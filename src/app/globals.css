@@ -3,6 +3,89 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Paleta 1: Azul claro (basada en la imagen, escala 0..10) */
+  --blue-light-0: #ffffff;
+  --blue-light-50: #e9effd; /* 0.5 */
+  --blue-light-100: #d3e0fb; /* 1.0 */
+  --blue-light-150: #bed0f9; /* 1.5 */
+  --blue-light-200: #a8c1f7; /* 2.0 */
+  --blue-light-300: #7ca1f3; /* 3.0 */
+  --blue-light-400: #5182ef; /* 4.0 */
+  --blue-light-500: #2563eb; /* 5.0 (base) */
+  --blue-light-600: #1e4fbc; /* 6.0 */
+  --blue-light-700: #163b8d; /* 7.0 */
+  --blue-light-800: #0f285e; /* 8.0 */
+  --blue-light-850: #0b1e47; /* 8.5 */
+  --blue-light-900: #07142f; /* 9.0 */
+  --blue-light-950: #040a18; /* 9.5 */
+  --blue-light-1000: #000000; /* 10.0 */
+
+  /* Paleta 2: Azul vivo (basada en la imagen, escala 0..10) */
+  --blue-vivid-0: #ffffff;
+  --blue-vivid-50: #ebf3ff; /* 0.5 */
+  --blue-vivid-100: #d8e7ff; /* 1.0 */
+  --blue-vivid-150: #c4dbff; /* 1.5 */
+  --blue-vivid-200: #b0cfff; /* 2.0 */
+  --blue-vivid-300: #89b6ff; /* 3.0 */
+  --blue-vivid-400: #619eff; /* 4.0 */
+  --blue-vivid-500: #3a86ff; /* 5.0 (base) */
+  --blue-vivid-600: #2e6dcf; /* 6.0 */
+  --blue-vivid-700: #2353a0; /* 7.0 */
+  --blue-vivid-800: #173a70; /* 8.0 */
+  --blue-vivid-850: #112d58; /* 8.5 */
+  --blue-vivid-900: #0c2041; /* 9.0 */
+  --blue-vivid-950: #061429; /* 9.5 */
+  --blue-vivid-1000: #000711; /* 10.0 */
+
+  /* Paleta 3: Neutros claros (blancos -> grises medios) */
+  --neutral-0: #ffffff;
+  --neutral-50: #ffffff;
+  --neutral-100: #ffffff;
+  --neutral-150: #ffffff;
+  --neutral-200: #ffffff;
+  --neutral-300: #ffffff;
+  --neutral-400: #ffffff;
+  --neutral-500: #e1e1e1; /* 6.0 */
+  --neutral-600: #c4c4c4; /* 7.0 */
+  --neutral-700: #a6a6a6; /* 8.0 */
+  --neutral-800: #979797; /* 8.5 */
+  --neutral-900: #898989; /* 9.0 */
+  --neutral-950: #7a7a7a; /* 9.5 */
+  --neutral-1000: #6b6b6b; /* 10.0 */
+
+  /* Paleta 4: Grises medios (escala de grises) */
+  --gray-medium-0: #ffffff;
+  --gray-medium-50: #ededed; /* 0.5 */
+  --gray-medium-100: #dadada; /* 1.0 */
+  --gray-medium-150: #c8c8c8; /* 1.5 */
+  --gray-medium-200: #b6b6b6; /* 2.0 */
+  --gray-medium-300: #919191; /* 3.0 */
+  --gray-medium-400: #6d6d6d; /* 4.0 */
+  --gray-medium-500: #484848; /* 5.0 (base) */
+  --gray-medium-600: #3a3a3a; /* 6.0 */
+  --gray-medium-700: #2b2b2b; /* 7.0 */
+  --gray-medium-800: #1d1d1d; /* 8.0 */
+  --gray-medium-850: #161616; /* 8.5 */
+  --gray-medium-900: #0e0e0e; /* 9.0 */
+  --gray-medium-950: #070707; /* 9.5 */
+  --gray-medium-1000: #000000; /* 10.0 */
+
+  /* Paleta 5: Grises oscuros / casi negros (escala 0..10) */
+  --gray-dark-0: #b1b8cd; /* 0 */
+  --gray-dark-50: #a3aab1; /* 0.5 */
+  --gray-dark-100: #949ba2; /* 1.0 */
+  --gray-dark-150: #868d93; /* 1.5 */
+  --gray-dark-200: #777e84; /* 2.0 */
+  --gray-dark-300: #5b6065; /* 3.0 */
+  --gray-dark-400: #3e4347; /* 4.0 */
+  --gray-dark-500: #212529; /* 5.0 (base) */
+  --gray-dark-600: #1a1e21; /* 6.0 */
+  --gray-dark-700: #141619; /* 7.0 */
+  --gray-dark-800: #0d0f10; /* 8.0 */
+  --gray-dark-850: #0a0b0c; /* 8.5 */
+  --gray-dark-900: #070708; /* 9.0 */
+  --gray-dark-950: #030404; /* 9.5 */
+  --gray-dark-1000: #000000; /* 10.0 */
 }
 
 @theme inline {
@@ -10,14 +93,98 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Paleta 1: Azul claro */
+  --color-blue-light-0: var(--blue-light-0);
+  --color-blue-light-50: var(--blue-light-50);
+  --color-blue-light-100: var(--blue-light-100);
+  --color-blue-light-150: var(--blue-light-150);
+  --color-blue-light-200: var(--blue-light-200);
+  --color-blue-light-300: var(--blue-light-300);
+  --color-blue-light-400: var(--blue-light-400);
+  --color-blue-light-500: var(--blue-light-500);
+  --color-blue-light-600: var(--blue-light-600);
+  --color-blue-light-700: var(--blue-light-700);
+  --color-blue-light-800: var(--blue-light-800);
+  --color-blue-light-850: var(--blue-light-850);
+  --color-blue-light-900: var(--blue-light-900);
+  --color-blue-light-950: var(--blue-light-950);
+  --color-blue-light-1000: var(--blue-light-1000);
+
+  /* Paleta 2: Azul vivo */
+  --color-blue-vivid-0: var(--blue-vivid-0);
+  --color-blue-vivid-50: var(--blue-vivid-50);
+  --color-blue-vivid-100: var(--blue-vivid-100);
+  --color-blue-vivid-150: var(--blue-vivid-150);
+  --color-blue-vivid-200: var(--blue-vivid-200);
+  --color-blue-vivid-300: var(--blue-vivid-300);
+  --color-blue-vivid-400: var(--blue-vivid-400);
+  --color-blue-vivid-500: var(--blue-vivid-500);
+  --color-blue-vivid-600: var(--blue-vivid-600);
+  --color-blue-vivid-700: var(--blue-vivid-700);
+  --color-blue-vivid-800: var(--blue-vivid-800);
+  --color-blue-vivid-850: var(--blue-vivid-850);
+  --color-blue-vivid-900: var(--blue-vivid-900);
+  --color-blue-vivid-950: var(--blue-vivid-950);
+  --color-blue-vivid-1000: var(--blue-vivid-1000);
+
+  /* Paleta 3: Neutros claros */
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-150: var(--neutral-150);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-neutral-950: var(--neutral-950);
+  --color-neutral-1000: var(--neutral-1000);
+
+  /* Paleta 4: Grises medios */
+  --color-gray-medium-0: var(--gray-medium-0);
+  --color-gray-medium-50: var(--gray-medium-50);
+  --color-gray-medium-100: var(--gray-medium-100);
+  --color-gray-medium-150: var(--gray-medium-150);
+  --color-gray-medium-200: var(--gray-medium-200);
+  --color-gray-medium-300: var(--gray-medium-300);
+  --color-gray-medium-400: var(--gray-medium-400);
+  --color-gray-medium-500: var(--gray-medium-500);
+  --color-gray-medium-600: var(--gray-medium-600);
+  --color-gray-medium-700: var(--gray-medium-700);
+  --color-gray-medium-800: var(--gray-medium-800);
+  --color-gray-medium-850: var(--gray-medium-850);
+  --color-gray-medium-900: var(--gray-medium-900);
+  --color-gray-medium-950: var(--gray-medium-950);
+  --color-gray-medium-1000: var(--gray-medium-1000);
+
+  /* Paleta 5: Grises oscuros */
+  --color-gray-dark-0: var(--gray-dark-0);
+  --color-gray-dark-50: var(--gray-dark-50);
+  --color-gray-dark-100: var(--gray-dark-100);
+  --color-gray-dark-150: var(--gray-dark-150);
+  --color-gray-dark-200: var(--gray-dark-200);
+  --color-gray-dark-300: var(--gray-dark-300);
+  --color-gray-dark-400: var(--gray-dark-400);
+  --color-gray-dark-500: var(--gray-dark-500);
+  --color-gray-dark-600: var(--gray-dark-600);
+  --color-gray-dark-700: var(--gray-dark-700);
+  --color-gray-dark-800: var(--gray-dark-800);
+  --color-gray-dark-850: var(--gray-dark-850);
+  --color-gray-dark-900: var(--gray-dark-900);
+  --color-gray-dark-950: var(--gray-dark-950);
+  --color-gray-dark-1000: var(--gray-dark-1000);
 }
 
-@media (prefers-color-scheme: dark) {
+/*@media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+}*/
 
 body {
   background: var(--background);
