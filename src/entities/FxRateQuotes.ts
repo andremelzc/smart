@@ -6,7 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Currencies } from "./Currencies";
 
 @Index("SYS_C008502", ["fxQuoteId"], { unique: true })
 @Entity("FX_RATE_QUOTES")
@@ -25,7 +24,7 @@ export class FxRateQuotes {
   @Column("date", { name: "QUOTED_AT" })
   quotedAt: Date;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "FX_QUOTE_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "FX_QUOTE_ID" })
   fxQuoteId: number;
 
   @Column("date", {
@@ -35,13 +34,13 @@ export class FxRateQuotes {
   })
   createdAt: Date | null;
 
-  @ManyToOne(() => Currencies, (currencies) => currencies.fxRateQuotes)
+  @ManyToOne("Currencies", (currencies: any) => currencies.fxRateQuotes)
   @JoinColumn([{ name: "BASE_CURRENCY", referencedColumnName: "currencyCode" }])
-  baseCurrency: Currencies;
+  baseCurrency: any;
 
-  @ManyToOne(() => Currencies, (currencies) => currencies.fxRateQuotes2)
+  @ManyToOne("Currencies", (currencies: any) => currencies.fxRateQuotes2)
   @JoinColumn([
     { name: "QUOTE_CURRENCY", referencedColumnName: "currencyCode" },
   ])
-  quoteCurrency: Currencies;
+  quoteCurrency: any;
 }

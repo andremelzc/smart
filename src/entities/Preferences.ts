@@ -5,7 +5,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { TenantPreferences } from "./TenantPreferences";
 
 @Index("SYS_C008398", ["preferenceId"], { unique: true })
 @Index("SYS_C008399", ["code"], { unique: true })
@@ -18,7 +17,7 @@ export class Preferences {
   })
   valueType: string;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "PREFERENCE_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "PREFERENCE_ID" })
   preferenceId: number;
 
   @Column("varchar2", { name: "NAME", length: 100 })
@@ -38,8 +37,8 @@ export class Preferences {
   code: string;
 
   @OneToMany(
-    () => TenantPreferences,
-    (tenantPreferences) => tenantPreferences.preference
+    "TenantPreferences",
+    (tenantPreferences: any) => tenantPreferences.preference
   )
-  tenantPreferences: TenantPreferences[];
+  tenantPreferences: any[];
 }

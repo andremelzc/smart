@@ -7,10 +7,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { PaymentDetails } from "./PaymentDetails";
-import { Bookings } from "./Bookings";
-import { UserPaymentMethods } from "./UserPaymentMethods";
-import { Currencies } from "./Currencies";
 
 @Index("SYS_C008466", ["paymentId"], { unique: true })
 @Entity("PAYMENTS")
@@ -25,7 +21,7 @@ export class Payments {
   @Column("date", { name: "PROCESSED_AT", nullable: true })
   processedAt: Date | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "PAYMENT_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "PAYMENT_ID" })
   paymentId: number;
 
   @Column("varchar2", { name: "MESSAGE", nullable: true, length: 255 })
@@ -51,23 +47,23 @@ export class Payments {
   @Column("number", { name: "AMOUNT", precision: 12, scale: 2 })
   amount: number;
 
-  @OneToMany(() => PaymentDetails, (paymentDetails) => paymentDetails.payment)
-  paymentDetails: PaymentDetails[];
+  @OneToMany("PaymentDetails", (paymentDetails: any) => paymentDetails.payment)
+  paymentDetails: any[];
 
-  @ManyToOne(() => Bookings, (bookings) => bookings.payments)
+  @ManyToOne("Bookings", (bookings: any) => bookings.payments)
   @JoinColumn([{ name: "BOOKING_ID", referencedColumnName: "bookingId" }])
-  booking: Bookings;
+  booking: any;
 
   @ManyToOne(
-    () => UserPaymentMethods,
-    (userPaymentMethods) => userPaymentMethods.payments
+    "UserPaymentMethods",
+    (userPaymentMethods: any) => userPaymentMethods.payments
   )
   @JoinColumn([
     { name: "PAYMENT_METHOD_ID", referencedColumnName: "paymentMethodId" },
   ])
-  paymentMethod: UserPaymentMethods;
+  paymentMethod: any;
 
-  @ManyToOne(() => Currencies, (currencies) => currencies.payments)
+  @ManyToOne("Currencies", (currencies: any) => currencies.payments)
   @JoinColumn([{ name: "CURRENCY_CODE", referencedColumnName: "currencyCode" }])
-  currencyCode: Currencies;
+  currencyCode: any;
 }

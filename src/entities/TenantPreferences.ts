@@ -1,6 +1,4 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
-import { Tenants } from "./Tenants";
-import { Preferences } from "./Preferences";
 
 @Index("SYS_C008403", ["tenantId", "preferenceId"], { unique: true })
 @Entity("TENANT_PREFERENCES")
@@ -28,11 +26,11 @@ export class TenantPreferences {
   @Column("number", { primary: true, name: "PREFERENCE_ID", scale: 0 })
   preferenceId: number;
 
-  @ManyToOne(() => Tenants, (tenants) => tenants.tenantPreferences)
+  @ManyToOne("Tenants", (tenants: any) => tenants.tenantPreferences)
   @JoinColumn([{ name: "TENANT_ID", referencedColumnName: "tenantId" }])
-  tenant: Tenants;
+  tenant: any;
 
-  @ManyToOne(() => Preferences, (preferences) => preferences.tenantPreferences)
+  @ManyToOne("Preferences", (preferences: any) => preferences.tenantPreferences)
   @JoinColumn([{ name: "PREFERENCE_ID", referencedColumnName: "preferenceId" }])
-  preference: Preferences;
+  preference: any;
 }

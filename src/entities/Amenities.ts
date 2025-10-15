@@ -5,7 +5,6 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Properties } from "./Properties";
 
 @Index("SYS_C008428", ["amenityId"], { unique: true })
 @Index("SYS_C008429", ["code"], { unique: true })
@@ -35,9 +34,9 @@ export class Amenities {
   @Column("varchar2", { name: "CODE", unique: true, length: 50 })
   code: string;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "AMENITY_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "AMENITY_ID" })
   amenityId: number;
 
-  @ManyToMany(() => Properties, (properties) => properties.amenities)
-  properties: Properties[];
+  @ManyToMany("Properties", (properties: any) => properties.amenities)
+  properties: any[];
 }

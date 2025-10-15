@@ -7,9 +7,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Payments } from "./Payments";
-import { Users } from "./Users";
-import { PaymentTypes } from "./PaymentTypes";
 
 @Index("SYS_C008459", ["paymentMethodId"], { unique: true })
 @Entity("USER_PAYMENT_METHODS")
@@ -23,7 +20,6 @@ export class UserPaymentMethods {
   @PrimaryGeneratedColumn({
     type: "number",
     name: "PAYMENT_METHOD_ID",
-    scale: 0,
   })
   paymentMethodId: number;
 
@@ -51,19 +47,19 @@ export class UserPaymentMethods {
   @Column("varchar2", { name: "ACCOUNT_REF", nullable: true, length: 100 })
   accountRef: string | null;
 
-  @OneToMany(() => Payments, (payments) => payments.paymentMethod)
-  payments: Payments[];
+  @OneToMany("Payments", (payments: any) => payments.paymentMethod)
+  payments: any[];
 
-  @ManyToOne(() => Users, (users) => users.userPaymentMethods)
+  @ManyToOne("Users", (users: any) => users.userPaymentMethods)
   @JoinColumn([{ name: "USER_ID", referencedColumnName: "userId" }])
-  user: Users;
+  user: any;
 
   @ManyToOne(
-    () => PaymentTypes,
-    (paymentTypes) => paymentTypes.userPaymentMethods
+    "PaymentTypes",
+    (paymentTypes: any) => paymentTypes.userPaymentMethods
   )
   @JoinColumn([
     { name: "PAYMENT_TYPE_ID", referencedColumnName: "paymentTypeId" },
   ])
-  paymentType: PaymentTypes;
+  paymentType: any;
 }

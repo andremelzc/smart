@@ -6,8 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Payments } from "./Payments";
-import { Currencies } from "./Currencies";
 
 @Index("SYS_C008474", ["detailId"], { unique: true })
 @Entity("PAYMENT_DETAILS")
@@ -24,7 +22,7 @@ export class PaymentDetails {
   @Column("number", { name: "HOST_PAYOUT", precision: 12, scale: 2 })
   hostPayout: number;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "DETAIL_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "DETAIL_ID" })
   detailId: number;
 
   @Column("date", {
@@ -34,11 +32,11 @@ export class PaymentDetails {
   })
   createdAt: Date | null;
 
-  @ManyToOne(() => Payments, (payments) => payments.paymentDetails)
+  @ManyToOne("Payments", (payments: any) => payments.paymentDetails)
   @JoinColumn([{ name: "PAYMENT_ID", referencedColumnName: "paymentId" }])
-  payment: Payments;
+  payment: any;
 
-  @ManyToOne(() => Currencies, (currencies) => currencies.paymentDetails)
+  @ManyToOne("Currencies", (currencies: any) => currencies.paymentDetails)
   @JoinColumn([{ name: "CURRENCY_CODE", referencedColumnName: "currencyCode" }])
-  currencyCode: Currencies;
+  currencyCode: any;
 }

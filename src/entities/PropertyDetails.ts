@@ -1,5 +1,4 @@
 import { Column, Entity, Index, JoinColumn, OneToOne } from "typeorm";
-import { Properties } from "./Properties";
 
 @Index("SYS_C008419", ["propertyId"], { unique: true })
 @Entity("PROPERTY_DETAILS")
@@ -47,7 +46,7 @@ export class PropertyDetails {
   @Column("number", { name: "AREA_M2", nullable: true, scale: 0 })
   areaM2: number | null;
 
-  @OneToOne(() => Properties, (properties) => properties.propertyDetails)
+  @OneToOne("Properties", (properties: any) => properties.propertyDetails)
   @JoinColumn([{ name: "PROPERTY_ID", referencedColumnName: "propertyId" }])
-  property: Properties;
+  property: any;
 }

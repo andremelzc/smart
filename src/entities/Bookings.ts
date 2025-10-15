@@ -7,12 +7,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Properties } from "./Properties";
-import { Tenants } from "./Tenants";
-import { Currencies } from "./Currencies";
-import { Conversations } from "./Conversations";
-import { Payments } from "./Payments";
-import { Reviews } from "./Reviews";
 
 @Index("SYS_C008449", ["bookingId"], { unique: true })
 @Entity("BOOKINGS")
@@ -91,30 +85,30 @@ export class Bookings {
   @Column("varchar2", { name: "CHECKIN_CODE", nullable: true, length: 50 })
   checkinCode: string | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "BOOKING_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "BOOKING_ID" })
   bookingId: number;
 
   @Column("date", { name: "ACCEPTED_AT", nullable: true })
   acceptedAt: Date | null;
 
-  @ManyToOne(() => Properties, (properties) => properties.bookings)
+  @ManyToOne("Properties", (properties: any) => properties.bookings)
   @JoinColumn([{ name: "PROPERTY_ID", referencedColumnName: "propertyId" }])
-  property: Properties;
+  property: any;
 
-  @ManyToOne(() => Tenants, (tenants) => tenants.bookings)
+  @ManyToOne("Tenants", (tenants: any) => tenants.bookings)
   @JoinColumn([{ name: "TENANT_ID", referencedColumnName: "tenantId" }])
-  tenant: Tenants;
+  tenant: any;
 
-  @ManyToOne(() => Currencies, (currencies) => currencies.bookings)
+  @ManyToOne("Currencies", (currencies: any) => currencies.bookings)
   @JoinColumn([{ name: "CURRENCY_CODE", referencedColumnName: "currencyCode" }])
-  currencyCode: Currencies;
+  currencyCode: any;
 
-  @OneToMany(() => Conversations, (conversations) => conversations.booking)
-  conversations: Conversations[];
+  @OneToMany("Conversations", (conversations: any) => conversations.booking)
+  conversations: any[];
 
-  @OneToMany(() => Payments, (payments) => payments.booking)
-  payments: Payments[];
+  @OneToMany("Payments", (payments: any) => payments.booking)
+  payments: any[];
 
-  @OneToMany(() => Reviews, (reviews) => reviews.booking)
-  reviews: Reviews[];
+  @OneToMany("Reviews", (reviews: any) => reviews.booking)
+  reviews: any[];
 }

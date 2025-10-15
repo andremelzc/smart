@@ -5,13 +5,12 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { UserPaymentMethods } from "./UserPaymentMethods";
 
 @Index("SYS_C008452", ["paymentTypeId"], { unique: true })
 @Index("SYS_C008453", ["name"], { unique: true })
 @Entity("PAYMENT_TYPES")
 export class PaymentTypes {
-  @PrimaryGeneratedColumn({ type: "number", name: "PAYMENT_TYPE_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "PAYMENT_TYPE_ID" })
   paymentTypeId: number;
 
   @Column("varchar2", { name: "NAME", unique: true, length: 50 })
@@ -28,8 +27,8 @@ export class PaymentTypes {
   createdAt: Date | null;
 
   @OneToMany(
-    () => UserPaymentMethods,
-    (userPaymentMethods) => userPaymentMethods.paymentType
+    "UserPaymentMethods",
+    (userPaymentMethods: any) => userPaymentMethods.paymentType
   )
-  userPaymentMethods: UserPaymentMethods[];
+  userPaymentMethods: any[];
 }

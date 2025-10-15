@@ -6,8 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Conversations } from "./Conversations";
-import { Users } from "./Users";
 
 @Index("SYS_C008494", ["messageId"], { unique: true })
 @Entity("MESSAGES")
@@ -18,7 +16,7 @@ export class Messages {
   @Column("date", { name: "READ_AT", nullable: true })
   readAt: Date | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "MESSAGE_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "MESSAGE_ID" })
   messageId: number;
 
   @Column("number", {
@@ -32,13 +30,13 @@ export class Messages {
   @Column("clob", { name: "CONTENT" })
   content: string;
 
-  @ManyToOne(() => Conversations, (conversations) => conversations.messages)
+  @ManyToOne("Conversations", (conversations: any) => conversations.messages)
   @JoinColumn([
     { name: "CONVERSATION_ID", referencedColumnName: "conversationId" },
   ])
-  conversation: Conversations;
+  conversation: any;
 
-  @ManyToOne(() => Users, (users) => users.messages)
+  @ManyToOne("Users", (users: any) => users.messages)
   @JoinColumn([{ name: "AUTHOR_USER_ID", referencedColumnName: "userId" }])
-  authorUser: Users;
+  authorUser: any;
 }

@@ -6,9 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Bookings } from "./Bookings";
-import { Properties } from "./Properties";
-import { Users } from "./Users";
 
 @Index("SYS_C008483", ["reviewId"], { unique: true })
 @Entity("REVIEWS")
@@ -16,7 +13,7 @@ export class Reviews {
   @Column("clob", { name: "comment", nullable: true })
   comment: string | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "REVIEW_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "REVIEW_ID" })
   reviewId: number;
 
   @Column("number", { name: "RATING", scale: 0 })
@@ -51,19 +48,19 @@ export class Reviews {
   })
   createdAt: Date | null;
 
-  @ManyToOne(() => Bookings, (bookings) => bookings.reviews)
+  @ManyToOne("Bookings", (bookings: any) => bookings.reviews)
   @JoinColumn([{ name: "BOOKING_ID", referencedColumnName: "bookingId" }])
-  booking: Bookings;
+  booking: any;
 
-  @ManyToOne(() => Properties, (properties) => properties.reviews)
+  @ManyToOne("Properties", (properties: any) => properties.reviews)
   @JoinColumn([{ name: "PROPERTY_ID", referencedColumnName: "propertyId" }])
-  property: Properties;
+  property: any;
 
-  @ManyToOne(() => Users, (users) => users.reviews)
+  @ManyToOne("Users", (users: any) => users.reviews)
   @JoinColumn([{ name: "AUTHOR_USER_ID", referencedColumnName: "userId" }])
-  authorUser: Users;
+  authorUser: any;
 
-  @ManyToOne(() => Users, (users) => users.reviews2)
+  @ManyToOne("Users", (users: any) => users.reviews2)
   @JoinColumn([{ name: "TARGET_USER_ID", referencedColumnName: "userId" }])
-  targetUser: Users;
+  targetUser: any;
 }

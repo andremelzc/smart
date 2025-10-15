@@ -6,9 +6,6 @@ import {
   OneToMany,
   OneToOne,
 } from "typeorm";
-import { Bookings } from "./Bookings";
-import { TenantPreferences } from "./TenantPreferences";
-import { Users } from "./Users";
 
 @Index("SYS_C008390", ["tenantId"], { unique: true })
 @Entity("TENANTS")
@@ -46,16 +43,16 @@ export class Tenants {
   })
   averageRating: number | null;
 
-  @OneToMany(() => Bookings, (bookings) => bookings.tenant)
-  bookings: Bookings[];
+  @OneToMany("Bookings", (bookings: any) => bookings.tenant)
+  bookings: any[];
 
   @OneToMany(
-    () => TenantPreferences,
-    (tenantPreferences) => tenantPreferences.tenant
+    "TenantPreferences",
+    (tenantPreferences: any) => tenantPreferences.tenant
   )
-  tenantPreferences: TenantPreferences[];
+  tenantPreferences: any[];
 
-  @OneToOne(() => Users, (users) => users.tenants)
+  @OneToOne("Users", (users: any) => users.tenants)
   @JoinColumn([{ name: "TENANT_ID", referencedColumnName: "userId" }])
-  tenant: Users;
+  tenant: any;
 }

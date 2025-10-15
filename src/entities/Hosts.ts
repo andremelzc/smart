@@ -6,8 +6,6 @@ import {
   OneToMany,
   OneToOne,
 } from "typeorm";
-import { Users } from "./Users";
-import { Properties } from "./Properties";
 
 @Index("SYS_C008393", ["hostId"], { unique: true })
 @Entity("HOSTS")
@@ -53,10 +51,10 @@ export class Hosts {
   })
   averageRating: number | null;
 
-  @OneToOne(() => Users, (users) => users.hosts)
+  @OneToOne("Users", (users: any) => users.hosts)
   @JoinColumn([{ name: "HOST_ID", referencedColumnName: "userId" }])
-  host: Users;
+  host: any;
 
-  @OneToMany(() => Properties, (properties) => properties.host)
-  properties: Properties[];
+  @OneToMany("Properties", (properties: any) => properties.host)
+  properties: any[];
 }

@@ -6,7 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Users } from "./Users";
 
 @Index("SYS_C008388", ["identityId"], { unique: true })
 @Entity("USER_AUTH_IDENTITIES")
@@ -23,7 +22,7 @@ export class UserAuthIdentities {
   @Column("date", { name: "LAST_LOGIN_AT", nullable: true })
   lastLoginAt: Date | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "IDENTITY_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "IDENTITY_ID" })
   identityId: number;
 
   @Column("number", {
@@ -44,7 +43,7 @@ export class UserAuthIdentities {
   })
   createdAt: Date | null;
 
-  @ManyToOne(() => Users, (users) => users.userAuthIdentities)
+  @ManyToOne("Users", (users: any) => users.userAuthIdentities)
   @JoinColumn([{ name: "USER_ID", referencedColumnName: "userId" }])
-  user: Users;
+  user: any;
 }

@@ -10,15 +10,6 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Availabilities } from "./Availabilities";
-import { Bookings } from "./Bookings";
-import { Conversations } from "./Conversations";
-import { Hosts } from "./Hosts";
-import { Currencies } from "./Currencies";
-import { Amenities } from "./Amenities";
-import { PropertyDetails } from "./PropertyDetails";
-import { PropertyImages } from "./PropertyImages";
-import { Reviews } from "./Reviews";
 
 @Index("SYS_C008418", ["propertyId"], { unique: true })
 @Entity("PROPERTIES")
@@ -35,7 +26,7 @@ export class Properties {
   @Column("varchar2", { name: "PROPERTY_TYPE", length: 30 })
   propertyType: string;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "PROPERTY_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "PROPERTY_ID" })
   propertyId: number;
 
   @Column("varchar2", { name: "POSTAL_CODE", length: 255 })
@@ -69,24 +60,24 @@ export class Properties {
   @Column("varchar2", { name: "ADDRESS_TEXT", length: 255 })
   addressText: string;
 
-  @OneToMany(() => Availabilities, (availabilities) => availabilities.property)
-  availabilities: Availabilities[];
+  @OneToMany("Availabilities", (availabilities: any) => availabilities.property)
+  availabilities: any[];
 
-  @OneToMany(() => Bookings, (bookings) => bookings.property)
-  bookings: Bookings[];
+  @OneToMany("Bookings", (bookings: any) => bookings.property)
+  bookings: any[];
 
-  @OneToMany(() => Conversations, (conversations) => conversations.property)
-  conversations: Conversations[];
+  @OneToMany("Conversations", (conversations: any) => conversations.property)
+  conversations: any[];
 
-  @ManyToOne(() => Hosts, (hosts) => hosts.properties)
+  @ManyToOne("Hosts", (hosts: any) => hosts.properties)
   @JoinColumn([{ name: "HOST_ID", referencedColumnName: "hostId" }])
-  host: Hosts;
+  host: any;
 
-  @ManyToOne(() => Currencies, (currencies) => currencies.properties)
+  @ManyToOne("Currencies", (currencies: any) => currencies.properties)
   @JoinColumn([{ name: "CURRENCY_CODE", referencedColumnName: "currencyCode" }])
-  currencyCode: Currencies;
+  currencyCode: any;
 
-  @ManyToMany(() => Amenities, (amenities) => amenities.properties)
+  @ManyToMany("Amenities", (amenities: any) => amenities.properties)
   @JoinTable({
     name: "PROPERTY_AMENITIES",
     joinColumns: [{ name: "PROPERTY_ID", referencedColumnName: "propertyId" }],
@@ -94,17 +85,17 @@ export class Properties {
       { name: "AMENITY_ID", referencedColumnName: "amenityId" },
     ],
   })
-  amenities: Amenities[];
+  amenities: any[];
 
   @OneToOne(
-    () => PropertyDetails,
-    (propertyDetails) => propertyDetails.property
+    "PropertyDetails",
+    (propertyDetails: any) => propertyDetails.property
   )
-  propertyDetails: PropertyDetails;
+  propertyDetails: any;
 
-  @OneToMany(() => PropertyImages, (propertyImages) => propertyImages.property)
-  propertyImages: PropertyImages[];
+  @OneToMany("PropertyImages", (propertyImages: any) => propertyImages.property)
+  propertyImages: any[];
 
-  @OneToMany(() => Reviews, (reviews) => reviews.property)
-  reviews: Reviews[];
+  @OneToMany("Reviews", (reviews: any) => reviews.property)
+  reviews: any[];
 }

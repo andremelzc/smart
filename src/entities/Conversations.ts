@@ -7,10 +7,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { ConversationParticipants } from "./ConversationParticipants";
-import { Properties } from "./Properties";
-import { Bookings } from "./Bookings";
-import { Messages } from "./Messages";
 
 @Index("SYS_C008486", ["conversationId"], { unique: true })
 @Entity("CONVERSATIONS")
@@ -25,26 +21,26 @@ export class Conversations {
   })
   createdAt: Date | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "CONVERSATION_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "CONVERSATION_ID" })
   conversationId: number;
 
   @Column("date", { name: "CLOSED_AT", nullable: true })
   closedAt: Date | null;
 
   @OneToMany(
-    () => ConversationParticipants,
-    (conversationParticipants) => conversationParticipants.conversation
+    "ConversationParticipants",
+    (conversationParticipants: any) => conversationParticipants.conversation
   )
-  conversationParticipants: ConversationParticipants[];
+  conversationParticipants: any[];
 
-  @ManyToOne(() => Properties, (properties) => properties.conversations)
+  @ManyToOne("Properties", (properties: any) => properties.conversations)
   @JoinColumn([{ name: "PROPERTY_ID", referencedColumnName: "propertyId" }])
-  property: Properties;
+  property: any;
 
-  @ManyToOne(() => Bookings, (bookings) => bookings.conversations)
+  @ManyToOne("Bookings", (bookings: any) => bookings.conversations)
   @JoinColumn([{ name: "BOOKING_ID", referencedColumnName: "bookingId" }])
-  booking: Bookings;
+  booking: any;
 
-  @OneToMany(() => Messages, (messages) => messages.conversation)
-  messages: Messages[];
+  @OneToMany("Messages", (messages: any) => messages.conversation)
+  messages: any[];
 }

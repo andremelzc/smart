@@ -1,6 +1,4 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
-import { Conversations } from "./Conversations";
-import { Users } from "./Users";
 
 @Index("PK_CONVERSATION_PARTICIPANTS", ["conversationId", "userId"], {
   unique: true,
@@ -24,15 +22,15 @@ export class ConversationParticipants {
   conversationId: number;
 
   @ManyToOne(
-    () => Conversations,
-    (conversations) => conversations.conversationParticipants
+    "Conversations",
+    (conversations: any) => conversations.conversationParticipants
   )
   @JoinColumn([
     { name: "CONVERSATION_ID", referencedColumnName: "conversationId" },
   ])
-  conversation: Conversations;
+  conversation: any;
 
-  @ManyToOne(() => Users, (users) => users.conversationParticipants)
+  @ManyToOne("Users", (users: any) => users.conversationParticipants)
   @JoinColumn([{ name: "USER_ID", referencedColumnName: "userId" }])
-  user: Users;
+  user: any;
 }

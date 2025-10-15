@@ -6,7 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Properties } from "./Properties";
 
 @Index("SYS_C008437", ["availabilityId"], { unique: true })
 @Entity("AVAILABILITIES")
@@ -35,10 +34,10 @@ export class Availabilities {
   })
   createdAt: Date | null;
 
-  @PrimaryGeneratedColumn({ type: "number", name: "AVAILABILITY_ID", scale: 0 })
+  @PrimaryGeneratedColumn({ type: "number", name: "AVAILABILITY_ID" })
   availabilityId: number;
 
-  @ManyToOne(() => Properties, (properties) => properties.availabilities)
+  @ManyToOne("Properties", (properties: any) => properties.availabilities)
   @JoinColumn([{ name: "PROPERTY_ID", referencedColumnName: "propertyId" }])
-  property: Properties;
+  property: any;
 }
