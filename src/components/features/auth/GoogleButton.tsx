@@ -1,20 +1,37 @@
+// components/auth/GoogleButton.tsx
+'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { authService } from '@/src/services/auth.service';
 
 interface GoogleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children?: React.ReactNode;
   variant?: 'light' | 'dark';
   size?: 'sm' | 'md' | 'lg';
+  callbackUrl?: string;
 }
 
 export const GoogleButton = React.forwardRef<HTMLButtonElement, GoogleButtonProps>(({
   children = 'Continuar con Google',
   variant = 'light',
   size = 'md',
+  callbackUrl = '/',
   className = '',
   disabled = false,
   ...props
 }, ref) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await authService.signInWithGoogle(callbackUrl);
+    } catch (error) {
+      console.error('Error:', error);
+      setIsLoading(false);
+    }
+  };
+
   const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md leading-none";
 
   const variants: Record<string, string> = {
@@ -55,7 +72,8 @@ export const GoogleButton = React.forwardRef<HTMLButtonElement, GoogleButtonProp
         ${sizes[size]}
         ${className}
       `}
-      disabled={disabled}
+      disabled={disabled || isLoading}
+      onClick={handleGoogleSignIn}
       {...props}
     >
       <svg
@@ -83,7 +101,9 @@ export const GoogleButton = React.forwardRef<HTMLButtonElement, GoogleButtonProp
           />
         </g>
       </svg>
-      <span className="font-medium">{children}</span>
+      <span className="font-medium">
+        {isLoading ? 'Cargando...' : children}
+      </span>
     </button>
   );
 });
