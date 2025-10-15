@@ -12,8 +12,11 @@
     "lucide-react": "^0.545.0",
     "next": "^15.5.5",
     "next-auth": "^4.24.11",
+    "oracledb": "^6.9.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.27"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -24,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.0-beta.0",
     "tailwindcss": "^4",
+    "typeorm-model-generator": "^0.4.6",
     "typescript": "^5"
   }
 }
