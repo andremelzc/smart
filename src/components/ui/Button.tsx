@@ -26,22 +26,22 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   
   const variants: Record<string, string> = {
     primary: `
-      bg-[var(--blue-light-500)] text-white
-      hover:bg-[var(--blue-light-600)]
-      active:bg-[var(--blue-light-700)]
-      focus:ring-[var(--blue-light-300)]
+      bg-blue-light-500 text-white
+      hover:bg-blue-light-600
+      active:bg-blue-light-700
+      focus:ring-blue-light-300
     `,
     ghost: `
-      border-2 border-[var(--blue-light-500)] text-[var(--blue-light-500)] bg-transparent
-      hover:bg-[var(--blue-light-50)] hover:border-[var(--blue-light-600)]
-      active:bg-[var(--blue-light-100)] active:border-[var(--blue-light-700)]
-      focus:ring-[var(--blue-light-300)]
+      border-2 border-blue-light-500 text-blue-light-500 bg-transparent
+      hover:bg-blue-light-50 hover:border-blue-light-600
+      active:bg-blue-light-100 active:border-blue-light-700
+      focus:ring-blue-light-300
     `,
     text: `
-      text-[var(--blue-light-500)] bg-transparent
-      hover:bg-[var(--blue-light-50)]
-      active:bg-[var(--blue-light-100)]
-      focus:ring-[var(--blue-light-300)]
+      text-blue-light-500 bg-transparent
+      hover:bg-blue-light-150
+      active:bg-blue-light-150
+      focus:ring-blue-light-300
     `
   };
 
