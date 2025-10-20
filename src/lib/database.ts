@@ -25,10 +25,10 @@ import { FxRateQuotes } from "@/src/entities/FxRateQuotes";
 import { Preferences } from "@/src/entities/Preferences";
 
 // Configuración de conexión Oracle desde variables de entorno
-const host = process.env.DB_HOST || "34.176.142.194";
+const host = process.env.DB_HOST || "localhost";
 const port = parseInt(process.env.DB_PORT || "1521");
-const username = process.env.DB_USERNAME || "SMART01";
-const password = process.env.DB_PASSWORD || "123456";
+const username = process.env.DB_USERNAME || "oracle";
+const password = process.env.DB_PASSWORD || "password";
 const sid = process.env.DB_SID || "XEPDB1";
 
 // Construir connection string para Oracle
