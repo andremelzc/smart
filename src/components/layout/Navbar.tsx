@@ -3,15 +3,22 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Search, Menu, Home } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import UserMenu from "@/src/components/layout/UserMenu";
+import { authService } from "@/src/services/auth.service";
 
 export default function Navbar() {
   const [origin, setOrigin] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSearch = () => {
     console.log({ origin, departureDate, returnDate, passengers });
+  };
+
+  const handleMenuToggle = () => {
+    setIsMenuOpen((prev) => !prev);
   };
 
   return (
@@ -100,7 +107,9 @@ export default function Navbar() {
               iconOnly
               leftIcon={Menu}
               aria-label="Menú"
+              onClick={handleMenuToggle}
             />
+            {/* User Menu */}
           </div>
         </div>
       </div>
