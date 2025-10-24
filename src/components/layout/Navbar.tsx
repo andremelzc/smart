@@ -30,7 +30,7 @@ export default function Navbar() {
             <div className="flex items-center rounded-full overflow-hidden shadow-md bg-white">
               {/* Dónde */}
               <div className="flex-1 px-6 py-3 border-r border-gray-200">
-                <label className="block text-xs font-semibold mb-0.5 text-gray-dark-700">
+                <label className="block text-xs font-semibold text-gray-dark-700">
                   Dónde
                 </label>
                 <input
@@ -44,7 +44,7 @@ export default function Navbar() {
 
               {/* Fechas */}
               <div className="flex-1 px-6 py-3 border-r border-gray-200">
-                <label className="block text-xs font-semibold mb-0.5 text-gray-dark-700">
+                <label className="block text-xs font-semibold text-gray-dark-700">
                   Fechas
                 </label>
                 <input
@@ -61,7 +61,7 @@ export default function Navbar() {
               {/* Quién + Search Button */}
               <div className="flex-1 px-6 py-3 flex items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-xs font-semibold mb-0.5 text-gray-dark-700">
+                  <label className="block text-xs font-semibold text-gray-dark-700">
                     Quién
                   </label>
                   <input
