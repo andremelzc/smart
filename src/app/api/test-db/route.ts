@@ -1,37 +1,21 @@
 import { NextResponse } from "next/server";
-import { getDataSource } from "@/src/lib/database";
-import { Users } from "@/src/entities/Users";
-import { UserAuthIdentities } from "@/src/entities/UserAuthIdentities";
+import { executeQuery } from "@/src/lib/database";
 
 export async function GET() {
   try {
-    console.log("🔍 Intentando conectar a Oracle...");
-    
-    // Obtener la conexión
-    const dataSource = await getDataSource();
-    
-    console.log("✅ Conexión establecida");
+    console.log("🔍 Probando conexión a Oracle con consulta simple...");
 
-    // Probar queries básicas
-    const userRepository = dataSource.getRepository(Users);
-    const authRepository = dataSource.getRepository(UserAuthIdentities);
+    const ping = await executeQuery("SELECT 1 AS OK FROM DUAL");
 
-    const userCount = await userRepository.count();
-    const authCount = await authRepository.count();
-
-    // Obtener algunos usuarios de muestra (máximo 3)
-    const sampleUsers = await userRepository.find({
-      take: 3,
-      select: ["userId", "email", "firstName", "lastName", "createdAt"],
-    });
 
     return NextResponse.json({
       success: true,
       message: "Conexión a Oracle exitosa",
       data: {
-        totalUsers: userCount,
-        totalAuthIdentities: authCount,
-        sampleUsers,
+        ping: {
+          metaData: ping.metaData,
+          rows: ping.rows,
+        },
         database: {
           host: process.env.DB_HOST,
           port: process.env.DB_PORT,
