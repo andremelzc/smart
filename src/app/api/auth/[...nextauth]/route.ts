@@ -54,11 +54,13 @@ export const authOptions: NextAuthOptions = {
           ); 
         END;`;
 
+          // Aseguramos providerAccountId (fallback a profile.sub)
+          const providerAccountId = (account as any)?.providerAccountId ?? (profile as any)?.sub ?? "";
           const binds = {
             p_email: email,
             p_name: name,
             p_provider: account.provider,
-            p_provider_account_id: account.providerAccountId,
+            p_provider_account_id: providerAccountId,
             out_user_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
             out_identity_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
           };
@@ -78,17 +80,21 @@ export const authOptions: NextAuthOptions = {
           );
           console.log("🔍 outBinds:", result?.outBinds);
           console.log("🔍 out_user_id:", result?.outBinds?.out_user_id);
+          console.log("🔍 out_identity_id:", result?.outBinds?.out_identity_id);
 
           const dbUserId = result?.outBinds?.out_user_id;
+          const dbIdentityId = result?.outBinds?.out_identity_id;
 
-          if (dbUserId != null) {
-            console.log("✅ Usuario autenticado con ID:", dbUserId);
+          if (dbUserId != null && dbIdentityId != null) {
+            console.log("✅ Usuario autenticado con IDs:", { dbUserId, dbIdentityId });
             (user as any).dbUserId = dbUserId;
+            (user as any).dbIdentityId = dbIdentityId;
             return true;
           } else {
-            console.error(
-              "❌ El Stored Procedure no devolvió un ID de usuario."
-            );
+            console.error("❌ El Stored Procedure no devolvió ambos OUT (user e identity).", {
+              dbUserId,
+              dbIdentityId,
+            });
             return false;
           }
         } catch (err) {
@@ -103,9 +109,48 @@ export const authOptions: NextAuthOptions = {
      * 2. Se ejecuta después de 'signIn'.
      * Toma el ID de la BD (que adjuntamos) y lo guarda en el token de sesión.
      */
-    async jwt({ token, user }) {
-      if ((user as any)?.dbUserId) {
-        token.id = (user as any).dbUserId;
+    async jwt({ token, user, trigger, account }) {
+      // Solo hacemos esto la primera vez que se crea el token (al iniciar sesión)
+      if (trigger === "signIn" && user) {
+        // Guardamos el USER_ID en el token
+        if ((user as any)?.dbUserId) {
+          token.id = (user as any).dbUserId;
+        } else if (user.id) {
+          // Para Credentials, el ID ya viene en user.id
+          token.id = user.id;
+        }
+
+        // Si tenemos el IDENTITY_ID (viene de OAuth o podríamos obtenerlo de Credentials)
+        const identityId = (user as any)?.dbIdentityId; // ID de USER_AUTH_IDENTITIES
+
+        if (identityId) {
+          token.identityId = identityId; // Guardamos identityId en el token
+
+          // --- AQUÍ LLAMAMOS AL SP_UPDATE_LAST_LOGIN (ENFOQUE FLEXIBLE) ---
+          try {
+            console.log(
+              `🔄 Actualizando last login para identityId: ${identityId}`
+            );
+            const sqlUpdate = `BEGIN AUTH_PKG.SP_UPDATE_LAST_LOGIN(:p_identity_id); END;`;
+            const bindsUpdate = { p_identity_id: identityId };
+            await executeQuery(sqlUpdate, bindsUpdate);
+            console.log("✅ Last login actualizado.");
+          } catch (updateErr) {
+            // *** LA CLAVE DE LA FLEXIBILIDAD ***
+            // Si la actualización falla, SOLO logueamos el error,
+            // pero NO retornamos false ni lanzamos una excepción.
+            // El flujo continúa y el token se crea igual.
+            console.error(
+              "💥 Error al actualizar last login (no bloqueante):",
+              updateErr
+            );
+          }
+          // ---------------------------------------------
+        } else {
+          console.warn(
+            "⚠️ No se encontró identityId para actualizar last login."
+          );
+        }
       }
       return token;
     },
