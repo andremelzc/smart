@@ -3,10 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import {
-  UserCircle,
+  User,
   LogOut,
-  CalendarDays,
+  Calendar,
   Home,
+  MessageSquare,
+  Settings,
+  Bell,
+  HelpCircle,
+  LogIn,
 } from "lucide-react";
 
 // Props que recibe del Navbar
@@ -22,60 +27,126 @@ export default function UserMenu({
   onLogout,
   onClose,
 }: UserMenuProps) {
-
   // Función wrapper para que al hacer clic en un link, se cierre el menú
   const handleClickLink = () => {
     onClose();
   };
-  
+
   // Función wrapper para el logout
   const handleLogoutClick = () => {
     onLogout();
     onClose();
-  }
+  };
 
   return (
     // El contenedor posicionado (se alinea con el 'relative' del Navbar)
-    <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl py-2 z-50">
+    <div
+      className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg ring-1 ring-black/5 py-2 z-50"
+      role="menu"
+      aria-label={isAuthenticated ? "Menú de usuario" : "Menú de invitado"}
+    >
       {isAuthenticated ? (
         // --- MENÚ AUTENTICADO ---
         <>
-          <Link href="/bookings" onClick={handleClickLink} className="block px-4 py-2 text-sm font-semibold text-gray-dark-700 hover:bg-gray-100 flex items-center gap-2">
-              <CalendarDays className="w-4 h-4" /> Mis Reservas
+          <Link
+            href="/bookings"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <Calendar className="w-5 h-5" /> Viajes
           </Link>
-          <Link href="/profile" onClick={handleClickLink} className="block px-4 py-2 text-sm text-gray-dark-700 hover:bg-gray-100 flex items-center gap-2">
-              <UserCircle className="w-4 h-4" /> Mi Perfil
+          <Link
+            href="/messages"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <MessageSquare className="w-5 h-5" /> Mensajes
           </Link>
-          
-          <div className="border-t border-gray-100 my-2"></div>
-          
-          <Link href="/host/become" onClick={handleClickLink} className="block px-4 py-2 text-sm text-gray-dark-700 hover:bg-gray-100 flex items-center gap-2">
-              <Home className="w-4 h-4" /> Conviértete en anfitrión
+          <Link
+            href="/account/profile"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <User className="w-5 h-5" /> Mi perfil
           </Link>
-          
-          <div className="border-t border-gray-100 my-2"></div>
-          
+          <div className="border-t border-gray-200 my-2"></div>
+
+          <Link
+            href="/account/settings"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <Settings className="w-5 h-5" /> Configuración de la cuenta
+          </Link>
+
+          <Link
+            href="/account/notifications"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <Bell className="w-5 h-5" /> Notificaciones
+          </Link>
+
+          <div className="border-t border-gray-200 my-2"></div>
+
+          <Link
+            href="/host/become"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <Home className="w-5 h-5" />
+            Conviértete en anfitrión
+          </Link>
+
+          <div className="border-t border-gray-200 my-2"></div>
+
           <button
             onClick={handleLogoutClick}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-b-lg"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none transition-colors rounded-b-lg"
+            role="menuitem"
           >
-            <LogOut className="w-4 h-4" /> Cerrar Sesión
+            <LogOut className="w-5 h-5" />
+            Cerrar Sesión
           </button>
         </>
       ) : (
         // --- MENÚ INVITADO ---
         <>
-          <Link href="/login" onClick={handleClickLink} className="block px-4 py-2 text-sm font-semibold text-gray-dark-700 hover:bg-gray-100">
-              Iniciar Sesión
-          </Link>
-          <Link href="/register" onClick={handleClickLink} className="block px-4 py-2 text-sm text-gray-dark-700 hover:bg-gray-100">
-              Registrarse
+          <Link
+            href="/help"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <HelpCircle className="w-5 h-5" /> Centro de ayuda
           </Link>
 
-          <div className="border-t border-gray-100 my-2"></div>
-          
-          <Link href="/host/become" onClick={handleClickLink} className="block px-4 py-2 text-sm text-gray-dark-700 hover:bg-gray-100">
-              Conviértete en anfitrión
+          <div className="border-t border-gray-200 my-2"></div>
+
+          <Link
+            href="/host/become"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+            role="menuitem"
+          >
+            <Home className="w-5 h-5" /> Conviértete en anfitrión
+          </Link>
+
+          <div className="border-t border-gray-200 my-2"></div>
+
+          <Link
+            href="/login"
+            onClick={handleClickLink}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors rounded-b-lg"
+            role="menuitem"
+          >
+            <LogIn className="w-5 h-5" /> Iniciar sesión o registrarse
           </Link>
         </>
       )}

@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Search, Menu, Home } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { useAuth } from "@/src/hooks/useAuth";
 import UserMenu from "@/src/components/layout/UserMenu";
 import { authService } from "@/src/services/auth.service";
 
@@ -12,6 +13,26 @@ export default function Navbar() {
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Cerrar el menú al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   const handleSearch = () => {
     console.log({ origin, departureDate, returnDate, passengers });
@@ -96,20 +117,33 @@ export default function Navbar() {
           {/* Right Side */}
           <div className="flex items-center gap-3 flex-shrink-0">
             {/* Host Link - Text Button */}
-            <Button variant="text" size="md" className="hidden xl:block text-gray-dark-500 font-semibold">
+            <Button
+              variant="text"
+              size="md"
+              className="hidden xl:block text-gray-dark-500 font-semibold"
+            >
               Conviértete en anfitrión
             </Button>
 
-            {/* Menu Button */}
-            <Button
-              variant="primary"
-              size="md"
-              iconOnly
-              leftIcon={Menu}
-              aria-label="Menú"
-              onClick={handleMenuToggle}
-            />
-            {/* User Menu */}
+            {/* Menu Button Container with Dropdown */}
+            <div className="relative" ref={menuRef}>
+              <Button
+                variant="primary"
+                size="md"
+                iconOnly
+                leftIcon={Menu}
+                aria-label="Menú"
+                onClick={handleMenuToggle}
+              />
+              {/* User Menu Dropdown */}
+              {isMenuOpen && (
+                <UserMenu
+                  isAuthenticated={isAuthenticated}
+                  onLogout={() => authService.signOut()}
+                  onClose={() => setIsMenuOpen(false)}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
