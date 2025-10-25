@@ -13,7 +13,7 @@ export default function Navbar() {
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -116,14 +116,14 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Host Link - Text Button */}
+            {/* Host Link - Text Button 
             <Button
               variant="text"
               size="md"
               className="hidden xl:block text-gray-dark-500 font-semibold"
             >
               Conviértete en anfitrión
-            </Button>
+            </Button>*/}
 
             {/* Menu Button Container with Dropdown */}
             <div className="relative" ref={menuRef}>
@@ -138,6 +138,7 @@ export default function Navbar() {
               {/* User Menu Dropdown */}
               {isMenuOpen && (
                 <UserMenu
+                  role={"tenant"}
                   isAuthenticated={isAuthenticated}
                   onLogout={() => authService.signOut()}
                   onClose={() => setIsMenuOpen(false)}

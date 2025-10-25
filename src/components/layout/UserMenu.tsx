@@ -14,11 +14,14 @@ import {
   LogIn,
 } from "lucide-react";
 
+import { useAuth } from "@/src/hooks/useAuth";
+
 // Props que recibe del Navbar
 interface UserMenuProps {
   isAuthenticated: boolean; // Estado de autenticación
   onLogout: () => void; // Función para hacer logout
   onClose: () => void; // Función para decirle al Navbar que se cierre
+  role: string | null; // Rol del usuario
 }
 
 // Este componente AHORA SÍ es solo el "dropdown"
@@ -26,7 +29,10 @@ export default function UserMenu({
   isAuthenticated,
   onLogout,
   onClose,
+  role,
 }: UserMenuProps) {
+  const { user } = useAuth();
+
   // Función wrapper para que al hacer clic en un link, se cierre el menú
   const handleClickLink = () => {
     onClose();
@@ -46,75 +52,130 @@ export default function UserMenu({
       aria-label={isAuthenticated ? "Menú de usuario" : "Menú de invitado"}
     >
       {isAuthenticated ? (
-        // --- MENÚ AUTENTICADO ---
-        <>
-          <Link
-            href="/bookings"
-            onClick={handleClickLink}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-            role="menuitem"
-          >
-            <Calendar className="w-5 h-5" /> Viajes
-          </Link>
-          <Link
-            href="/messages"
-            onClick={handleClickLink}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-            role="menuitem"
-          >
-            <MessageSquare className="w-5 h-5" /> Mensajes
-          </Link>
-          <Link
-            href="/account/profile"
-            onClick={handleClickLink}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-            role="menuitem"
-          >
-            <User className="w-5 h-5" /> Mi perfil
-          </Link>
-          <div className="border-t border-gray-200 my-2"></div>
+        role === "tenant" ? (
+          // --- MENÚ TENANT ---
+          <>
+            <Link
+              href="/bookings"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <Calendar className="w-5 h-5" /> Viajes
+            </Link>
+            <Link
+              href="/messages"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <MessageSquare className="w-5 h-5" /> Mensajes
+            </Link>
+            <Link
+              href="/account/profile"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <User className="w-5 h-5" /> Mi perfil
+            </Link>
+            <div className="border-t border-gray-200 my-2"></div>
 
-          <Link
-            href="/account/settings"
-            onClick={handleClickLink}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-            role="menuitem"
-          >
-            <Settings className="w-5 h-5" /> Configuración de la cuenta
-          </Link>
+            <Link
+              href="/account/settings"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <Settings className="w-5 h-5" /> Configuración de la cuenta
+            </Link>
 
-          <Link
-            href="/account/notifications"
-            onClick={handleClickLink}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-            role="menuitem"
-          >
-            <Bell className="w-5 h-5" /> Notificaciones
-          </Link>
+            <Link
+              href="/account/notifications"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <Bell className="w-5 h-5" /> Notificaciones
+            </Link>
 
-          <div className="border-t border-gray-200 my-2"></div>
+            <div className="border-t border-gray-200 my-2"></div>
 
-          <Link
-            href="/host/become"
-            onClick={handleClickLink}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-            role="menuitem"
-          >
-            <Home className="w-5 h-5" />
-            Conviértete en anfitrión
-          </Link>
+            {user?.isHost ? (
+              <Link
+                href="/host/dashboard"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Home className="w-5 h-5" />
+                Cambia a anfitrión
+              </Link>
+            ) : (
+              <Link
+                href="/host/become"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Home className="w-5 h-5" />
+                Conviértete en anfitrión
+              </Link>
+            )}
 
-          <div className="border-t border-gray-200 my-2"></div>
+            <div className="border-t border-gray-200 my-2"></div>
 
-          <button
-            onClick={handleLogoutClick}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none transition-colors rounded-b-lg"
-            role="menuitem"
-          >
-            <LogOut className="w-5 h-5" />
-            Cerrar Sesión
-          </button>
-        </>
+            <button
+              onClick={handleLogoutClick}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none transition-colors rounded-b-lg"
+              role="menuitem"
+            >
+              <LogOut className="w-5 h-5" />
+              Cerrar Sesión
+            </button>
+          </>
+        ) : (
+          // --- MENÚ HOST U OTRO ROL ---
+          <>
+            <Link
+              href="/messages"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <MessageSquare className="w-5 h-5" /> Mensajes
+            </Link>
+            <Link
+              href="/account/profile"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <User className="w-5 h-5" /> Mi perfil
+            </Link>
+            <div className="border-t border-gray-200 my-2"></div>
+
+            <Link
+              href="/account/settings"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <Settings className="w-5 h-5" /> Configuración de la cuenta
+            </Link>
+
+            <div className="border-t border-gray-200 my-2"></div>
+
+            <button
+              onClick={handleLogoutClick}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none transition-colors rounded-b-lg"
+              role="menuitem"
+            >
+              <LogOut className="w-5 h-5" />
+              Cerrar Sesión
+            </button>
+          </>
+        )
       ) : (
         // --- MENÚ INVITADO ---
         <>
