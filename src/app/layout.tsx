@@ -30,12 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-background text-foreground`}
       >
         <Providers>
-          <Navbar />
-          <div className="mx-auto w-full max-w-5xl">
-            <main className="min-h-screen px-6 py-6">
-              {children}
-            </main>
-          </div>
+          {children}
         </Providers>
       </body>
     </html>

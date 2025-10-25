@@ -167,6 +167,18 @@ export default function UserMenu({
 
             <div className="border-t border-gray-200 my-2"></div>
 
+            <Link
+              href="/"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <Home className="w-5 h-5" />
+              Cambia a huésped
+            </Link>
+
+            <div className="border-t border-gray-200 my-2"></div>
+
             <button
               onClick={handleLogoutClick}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none transition-colors rounded-b-lg"
