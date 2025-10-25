@@ -89,6 +89,38 @@ export const authOptions: NextAuthOptions = {
             console.log("✅ Usuario autenticado con IDs:", { dbUserId, dbIdentityId });
             (user as any).dbUserId = dbUserId;
             (user as any).dbIdentityId = dbIdentityId;
+
+            // Obtener roles del usuario desde USER_PKG.SP_GET_USER_ROLES
+            try {
+              const schema = process.env.DB_SCHEMA?.trim();
+              const userPkg = process.env.DB_USER_PACKAGE?.trim() || 'USER_PKG';
+              let qualifiedName = `${userPkg}.SP_GET_USER_ROLES`;
+              if (schema && schema.length > 0) {
+                qualifiedName = `${schema}.${qualifiedName}`;
+              }
+
+              const rolesSql = `BEGIN ${qualifiedName}(:p_user_id, :out_is_tenant, :out_is_host); END;`;
+              const rolesBinds = {
+                p_user_id: dbUserId,
+                out_is_tenant: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+                out_is_host: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+              } as const;
+
+              const rolesRes: any = await executeQuery(rolesSql, rolesBinds);
+              const isTenant = Number(rolesRes?.outBinds?.out_is_tenant) === 1;
+              const isHost = Number(rolesRes?.outBinds?.out_is_host) === 1;
+
+              (user as any).dbIsTenant = isTenant;
+              (user as any).dbIsHost = isHost;
+              (user as any).dbRoles = [
+                ...(isTenant ? ['tenant'] : []),
+                ...(isHost ? ['host'] : []),
+              ];
+              console.log('👤 Roles asignados:', (user as any).dbRoles);
+            } catch (rolesErr) {
+              console.error('⚠️ No se pudieron obtener los roles del usuario:', rolesErr);
+              // No bloqueamos el login por roles
+            }
             return true;
           } else {
             console.error("❌ El Stored Procedure no devolvió ambos OUT (user e identity).", {
@@ -151,6 +183,17 @@ export const authOptions: NextAuthOptions = {
             "⚠️ No se encontró identityId para actualizar last login."
           );
         }
+
+        // Persistir roles en el token
+        if ((user as any)?.dbRoles) {
+          (token as any).roles = (user as any).dbRoles as string[];
+        }
+        if (typeof (user as any)?.dbIsTenant !== 'undefined') {
+          (token as any).isTenant = (user as any).dbIsTenant as boolean;
+        }
+        if (typeof (user as any)?.dbIsHost !== 'undefined') {
+          (token as any).isHost = (user as any).dbIsHost as boolean;
+        }
       }
       return token;
     },
@@ -162,6 +205,10 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        // Exponer roles a la sesión del cliente
+        (session.user as any).roles = (token as any).roles ?? [];
+        (session.user as any).isTenant = (token as any).isTenant ?? false;
+        (session.user as any).isHost = (token as any).isHost ?? false;
       }
       return session;
     },

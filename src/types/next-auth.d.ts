@@ -1,6 +1,6 @@
-import 'next-auth';
+import "next-auth";
 
-declare module 'next-auth' {
+declare module "next-auth" {
   /**
    * Extends the built-in session types
    */
@@ -10,6 +10,9 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      roles?: string[];
+      isTenant?: boolean;
+      isHost?: boolean;
     };
   }
 
@@ -18,15 +21,27 @@ declare module 'next-auth' {
    */
   interface User {
     id: string;
+    roles?: string[];
+    isTenant?: boolean;
+    isHost?: boolean;
+    dbUserId?: number;
+    dbIdentityId?: number;
+    dbRoles?: string[];
+    dbIsTenant?: boolean;
+    dbIsHost?: boolean;
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   /**
    * Extends the built-in JWT types
    */
   interface JWT {
-    id: string;
+    id: string | number;
+    identityId?: number;
+    roles?: string[];
+    isTenant?: boolean;
+    isHost?: boolean;
     accessToken?: string;
   }
 }
