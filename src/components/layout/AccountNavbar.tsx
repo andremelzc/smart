@@ -87,7 +87,7 @@ export default function AccountNavbar() {
               {/* User Menu Dropdown */}
               {isMenuOpen && (
                 <UserMenu
-                  role={user?.roles?.includes("host") ? "host" : "tenant"}
+                  role={"tenant"}
                   isAuthenticated={isAuthenticated}
                   onLogout={() => authService.signOut()}
                   onClose={() => setIsMenuOpen(false)}

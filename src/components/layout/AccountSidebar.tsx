@@ -63,9 +63,9 @@ export default function AccountSidebar() {
   const allItems = isHost ? [...sidebarItems, ...hostItems] : sidebarItems;
 
   return (
-    <div className="w-72 bg-blue-light-50 border-r border-blue-light-100 min-h-full">
+    <div className="w-72 bg-gray-50 border-r border-gray-200 min-h-full">
       <div className="p-6 lg:p-8">
-        <h3 className="text-xs font-bold text-gray-dark-400 uppercase tracking-wider mb-6">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-6">
           Configuración
         </h3>
         
