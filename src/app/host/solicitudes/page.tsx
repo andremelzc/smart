@@ -118,7 +118,7 @@ export default function HostRequestsPage() {
 
                   <div className="flex items-center gap-3">
                     <Button
-                      variant="secondary"
+                      variant="primary"
                       onClick={() =>
                         setSelectedRequest(isSelected ? null : request)
                       }

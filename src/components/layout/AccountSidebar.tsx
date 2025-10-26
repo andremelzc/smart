@@ -35,6 +35,12 @@ const sidebarItems = [
     description: "Historial de reservas y viajes",
   },
   {
+    name: "Mis reservas",
+    href: "/account/reservas",
+    icon: Calendar,
+    description: "Reservas en curso y próximas",
+  },
+  {
     name: "Notificaciones",
     href: "/account/notifications",
     icon: Bell,
