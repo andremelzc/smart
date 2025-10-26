@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Mail, 
   Phone, 
   CreditCard, 
   Calendar,
   IdCard,
-  Shield
+  Shield,
+  Loader2,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
+import { userService, UserProfileResponse, UserProfile } from "@/src/services/user.service";
 
 type EditingField = 
   | "name" 
@@ -22,47 +26,150 @@ type EditingField =
 export default function PersonalInfoPage() {
   const { user, isAuthenticated } = useAuth();
   const [editingField, setEditingField] = useState<EditingField>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
-  // Datos separados para nombre y apellido
-  const [firstName, setFirstName] = useState("André");
-  const [lastName, setLastName] = useState("Meléndez Cava");
-  
-  const [personalData, setPersonalData] = useState({
-    email: user?.email || "",
-    dni: "",
-    phone: "",
-    birthdate: "",
+  // Datos del perfil
+  const [profileData, setProfileData] = useState<UserProfileResponse>({
+    firstName: null,
+    lastName: null,
+    email: null,
+    phone: null,
+    dni: null,
+    birthDate: null,
+    createdAt: '',
+    updatedAt: ''
   });
 
-  const [tempFirstName, setTempFirstName] = useState(firstName);
-  const [tempLastName, setTempLastName] = useState(lastName);
+  // Datos temporales para edición
+  const [tempFirstName, setTempFirstName] = useState('');
+  const [tempLastName, setTempLastName] = useState('');
   const [tempData, setTempData] = useState<any>({});
 
-  const handleEdit = (field: EditingField) => {
-    setEditingField(field);
-    if (field === "name") {
-      setTempFirstName(firstName);
-      setTempLastName(lastName);
-    } else if (field && field in personalData) {
-      setTempData({ [field]: personalData[field as keyof typeof personalData] });
+  // Cargar datos del perfil al montar el componente
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadProfile();
+    }
+  }, [isAuthenticated]);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await userService.getProfile();
+      setProfileData(data);
+    } catch (error: any) {
+      console.error('Error cargando perfil:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSave = () => {
-    if (editingField === "name") {
-      setFirstName(tempFirstName);
-      setLastName(tempLastName);
-    } else if (editingField && editingField in personalData) {
-      setPersonalData(prev => ({ ...prev, ...tempData }));
+  const handleEdit = (field: EditingField) => {
+    setEditingField(field);
+    setMessage(null);
+    
+    if (field === "name") {
+      setTempFirstName(profileData.firstName || '');
+      setTempLastName(profileData.lastName || '');
+    } else if (field === "birthdate" && profileData.birthDate) {
+      // WORKAROUND: Sumar un día para compensar el problema de timezone al editar
+      const date = new Date(profileData.birthDate);
+      date.setDate(date.getDate() + 1);
+      const adjustedDate = date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      setTempData({ [field]: adjustedDate });
+    } else if (field) {
+      const value = profileData[field as keyof UserProfileResponse];
+      setTempData({ [field]: value || '' });
     }
-    setEditingField(null);
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setMessage(null);
+
+      let updateData: UserProfile = {};
+      let validationError = '';
+
+      if (editingField === "name") {
+        if (!tempFirstName.trim()) {
+          validationError = 'El nombre es requerido';
+        } else {
+          updateData.firstName = tempFirstName.trim();
+          updateData.lastName = tempLastName.trim();
+        }
+      } else if (editingField === "email") {
+        const email = tempData.email?.trim();
+        if (!email) {
+          validationError = 'El email es requerido';
+        } else if (!userService.validateEmail(email)) {
+          validationError = 'El formato del email no es válido';
+        } else {
+          updateData.email = email;
+        }
+      } else if (editingField === "phone") {
+        const phone = tempData.phone?.trim();
+        if (phone && !userService.validatePhone(phone)) {
+          validationError = 'El formato del teléfono no es válido (ej: +51 999 999 999)';
+        } else if (phone) {
+          updateData.phone = phone;
+        }
+      } else if (editingField === "dni") {
+        const dni = tempData.dni?.trim();
+        if (dni && !userService.validateDni(dni)) {
+          validationError = 'El DNI debe tener 8 dígitos';
+        } else if (dni) {
+          updateData.dni = dni;
+        }
+      } else if (editingField === "birthdate") {
+        const birthDate = tempData.birthdate;
+        if (birthDate && !userService.validateBirthDate(birthDate)) {
+          validationError = 'La fecha de nacimiento no es válida';
+        } else if (birthDate) {
+          updateData.birthDate = birthDate;
+        }
+      }
+
+      if (validationError) {
+        setMessage({ type: 'error', text: validationError });
+        return;
+      }
+
+      // Actualizar en la base de datos
+      const response = await userService.updateProfile(updateData);
+      
+      if (response.success) {
+        // Actualizar los datos locales
+        setProfileData(prev => ({
+          ...prev,
+          ...updateData,
+          updatedAt: new Date().toISOString()
+        }));
+        
+        setEditingField(null);
+        setMessage({ type: 'success', text: 'Información actualizada exitosamente' });
+
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => setMessage(null), 3000);
+      }
+
+    } catch (error: any) {
+      console.error('Error guardando:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
     setEditingField(null);
-    setTempFirstName(firstName);
-    setTempLastName(lastName);
+    setTempFirstName('');
+    setTempLastName('');
     setTempData({});
+    setMessage(null);
   };
 
   if (!isAuthenticated) {
@@ -78,6 +185,15 @@ export default function PersonalInfoPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="text-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+        <p className="text-gray-600">Cargando información personal...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl space-y-8">
       {/* Header */}
@@ -89,6 +205,28 @@ export default function PersonalInfoPage() {
           Gestiona tus datos personales y de verificación. Esta información es privada y solo la usamos para verificar tu identidad y facilitar las comunicaciones.
         </p>
       </div>
+
+      {/* Message Alert */}
+      {message && (
+        <div className={`rounded-lg p-4 ${
+          message.type === 'error' 
+            ? 'bg-red-50 border border-red-200' 
+            : 'bg-green-50 border border-green-200'
+        }`}>
+          <div className="flex items-center gap-3">
+            {message.type === 'error' ? (
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            ) : (
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            )}
+            <p className={`font-medium ${
+              message.type === 'error' ? 'text-red-800' : 'text-green-800'
+            }`}>
+              {message.text}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Información privada */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -137,20 +275,28 @@ export default function PersonalInfoPage() {
                     <div className="flex gap-3 pt-2">
                       <button
                         onClick={handleCancel}
-                        className="text-gray-dark-700 font-medium hover:text-gray-dark-900 underline"
+                        disabled={saving}
+                        className="text-gray-dark-700 font-medium hover:text-gray-dark-900 underline disabled:text-gray-400"
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={handleSave}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        disabled={saving}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                       >
-                        Guardar
+                        {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {saving ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-dark-900 font-medium">{firstName} {lastName}</p>
+                  <p className="text-gray-dark-900 font-medium">
+                    {profileData.firstName && profileData.lastName 
+                      ? `${profileData.firstName} ${profileData.lastName}`
+                      : "No proporcionado"
+                    }
+                  </p>
                 )}
               </div>
               {editingField !== "name" && (
@@ -197,13 +343,14 @@ export default function PersonalInfoPage() {
                         onClick={handleSave}
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                       >
-                        Guardar
+                        {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {saving ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
                   </div>
                 ) : (
                   <p className="text-gray-dark-900 font-medium">
-                    {personalData.email || "No proporcionado"}
+                    {profileData.email || "No proporcionado"}
                   </p>
                 )}
               </div>
@@ -212,7 +359,7 @@ export default function PersonalInfoPage() {
                   onClick={() => handleEdit("email")}
                   className="text-blue-600 font-medium hover:text-blue-700 underline ml-4"
                 >
-                  {personalData.email ? "Editar" : "Agregar"}
+                  {profileData.email ? "Editar" : "Agregar"}
                 </button>
               )}
             </div>
@@ -257,7 +404,7 @@ export default function PersonalInfoPage() {
                   </div>
                 ) : (
                   <p className="text-gray-dark-900 font-medium">
-                    {personalData.phone || "No proporcionado"}
+                    {profileData.phone || "No proporcionado"}
                   </p>
                 )}
               </div>
@@ -266,7 +413,7 @@ export default function PersonalInfoPage() {
                   onClick={() => handleEdit("phone")}
                   className="text-blue-600 font-medium hover:text-blue-700 underline ml-4"
                 >
-                  {personalData.phone ? "Editar" : "Agregar"}
+                  {profileData.phone ? "Editar" : "Agregar"}
                 </button>
               )}
             </div>
@@ -311,7 +458,7 @@ export default function PersonalInfoPage() {
                   </div>
                 ) : (
                   <p className="text-gray-dark-900 font-medium">
-                    {personalData.dni || "No proporcionado"}
+                    {profileData.dni || "No proporcionado"}
                   </p>
                 )}
               </div>
@@ -320,7 +467,7 @@ export default function PersonalInfoPage() {
                   onClick={() => handleEdit("dni")}
                   className="text-blue-600 font-medium hover:text-blue-700 underline ml-4"
                 >
-                  {personalData.dni ? "Editar" : "Agregar"}
+                  {profileData.dni ? "Editar" : "Agregar"}
                 </button>
               )}
             </div>
@@ -364,7 +511,19 @@ export default function PersonalInfoPage() {
                   </div>
                 ) : (
                   <p className="text-gray-dark-900 font-medium">
-                    {personalData.birthdate || "No proporcionado"}
+                    {profileData.birthDate ? 
+                      (() => {
+                        // WORKAROUND: Sumar un día para compensar el problema de timezone
+                        const date = new Date(profileData.birthDate);
+                        date.setDate(date.getDate() + 1);
+                        return date.toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        });
+                      })()
+                      : "No proporcionado"
+                    }
                   </p>
                 )}
               </div>
@@ -373,7 +532,7 @@ export default function PersonalInfoPage() {
                   onClick={() => handleEdit("birthdate")}
                   className="text-blue-600 font-medium hover:text-blue-700 underline ml-4"
                 >
-                  {personalData.birthdate ? "Editar" : "Agregar"}
+                  {profileData.birthDate ? "Editar" : "Agregar"}
                 </button>
               )}
             </div>
