@@ -10,16 +10,23 @@ import {
   CreditCard, 
   Settings,
   Heart,
-  Calendar
+  Calendar,
+  IdCard
 } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
 
 const sidebarItems = [
   {
-    name: "Información personal",
+    name: "Mi perfil público",
     href: "/account/profile",
     icon: User,
-    description: "Gestiona tus datos personales",
+    description: "Información que ven otros usuarios",
+  },
+  {
+    name: "Información personal",
+    href: "/account/personal-info",
+    icon: IdCard,
+    description: "Datos privados y verificación",
   },
   {
     name: "Mis viajes",
