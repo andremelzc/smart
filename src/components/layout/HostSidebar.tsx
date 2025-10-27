@@ -1,92 +1,95 @@
 "use client";
-
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
+  User,
+  MapPin,
+  Bell,
+  Shield,
+  CreditCard,
+  Calendar,
   Home,
   Building2,
-  Calendar,
   DollarSign,
   Settings,
   BarChart3,
   MessageSquare,
   Star,
   Users,
-  ChevronRight
+  ChevronRight,
+  FileText,
 } from "lucide-react";
-import { useAuth } from "@/src/hooks/useAuth";
 
-export default function HostSidebar() {
-  const pathname = usePathname();
-  const { user, isAuthenticated } = useAuth();
+const HostSidebar = () => {
+  const [pathname, setPathname] = React.useState("/host/dashboard");
+
+  const user = {
+    name: "María González",
+    email: "maria@ejemplo.com",
+    image: null,
+    roles: ["host"],
+  };
 
   const navigationItems = [
     {
       href: "/host/dashboard",
       label: "Dashboard",
       icon: Home,
-      description: "Resumen general"
+      description: "Resumen general",
     },
     {
-      href: "/host/properties", 
+      href: "/host/properties",
       label: "Propiedades",
       icon: Building2,
-      description: "Gestiona tus alojamientos"
+      description: "Gestiona tus alojamientos",
     },
     {
       href: "/host/bookings",
       label: "Reservas",
       icon: Calendar,
-      description: "Reservas y calendario"
+      description: "Reservas y calendario",
     },
     {
       href: "/host/earnings",
       label: "Ganancias",
       icon: DollarSign,
-      description: "Ingresos y pagos"
+      description: "Ingresos y pagos",
     },
     {
       href: "/host/reviews",
       label: "Reseñas",
       icon: Star,
-      description: "Valoraciones de huéspedes"
+      description: "Valoraciones de huéspedes",
     },
     {
       href: "/host/messages",
       label: "Mensajes",
       icon: MessageSquare,
-      description: "Comunicación con huéspedes"
+      description: "Comunicación con huéspedes",
     },
     {
       href: "/host/analytics",
       label: "Análisis",
       icon: BarChart3,
-      description: "Métricas y estadísticas"
+      description: "Métricas y estadísticas",
     },
     {
       href: "/host/settings",
       label: "Configuración",
       icon: Settings,
-      description: "Ajustes de la cuenta"
-    }
+      description: "Ajustes de la cuenta",
+    },
   ];
 
-  const isActive = (href: string) => {
+  const isActive = (href: string): boolean => {
     if (href === "/host/dashboard") {
       return pathname === "/host" || pathname === "/host/dashboard";
     }
     return pathname.startsWith(href);
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
     <aside className="w-80 bg-white border-r border-gray-200 min-h-screen">
       <div className="p-6">
-        {/* User Info Card */}
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
           <div className="flex items-center gap-4">
             {user?.image ? (
@@ -96,7 +99,7 @@ export default function HostSidebar() {
                 className="w-16 h-16 rounded-full object-cover border-3 border-white shadow-lg"
               />
             ) : (
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center border-3 border-white shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-3 border-white shadow-lg">
                 <span className="text-2xl font-bold text-white">
                   {user?.name?.charAt(0)?.toUpperCase() || "?"}
                 </span>
@@ -128,40 +131,59 @@ export default function HostSidebar() {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="space-y-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
-            
+
             return (
-              <Link
+              <button
                 key={item.href}
-                href={item.href}
+                onClick={() => setPathname(item.href)}
                 className={`
-                  group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200
-                  ${active
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200
+                  ${
+                    active
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }
                 `}
               >
-                <Icon className={`w-5 h-5 ${active ? "text-white" : "text-gray-500 group-hover:text-gray-700"}`} />
-                <div className="flex-1">
-                  <div className={`font-medium ${active ? "text-white" : "text-gray-900"}`}>
+                <Icon
+                  className={`w-5 h-5 ${
+                    active
+                      ? "text-white"
+                      : "text-gray-500 group-hover:text-gray-700"
+                  }`}
+                />
+                <div className="flex-1 text-left">
+                  <div
+                    className={`font-medium ${
+                      active ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {item.label}
                   </div>
-                  <div className={`text-sm ${active ? "text-blue-100" : "text-gray-500"}`}>
+                  <div
+                    className={`text-sm ${
+                      active ? "text-blue-100" : "text-gray-500"
+                    }`}
+                  >
                     {item.description}
                   </div>
                 </div>
-                <ChevronRight className={`w-4 h-4 transition-transform ${active ? "text-white rotate-90" : "text-gray-400 group-hover:translate-x-1"}`} />
-              </Link>
+                <ChevronRight
+                  className={`w-4 h-4 transition-transform ${
+                    active
+                      ? "text-white rotate-90"
+                      : "text-gray-400 group-hover:translate-x-1"
+                  }`}
+                />
+              </button>
             );
           })}
         </nav>
 
-        {/* Quick Stats Card */}
         <div className="mt-8 bg-gray-50 rounded-xl p-4 border border-gray-200">
           <h4 className="font-semibold text-gray-900 mb-3 text-sm">
             Resumen del mes
@@ -184,4 +206,6 @@ export default function HostSidebar() {
       </div>
     </aside>
   );
-}
+};
+
+export default HostSidebar;
