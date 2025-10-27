@@ -18,46 +18,22 @@ import { useAuth } from "@/src/hooks/useAuth";
 
 const navigationItems = [
   {
-    href: "/host/dashboard",
+    href: "/prototipo/tarea-facil/dashboard",
     label: "Dashboard",
     icon: Home,
     description: "Resumen general",
   },
   {
-    href: "/host/properties",
-    label: "Recintos",
+    href: "/prototipo/tarea-facil/recintos",
+    label: "Propiedades",
     icon: Building2,
     description: "Gestiona tus recintos",
   },
   {
-    href: "/host/bookings",
+    href: "/prototipo/tarea-facil/reservas",
     label: "Reservas",
     icon: Calendar,
     description: "Reservas y calendario",
-  },
-  {
-    href: "/host/reviews",
-    label: "Reseñas",
-    icon: Star,
-    description: "Valoraciones de huéspedes",
-  },
-  {
-    href: "/host/messages",
-    label: "Mensajes",
-    icon: MessageSquare,
-    description: "Comunicación con huéspedes",
-  },
-  {
-    href: "/host/analytics",
-    label: "Análisis",
-    icon: BarChart3,
-    description: "Métricas y estadísticas",
-  },
-  {
-    href: "/host/settings",
-    label: "Configuración",
-    icon: Settings,
-    description: "Ajustes de la cuenta",
   },
 ];
 
@@ -66,8 +42,8 @@ export default function HostSidebar() {
   const { user, isAuthenticated } = useAuth();
 
   const isActive = (href: string): boolean => {
-    if (href === "/host/dashboard") {
-      return pathname === "/host" || pathname === "/host/dashboard";
+    if (href === "/prototipo/tarea-facil/dashboard") {
+      return pathname === "/prototipo/tarea-facil" || pathname === "/prototipo/tarea-facil/dashboard";
     }
     return pathname.startsWith(href);
   };
@@ -79,48 +55,6 @@ export default function HostSidebar() {
   return (
     <aside className="w-80 bg-white border-r border-gray-200 min-h-screen">
       <div className="p-6">
-        {/* User Info Card */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
-          <div className="flex items-center gap-4">
-            {user?.image ? (
-              <img
-                src={user.image}
-                alt={user.name || "Usuario"}
-                className="w-16 h-16 rounded-full object-cover border-3 border-white shadow-lg"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-3 border-white shadow-lg">
-                <span className="text-2xl font-bold text-white">
-                  {user?.name?.charAt(0)?.toUpperCase() || "?"}
-                </span>
-              </div>
-            )}
-            <div className="flex-1">
-              <h3 className="font-bold text-gray-900 text-lg">
-                {user?.name || "Usuario"}
-              </h3>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex items-center gap-1">
-                  <Building2 className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700">
-                    Anfitrión
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  <span>245 huéspedes</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span>4.8</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Navigation */}
         <nav className="space-y-2">
           {navigationItems.map((item) => {

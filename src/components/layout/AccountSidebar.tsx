@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   User,
   MapPin,
@@ -7,90 +9,76 @@ import {
   Shield,
   CreditCard,
   Calendar,
-  Home,
   Building2,
-  DollarSign,
-  Settings,
-  BarChart3,
-  MessageSquare,
-  Star,
-  Users,
   ChevronRight,
   FileText,
 } from "lucide-react";
+import { useAuth } from "@/src/hooks/useAuth";
 
-// ============================================
-// ACCOUNT SIDEBAR - Versión Unificada
-// ============================================
+const sidebarItems = [
+  {
+    name: "Mi perfil público",
+    href: "/account/profile",
+    icon: User,
+    description: "Información que ven otros usuarios",
+  },
+  {
+    name: "Información personal",
+    href: "/account/personal-info",
+    icon: FileText,
+    description: "Datos privados y verificación",
+  },
+  {
+    name: "Mis viajes",
+    href: "/account/trips",
+    icon: MapPin,
+    description: "Historial de reservas y viajes",
+  },
+  {
+    name: "Mis reservas",
+    href: "/account/reservas",
+    icon: Calendar,
+    description: "Reservas en curso y próximas",
+  },
+  {
+    name: "Notificaciones",
+    href: "/account/notifications",
+    icon: Bell,
+    description: "Configuración de alertas",
+    disabled: true,
+  },
+  {
+    name: "Privacidad y seguridad",
+    href: "/account/security",
+    icon: Shield,
+    description: "Contraseña y configuración de seguridad",
+    disabled: true,
+  },
+];
 
-const AccountSidebar = () => {
-  const [pathname, setPathname] = React.useState("/account/profile");
+// Items adicionales solo para hosts
+const hostItems = [
+  {
+    name: "Pagos y facturación",
+    href: "/account/billing",
+    icon: CreditCard,
+    description: "Métodos de pago y facturas",
+    disabled: true,
+  },
+];
 
-  const user = {
-    name: "María González",
-    email: "maria@ejemplo.com",
-    image: null,
-    roles: ["host"],
-  };
-
+export default function AccountSidebar() {
+  const pathname = usePathname();
+  const { user } = useAuth();
   const isHost = user?.roles?.includes("host");
 
-  const sidebarItems = [
-    {
-      name: "Mi perfil público",
-      href: "/account/profile",
-      icon: User,
-      description: "Información que ven otros usuarios",
-    },
-    {
-      name: "Información personal",
-      href: "/account/personal-info",
-      icon: FileText,
-      description: "Datos privados y verificación",
-    },
-    {
-      name: "Mis viajes",
-      href: "/account/trips",
-      icon: MapPin,
-      description: "Historial de reservas y viajes",
-    },
-    {
-      name: "Mis reservas",
-      href: "/account/reservas",
-      icon: Calendar,
-      description: "Reservas en curso y próximas",
-    },
-    {
-      name: "Notificaciones",
-      href: "/account/notifications",
-      icon: Bell,
-      description: "Configuración de alertas",
-      disabled: true,
-    },
-    {
-      name: "Privacidad y seguridad",
-      href: "/account/security",
-      icon: Shield,
-      description: "Contraseña y configuración de seguridad",
-      disabled: true,
-    },
-  ];
-
-  const hostItems = [
-    {
-      name: "Pagos y facturación",
-      href: "/account/billing",
-      icon: CreditCard,
-      description: "Métodos de pago y facturas",
-      disabled: true,
-    },
-  ];
-
+  // Combinar items base con items de host si es necesario
   const allItems = isHost ? [...sidebarItems, ...hostItems] : sidebarItems;
 
   return (
     <aside className="w-80 bg-white border-r border-gray-200 min-h-screen">
       <div className="p-6">
+        {/* User Info Card */}
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
           <div className="flex items-center gap-4">
             {user?.image ? (
@@ -104,11 +92,13 @@ const AccountSidebar = () => {
                 <User className="w-8 h-8 text-white" />
               </div>
             )}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className="font-bold text-gray-900 text-lg">
                 {user?.name || "Usuario"}
               </h3>
-              <p className="text-sm text-gray-600 mt-0.5">{user?.email}</p>
+              <p className="text-sm text-gray-600 mt-0.5 truncate" title={user?.email || undefined}>
+                {user?.email}
+              </p>
               {isHost && (
                 <div className="mt-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
@@ -121,6 +111,7 @@ const AccountSidebar = () => {
           </div>
         </div>
 
+        {/* Navigation */}
         <nav className="space-y-2">
           {allItems.map((item) => {
             const Icon = item.icon;
@@ -142,9 +133,9 @@ const AccountSidebar = () => {
             }
 
             return (
-              <button
+              <Link
                 key={item.name}
-                onClick={() => setPathname(item.href)}
+                href={item.href}
                 className={`
                   w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200
                   ${
@@ -184,13 +175,11 @@ const AccountSidebar = () => {
                       : "text-gray-400 group-hover:translate-x-1"
                   }`}
                 />
-              </button>
+              </Link>
             );
           })}
         </nav>
       </div>
     </aside>
   );
-};
-
-export default AccountSidebar;
+}
