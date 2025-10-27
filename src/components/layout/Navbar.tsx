@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, Menu, Home, MapPin, Calendar, Users } from "lucide-react";
+import { Search, Menu, Home, MapPin, Calendar, Users, Bell } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useAuth } from "@/src/hooks/useAuth";
 import UserMenu from "@/src/components/layout/UserMenu";
@@ -13,6 +13,7 @@ export default function Navbar() {
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0); // Para futuro uso
 
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -39,6 +40,11 @@ export default function Navbar() {
 
   const handleMenuToggle = () => {
     setIsMenuOpen((prev) => !prev);
+  };
+
+  const handleNotificationsClick = () => {
+    console.log("Notificaciones clickeadas");
+    // Aquí irá la lógica para mostrar notificaciones
   };
 
   return (
@@ -142,6 +148,21 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Notifications Button */}
+            <button
+              onClick={handleNotificationsClick}
+              className="relative p-3 rounded-full border border-blue-light-200 hover:border-blue-light-300 bg-white shadow-sm hover:shadow-md transition-all"
+              aria-label="Notificaciones"
+            >
+              <Bell className="w-5 h-5 text-gray-dark-600" />
+              {/* Badge para notificaciones no leídas */}
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                </span>
+              )}
+            </button>
+
             {/* Menu Button with Dropdown */}
             <div className="relative" ref={menuRef}>
               <button

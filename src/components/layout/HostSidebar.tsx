@@ -47,18 +47,6 @@ const navigationItems = [
     icon: MessageSquare,
     description: "Comunicación con huéspedes",
   },
-  {
-    href: "/host/analytics",
-    label: "Análisis",
-    icon: BarChart3,
-    description: "Métricas y estadísticas",
-  },
-  {
-    href: "/host/settings",
-    label: "Configuración",
-    icon: Settings,
-    description: "Ajustes de la cuenta",
-  },
 ];
 
 export default function HostSidebar() {
@@ -77,10 +65,11 @@ export default function HostSidebar() {
   }
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 min-h-screen">
-      <div className="p-6">
-        {/* User Info Card */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
+    <aside className="w-80 bg-white border-r border-gray-200 h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          {/* User Info Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
           <div className="flex items-center gap-4">
             {user?.image ? (
               <img
@@ -174,6 +163,7 @@ export default function HostSidebar() {
             );
           })}
         </nav>
+        </div>
       </div>
     </aside>
   );

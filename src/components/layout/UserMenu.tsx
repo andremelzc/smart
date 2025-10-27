@@ -47,11 +47,14 @@ export default function UserMenu({
   };
 
   return (
-    // El contenedor posicionado (se alinea con el 'relative' del Navbar)
+    // El contenedor posicionado con animación
     <div
-      className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg ring-1 ring-black/5 py-2 z-50"
+      className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg ring-1 ring-black/5 py-2 z-50 animate-fadeInDown origin-top-right"
       role="menu"
       aria-label={isAuthenticated ? "Menú de usuario" : "Menú de invitado"}
+      style={{
+        animation: "fadeInDown 0.2s ease-out forwards"
+      }}
     >
       {isAuthenticated ? (
         role === "tenant" ? (
@@ -231,6 +234,19 @@ export default function UserMenu({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+
+      <style jsx>{`
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
