@@ -37,7 +37,7 @@ export default function AccountNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Navbar */}
         <div className="flex items-center justify-between py-5 lg:py-6">
-          {/* Left Side - Logo + Account Title */}
+          {/* Left Side - Logo */}
           <div className="flex items-center gap-6 lg:gap-8">
             {/* Logo */}
             <Link
@@ -51,12 +51,10 @@ export default function AccountNavbar() {
                 smart
               </h1>
             </Link>
-
           </div>
 
           {/* Right Side */}
           <div className="flex items-center gap-3 flex-shrink-0">
-
             {/* Back Button - Mobile */}
             <Link href="/" className="md:hidden">
               <button
