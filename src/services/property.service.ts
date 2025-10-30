@@ -16,7 +16,7 @@ export class PropertyService {
 
     try {
       // Obtener conexión del pool
-      const pool = await oracledb.getPool();
+      const pool = oracledb.getPool();
       connection = await pool.getConnection();
 
       // Preparar los parámetros para el SP
