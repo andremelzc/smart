@@ -34,3 +34,17 @@ export interface PropertyErrorResponse {
   details?: string;
 }
 
+// Tipo para los filtros de búsqueda de propiedades
+export interface PropertyFilterDto {
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  rooms?: number;
+  beds?: number;
+  baths?: number;
+  latMin?: number;
+  latMax?: number;
+  lngMin?: number;
+  lngMax?: number;
+  amenities?: number[];
+}

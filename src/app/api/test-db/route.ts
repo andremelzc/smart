@@ -7,7 +7,6 @@ export async function GET() {
 
     const ping = await executeQuery("SELECT 1 AS OK FROM DUAL");
 
-
     return NextResponse.json({
       success: true,
       message: "Conexión a Oracle exitosa",
@@ -21,6 +20,7 @@ export async function GET() {
           port: process.env.DB_PORT,
           sid: process.env.DB_SID,
           username: process.env.DB_USERNAME,
+          password: process.env.DB_PASSWORD ? "********" : "(vacío)"
         },
       },
     });
@@ -30,11 +30,15 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        message: error.message,
         errorType: error.constructor.name,
-        ...(process.env.NODE_ENV === "development" && {
-          stack: error.stack,
-        }),
+        env: {
+          DB_USERNAME: process.env.DB_USERNAME,
+          DB_PASSWORD: process.env.DB_PASSWORD ? "********" : "(vacío)",
+          DB_HOST: process.env.DB_HOST,
+          DB_PORT: process.env.DB_PORT,
+          DB_SID: process.env.DB_SID
+        }
       },
       { status: 500 }
     );

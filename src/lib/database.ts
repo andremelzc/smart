@@ -22,6 +22,12 @@ async function getPool(): Promise<oracledb.Pool> {
   return pool;
 }
 
+export async function getConnection(): Promise<oracledb.Connection> {
+  const poolInstance = await getPool();
+  const connection = await poolInstance.getConnection();
+  return connection;
+}
+
 export async function executeQuery(sql: string, binds: any = {}) {
   let connection: oracledb.Connection | undefined;
   
