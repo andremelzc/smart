@@ -24,7 +24,7 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-dark-800">
+        <h1 className="text-3xl font-bold text-blue-light-800">
           ¿Qué tipo de recinto vas a publicar?
         </h1>
         <p className="mt-2 text-lg text-gray-dark-500">
@@ -34,9 +34,9 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {PROPERTY_TYPES.map((prop) => {
           const isSelected = data.propertyType === prop.id;
-          const baseStyle = 'rounded-2xl p-6 cursor-pointer transition-all flex flex-col gap-3 text-left';
-          const unselectedStyle = 'bg-blue-light-50 text-blue-light-700 border border-blue-light-200 hover:border-blue-light-300 hover:bg-blue-light-100';
-          const selectedStyle = 'bg-blue-vivid-500 text-white shadow-lg border border-blue-vivid-500';
+          const baseStyle = 'rounded-2xl p-6 cursor-pointer transition-all flex flex-col gap-3 text-center items-center';
+          const unselectedStyle = 'bg-blue-light-50 text-blue-light-700 border-2 border-blue-light-300 hover:border-blue-light-500 hover:bg-blue-light-100';
+          const selectedStyle = 'bg-blue-vivid-600 text-white shadow-lg border border-blue-vivid-500';
           return (
             <button
               type="button"
