@@ -19,7 +19,11 @@ export const PropertyReviews = ({ reviews }: PropertyReviewsProps) => {
   const totalCount = typeof reviews.totalCount === 'number' ? reviews.totalCount : 0;
   const averageRating = typeof reviews.averageRating === 'number' ? reviews.averageRating : 0;
 
-  if (totalCount === 0) {
+  // Verificar si realmente hay reseñas en la lista (más confiable que totalCount)
+  const actualReviews = Array.isArray(reviews.reviewsList) ? reviews.reviewsList : [];
+  const hasReviews = actualReviews.length > 0;
+
+  if (!hasReviews) {
     return (
       <div>
         <div className="flex items-center gap-2 mb-6">
@@ -33,19 +37,23 @@ export const PropertyReviews = ({ reviews }: PropertyReviewsProps) => {
     );
   }
 
+  // Calcular el rating promedio real si los datos del backend están inconsistentes
+  const realAverageRating = averageRating > 0 ? averageRating : 
+    actualReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / actualReviews.length;
+  const realTotalCount = Math.max(totalCount, actualReviews.length);
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
         <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
         <h3 className="text-xl font-semibold">
-          {averageRating.toFixed(1)} · {totalCount} reseñas
+          {realAverageRating.toFixed(1)} · {realTotalCount} reseña{realTotalCount !== 1 ? 's' : ''}
         </h3>
       </div>
       
       <div className="space-y-6">
-        {Array.isArray(reviews.reviewsList) &&
-          reviews.reviewsList
-            .slice(0, showAllReviews ? reviews.reviewsList.length : 3)
+        {actualReviews
+            .slice(0, showAllReviews ? actualReviews.length : 3)
             .map((review, index) => {
               // Validaciones seguras para cada review
               const authorName = typeof review?.authorName === 'string' ? review.authorName : 'Usuario';
@@ -98,14 +106,14 @@ export const PropertyReviews = ({ reviews }: PropertyReviewsProps) => {
               );
             })}
         
-        {Array.isArray(reviews.reviewsList) && reviews.reviewsList.length > 3 && (
+        {actualReviews.length > 3 && (
           <button
             onClick={() => setShowAllReviews(!showAllReviews)}
             className="text-blue-light-500 font-medium hover:underline"
           >
             {showAllReviews 
               ? 'Mostrar menos reseñas' 
-              : `Mostrar las ${totalCount} reseñas`
+              : `Mostrar las ${actualReviews.length} reseñas`
             }
           </button>
         )}
