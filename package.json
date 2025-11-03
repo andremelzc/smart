@@ -14,11 +14,14 @@
     "next-auth": "^4.24.11",
     "oracledb": "^6.10.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.13",
     "@types/node": "^20",
     "@types/oracledb": "^6.10.0",
     "@types/react": "^19",

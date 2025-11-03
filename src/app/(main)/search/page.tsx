@@ -1,11 +1,12 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePropertySearch } from '@/src/hooks/usePropertySearch';
 import type { PropertyFilterDto } from '@/src/types/dtos/properties.dto';
 import { useSearchParams } from 'next/navigation';
 import { PropertySearchCard } from '@/src/components/features/properties/PropertySearchCard';
+import { PropertySearchMap, type MapBounds } from '@/src/components/features/properties/PropertySearchMap';
 
 const AMENITY_OPTIONS = [
   { id: 53, label: 'Wi-Fi' },
@@ -14,6 +15,8 @@ const AMENITY_OPTIONS = [
   { id: 56, label: 'Desayuno' },
   { id: 57, label: 'Aire acondicionado' },
 ];
+
+const BOUNDS_TOLERANCE = 1e-5;
 
 type FilterFormState = {
   city: string;
@@ -25,10 +28,6 @@ type FilterFormState = {
   rooms: string;
   beds: string;
   baths: string;
-  latMin: string;
-  latMax: string;
-  lngMin: string;
-  lngMax: string;
 };
 
 const EMPTY_FORM: FilterFormState = {
@@ -41,10 +40,53 @@ const EMPTY_FORM: FilterFormState = {
   rooms: '',
   beds: '',
   baths: '',
-  latMin: '',
-  latMax: '',
-  lngMin: '',
-  lngMax: '',
+};
+
+const parseNumericString = (value: string | null | undefined): number | undefined => {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const buildFilters = (
+  values: FilterFormState,
+  amenities: number[],
+  bounds: MapBounds | null,
+): PropertyFilterDto => {
+  const base: PropertyFilterDto = {
+    city: values.city || undefined,
+    startDate: values.startDate || undefined,
+    endDate: values.endDate || undefined,
+    capacityTotal: parseNumericString(values.capacityTotal),
+    minPrice: parseNumericString(values.minPrice),
+    maxPrice: parseNumericString(values.maxPrice),
+    rooms: parseNumericString(values.rooms),
+    beds: parseNumericString(values.beds),
+    baths: parseNumericString(values.baths),
+  };
+
+  if (amenities.length > 0) {
+    base.amenities = [...amenities];
+  }
+
+  if (bounds) {
+    base.latMin = bounds.latMin;
+    base.latMax = bounds.latMax;
+    base.lngMin = bounds.lngMin;
+    base.lngMax = bounds.lngMax;
+  }
+
+  return base;
+};
+
+const areBoundsEqual = (a: MapBounds | null, b: MapBounds | null) => {
+  if (!a || !b) return false;
+  return (
+    Math.abs(a.latMin - b.latMin) < BOUNDS_TOLERANCE &&
+    Math.abs(a.latMax - b.latMax) < BOUNDS_TOLERANCE &&
+    Math.abs(a.lngMin - b.lngMin) < BOUNDS_TOLERANCE &&
+    Math.abs(a.lngMax - b.lngMax) < BOUNDS_TOLERANCE
+  );
 };
 
 export default function PropertySearchPage() {
@@ -53,6 +95,7 @@ export default function PropertySearchPage() {
   const [formValues, setFormValues] = useState<FilterFormState>({ ...EMPTY_FORM });
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
   const [appliedFilters, setAppliedFilters] = useState<PropertyFilterDto | null>(null);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParamsKey = searchParams.toString();
@@ -60,6 +103,7 @@ export default function PropertySearchPage() {
     if (!searchParamsKey) {
       setFormValues({ ...EMPTY_FORM });
       setSelectedAmenities([]);
+      setMapBounds(null);
       setAppliedFilters(null);
       setError(null);
       return;
@@ -77,10 +121,6 @@ export default function PropertySearchPage() {
       rooms: params.get('rooms') ?? '',
       beds: params.get('beds') ?? '',
       baths: params.get('baths') ?? '',
-      latMin: params.get('latMin') ?? '',
-      latMax: params.get('latMax') ?? '',
-      lngMin: params.get('lngMin') ?? '',
-      lngMax: params.get('lngMax') ?? '',
     };
 
     setFormValues(nextForm);
@@ -100,25 +140,22 @@ export default function PropertySearchPage() {
     setSelectedAmenities(parsedAmenityIds);
     setError(null);
 
-    const initialFilters: PropertyFilterDto = {
-      city: nextForm.city || undefined,
-      startDate: nextForm.startDate || undefined,
-      endDate: nextForm.endDate || undefined,
-      capacityTotal: numericOrUndefined(nextForm.capacityTotal),
-      minPrice: numericOrUndefined(nextForm.minPrice),
-      maxPrice: numericOrUndefined(nextForm.maxPrice),
-      rooms: numericOrUndefined(nextForm.rooms),
-      beds: numericOrUndefined(nextForm.beds),
-      baths: numericOrUndefined(nextForm.baths),
-      latMin: numericOrUndefined(nextForm.latMin),
-      latMax: numericOrUndefined(nextForm.latMax),
-      lngMin: numericOrUndefined(nextForm.lngMin),
-      lngMax: numericOrUndefined(nextForm.lngMax),
-    };
+    const latMin = parseNumericString(params.get('latMin'));
+    const latMax = parseNumericString(params.get('latMax'));
+    const lngMin = parseNumericString(params.get('lngMin'));
+    const lngMax = parseNumericString(params.get('lngMax'));
 
-    if (parsedAmenityIds.length > 0) {
-      initialFilters.amenities = parsedAmenityIds;
-    }
+    const initialBounds =
+      typeof latMin === 'number' &&
+      typeof latMax === 'number' &&
+      typeof lngMin === 'number' &&
+      typeof lngMax === 'number'
+        ? { latMin, latMax, lngMin, lngMax }
+        : null;
+
+    setMapBounds(initialBounds);
+
+    const initialFilters = buildFilters(nextForm, parsedAmenityIds, initialBounds);
 
     search(initialFilters)
       .then(() => {
@@ -178,12 +215,6 @@ export default function PropertySearchPage() {
     );
   };
 
-  const numericOrUndefined = (value: string): number | undefined => {
-    if (!value) return undefined;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  };
-
   const nightsCount = useMemo(() => {
     if (!appliedFilters?.startDate || !appliedFilters?.endDate) {
       return null;
@@ -202,41 +233,46 @@ export default function PropertySearchPage() {
     return nights > 0 ? nights : null;
   }, [appliedFilters?.startDate, appliedFilters?.endDate]);
 
-  const filters: PropertyFilterDto = useMemo(() => {
-    const base: PropertyFilterDto = {
-      city: formValues.city || undefined,
-      startDate: formValues.startDate || undefined,
-      endDate: formValues.endDate || undefined,
-      capacityTotal: numericOrUndefined(formValues.capacityTotal),
-      minPrice: numericOrUndefined(formValues.minPrice),
-      maxPrice: numericOrUndefined(formValues.maxPrice),
-      rooms: numericOrUndefined(formValues.rooms),
-      beds: numericOrUndefined(formValues.beds),
-      baths: numericOrUndefined(formValues.baths),
-      latMin: numericOrUndefined(formValues.latMin),
-      latMax: numericOrUndefined(formValues.latMax),
-      lngMin: numericOrUndefined(formValues.lngMin),
-      lngMax: numericOrUndefined(formValues.lngMax),
-    };
-
-    if (selectedAmenities.length > 0) {
-      base.amenities = selectedAmenities;
-    }
-
-    return base;
-  }, [formValues, selectedAmenities]);
-
   const closeFilters = () => setShowFilters(false);
+
+  const handleMapBoundsChange = useCallback(
+    async (nextBounds: MapBounds) => {
+      if (areBoundsEqual(mapBounds, nextBounds)) {
+        return;
+      }
+
+      setMapBounds(nextBounds);
+      setError(null);
+
+      const nextFilters = buildFilters(formValues, selectedAmenities, nextBounds);
+
+      try {
+        await search(nextFilters);
+        setAppliedFilters({
+          ...nextFilters,
+          amenities: nextFilters.amenities ? [...nextFilters.amenities] : undefined,
+        });
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('No se pudo realizar la búsqueda.');
+        }
+      }
+    },
+    [formValues, mapBounds, search, selectedAmenities],
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
+    const requestFilters = buildFilters(formValues, selectedAmenities, mapBounds);
     try {
-      await search(filters);
+      await search(requestFilters);
       setAppliedFilters({
-        ...filters,
-        amenities: filters.amenities ? [...filters.amenities] : undefined,
+        ...requestFilters,
+        amenities: requestFilters.amenities ? [...requestFilters.amenities] : undefined,
       });
       closeFilters();
     } catch (err) {
@@ -251,6 +287,7 @@ export default function PropertySearchPage() {
   const handleReset = () => {
     setFormValues({ ...EMPTY_FORM });
     setSelectedAmenities([]);
+    setMapBounds(null);
     setAppliedFilters(null);
     setError(null);
   };
@@ -388,50 +425,6 @@ export default function PropertySearchPage() {
                   className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
                 />
               </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Latitud mínima
-                <input
-                  name="latMin"
-                  value={formValues.latMin}
-                  onChange={handleInputChange}
-                  placeholder="-12.34"
-                  inputMode="decimal"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Latitud máxima
-                <input
-                  name="latMax"
-                  value={formValues.latMax}
-                  onChange={handleInputChange}
-                  placeholder="-11.90"
-                  inputMode="decimal"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Longitud mínima
-                <input
-                  name="lngMin"
-                  value={formValues.lngMin}
-                  onChange={handleInputChange}
-                  placeholder="-77.20"
-                  inputMode="decimal"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Longitud máxima
-                <input
-                  name="lngMax"
-                  value={formValues.lngMax}
-                  onChange={handleInputChange}
-                  placeholder="-76.90"
-                  inputMode="decimal"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
             </div>
 
             <section className="space-y-3">
@@ -500,26 +493,37 @@ export default function PropertySearchPage() {
           </p>
         )}
 
-        {!loading && results.length === 0 && !error && (
-          <p className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-6 text-center text-gray-dark-500">
-            Usa los filtros para iniciar una búsqueda.
-          </p>
-        )}
-
-        {results.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {results.map((item, index) => (
-              <PropertySearchCard
-                key={index}
-                data={item}
-                index={index}
-                startDate={appliedFilters?.startDate}
-                endDate={appliedFilters?.endDate}
-                nights={nightsCount ?? undefined}
-              />
-            ))}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)] lg:items-start">
+          <div className="space-y-4">
+            {!loading && results.length === 0 && !error ? (
+              <p className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-6 text-center text-gray-dark-500">
+                Usa los filtros para iniciar una búsqueda.
+              </p>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {results.map((item, index) => (
+                  <PropertySearchCard
+                    key={index}
+                    data={item}
+                    index={index}
+                    startDate={appliedFilters?.startDate}
+                    endDate={appliedFilters?.endDate}
+                    nights={nightsCount ?? undefined}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          <div className="h-[320px] w-full lg:sticky lg:top-28 lg:h-[70vh]">
+            <PropertySearchMap
+              items={results}
+              bounds={mapBounds}
+              loading={loading}
+              onBoundsChange={handleMapBoundsChange}
+            />
+          </div>
+        </div>
       </section>
     </div>
   );
