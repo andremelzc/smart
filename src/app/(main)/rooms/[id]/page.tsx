@@ -23,7 +23,10 @@ import {
   Home,
   Waves,
   Dumbbell,
-  ParkingCircle
+  CreditCard,
+  Lock,
+  CheckCircle,
+  X
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -58,11 +61,26 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   // Estados para funcionalidades
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Reset image index when property changes
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [property?.propertyId]);
+
+  useEffect(() => {
+    if (!showCheckout && !showSuccess) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [showCheckout, showSuccess]);
 
   if (isLoading) {
     return (
@@ -110,35 +128,108 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     );
   }
 
-  const nextImage = () => {
+  const nightsCount = getNightCount();
+  const totalPrice = calculateTotalPrice();
+  const serviceFee = Math.round(totalPrice * 0.14);
+  const grandTotal = totalPrice + serviceFee;
+
+  const currencyCode = typeof property.currencyCode === 'string' && property.currencyCode.trim().length > 0
+    ? property.currencyCode.toUpperCase()
+    : 'USD';
+  const currencyPrefix = currencyCode === 'PEN' ? 'S/' : currencyCode === 'USD' ? '$' : `${currencyCode} `;
+  const formatCurrencyValue = (value: number) => `${currencyPrefix}${value.toLocaleString('es-PE')}`;
+
+  const formatDateLabel = (value: string) => {
+    try {
+      return new Intl.DateTimeFormat('es-PE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(new Date(value));
+    } catch {
+      return value;
+    }
+  };
+
+  const maxGuests = typeof property.capacity === 'number' && property.capacity > 0 ? property.capacity : 1;
+  const guestsCount = Math.min(selectedDates.guests, maxGuests);
+  const checkInLabel = selectedDates.checkIn ? formatDateLabel(selectedDates.checkIn) : '';
+  const checkOutLabel = selectedDates.checkOut ? formatDateLabel(selectedDates.checkOut) : '';
+  const guestsLabel = `${guestsCount} huésped${guestsCount !== 1 ? 'es' : ''}`;
+  const summaryImage = property.images && property.images.length > 0
+    ? property.images[currentImageIndex] || property.images[0]
+    : undefined;
+  const ratingLabel = typeof property.reviews.averageRating === 'number'
+    ? property.reviews.averageRating.toFixed(1)
+    : '0.0';
+
+  function nextImage() {
     if (property?.images && property.images.length > 0) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === property.images.length - 1 ? 0 : prev + 1
       );
     }
-  };
+  }
 
-  const prevImage = () => {
+  function prevImage() {
     if (property?.images && property.images.length > 0) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === 0 ? property.images.length - 1 : prev - 1
       );
     }
-  };
+  }
 
-  const calculateTotalPrice = () => {
+  function getNightCount() {
     const { checkIn, checkOut } = selectedDates;
     if (!checkIn || !checkOut) return 0;
-    
+
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const diff = end.getTime() - start.getTime();
+
+    if (!Number.isFinite(diff) || diff <= 0) {
+      return 0;
+    }
+
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  function calculateTotalPrice() {
+    if (typeof property?.basePriceNight !== 'number') {
+      return 0;
+    }
+
+    const nights = getNightCount();
     return nights > 0 ? nights * property.basePriceNight : 0;
+  }
+
+  const handleReserve = () => {
+    if (!selectedDates.checkIn || !selectedDates.checkOut) {
+      return;
+    }
+    if (getNightCount() <= 0) {
+      return;
+    }
+    setShowCheckout(true);
+    setShowSuccess(false);
+  };
+
+  const handleCloseCheckout = () => {
+    setShowCheckout(false);
+  };
+
+  const handlePay = () => {
+    setShowCheckout(false);
+    setShowSuccess(true);
+  };
+
+  const handleCloseSuccess = () => {
+    setShowSuccess(false);
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -365,10 +456,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="text-2xl font-bold">
-                      ${typeof property.basePriceNight === 'number' ? property.basePriceNight : 0}
-                    </span>
-                    <span className="text-gray-600">
-                      {typeof property.currencyCode === 'string' ? property.currencyCode : 'USD'}
+                      {formatCurrencyValue(typeof property.basePriceNight === 'number' ? property.basePriceNight : 0)}
                     </span>
                     <span className="text-gray-600">/ noche</span>
                   </div>
@@ -423,26 +511,30 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                       HUÉSPEDES
                     </label>
                     <select
-                      value={selectedDates.guests}
-                      onChange={(e) => setSelectedDates(prev => ({ ...prev, guests: parseInt(e.target.value) }))}
+                      value={guestsCount}
+                      onChange={(e) => {
+                        const nextValue = Math.min(parseInt(e.target.value, 10) || 1, maxGuests);
+                        setSelectedDates((prev) => ({ ...prev, guests: nextValue }));
+                      }}
                       className="w-full text-sm border-none outline-none bg-transparent"
                     >
-                      {[...Array(property.capacity)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>
-                          {i + 1} huésped{i + 1 > 1 ? 'es' : ''}
+                      {Array.from({ length: maxGuests }, (_, index) => index + 1).map((value) => (
+                        <option key={value} value={value}>
+                          {value} huésped{value !== 1 ? 'es' : ''}
                         </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                <Button 
-                  className="w-full mb-4" 
+                <Button
+                  className="w-full mb-4"
                   size="lg"
                   disabled={!selectedDates.checkIn || !selectedDates.checkOut}
+                  onClick={handleReserve}
                 >
-                  {selectedDates.checkIn && selectedDates.checkOut 
-                    ? 'Reservar' 
+                  {selectedDates.checkIn && selectedDates.checkOut
+                    ? 'Reservar'
                     : 'Selecciona fechas'
                   }
                 </Button>
@@ -451,21 +543,21 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                   No se realizará ningún cargo todavía
                 </p>
 
-                {selectedDates.checkIn && selectedDates.checkOut && (
+                {selectedDates.checkIn && selectedDates.checkOut && nightsCount > 0 && (
                   <div className="space-y-3 pt-4 border-t border-gray-200">
                     <div className="flex justify-between">
                       <span className="text-gray-600">
-                        ${property.basePriceNight} x {Math.ceil((new Date(selectedDates.checkOut).getTime() - new Date(selectedDates.checkIn).getTime()) / (1000 * 60 * 60 * 24))} noches
+                        {formatCurrencyValue(typeof property.basePriceNight === 'number' ? property.basePriceNight : 0)} x {nightsCount} noche{nightsCount > 1 ? 's' : ''}
                       </span>
-                      <span>${calculateTotalPrice()}</span>
+                      <span>{formatCurrencyValue(totalPrice)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tarifa de servicio</span>
-                      <span>${Math.round(calculateTotalPrice() * 0.14)}</span>
+                      <span>{formatCurrencyValue(serviceFee)}</span>
                     </div>
                     <div className="flex justify-between font-medium pt-3 border-t border-gray-200">
                       <span>Total</span>
-                      <span>${calculateTotalPrice() + Math.round(calculateTotalPrice() * 0.14)}</span>
+                      <span>{formatCurrencyValue(grandTotal)}</span>
                     </div>
                   </div>
                 )}
@@ -475,5 +567,162 @@ export default function PropertyPage({ params }: PropertyPageProps) {
         </div>
       </div>
     </div>
+
+      {showCheckout && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 px-4">
+          <div className="relative w-full max-w-5xl overflow-hidden rounded-[32px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={handleCloseCheckout}
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:bg-gray-100"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 gap-0 lg:grid-cols-2">
+              <section className="flex flex-col gap-6 bg-blue-light-50 p-8">
+                <header className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-blue-light-600">Resumen de tu reserva</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Confirma los detalles</h2>
+                </header>
+
+                <div className="flex items-start gap-4 rounded-2xl bg-white p-4 shadow-sm">
+                  {summaryImage?.url ? (
+                    <img
+                      src={summaryImage.url}
+                      alt={summaryImage.alt || property.title || 'Propiedad'}
+                      className="h-20 w-20 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-light-100 text-lg font-semibold text-blue-light-600">
+                      <Home className="h-6 w-6" />
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-lg font-semibold text-gray-900">{property.title || 'Propiedad'}</h3>
+                    <p className="text-sm text-gray-600">
+                      {property.city}, {property.stateRegion}, {property.country}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-700">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">{ratingLabel}</span>
+                      <span>({property.reviews.totalCount || 0} reseñas)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm text-sm text-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">Fechas</span>
+                    <span>{checkInLabel} – {checkOutLabel}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">Huéspedes</span>
+                    <span>{guestsLabel}</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-3">
+                    <div className="flex items-center justify-between text-gray-600">
+                      <span>Precio base ({nightsCount} noche{nightsCount > 1 ? 's' : ''})</span>
+                      <span className="font-medium text-gray-900">{formatCurrencyValue(totalPrice)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-gray-600">
+                      <span>Tarifa de servicio</span>
+                      <span className="font-medium text-gray-900">{formatCurrencyValue(serviceFee)}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 text-base font-semibold text-gray-900">
+                      <span>Total a pagar</span>
+                      <span>{formatCurrencyValue(grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="flex flex-col gap-6 p-8">
+                <header className="space-y-2">
+                  <div className="flex items-center gap-2 text-blue-light-600">
+                    <CreditCard className="h-5 w-5" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Simulación de pago</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Introduce los datos</h2>
+                  <p className="text-sm text-gray-600">Esta es una vista previa visual de la pasarela de pago.</p>
+                </header>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">Nombre en la tarjeta</label>
+                    <input
+                      type="text"
+                      placeholder="Juan Pérez"
+                      className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">Número de tarjeta</label>
+                    <input
+                      type="text"
+                      placeholder="1234 5678 9012 3456"
+                      className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Fecha de expiración</label>
+                      <input
+                        type="text"
+                        placeholder="MM/AA"
+                        className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">CVV</label>
+                      <input
+                        type="text"
+                        placeholder="123"
+                        className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">Correo de confirmación</label>
+                    <input
+                      type="email"
+                      placeholder="correo@ejemplo.com"
+                      className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Button type="button" className="w-full" size="lg" onClick={handlePay}>
+                    {`Pagar${grandTotal > 0 ? ` ${formatCurrencyValue(grandTotal)}` : ''}`}
+                  </Button>
+                  <p className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                    <Lock className="h-4 w-4" />
+                    Tus datos están protegidos con cifrado SSL.
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSuccess && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-gray-900/70 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-10 text-center shadow-2xl">
+            <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-500" />
+            <h2 className="mb-2 text-2xl font-bold text-gray-900">Reserva exitosa</h2>
+            <p className="mb-6 text-sm text-gray-600">
+              Tu reserva ha sido confirmada correctamente. Recibirás un correo con los detalles.
+            </p>
+            <Button className="w-full" size="lg" onClick={handleCloseSuccess}>
+              Entendido
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
