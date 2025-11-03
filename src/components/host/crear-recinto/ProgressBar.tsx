@@ -32,15 +32,10 @@ interface ProgressBarProps {
 
 export function ProgressBar({ steps, currentStep, onStepClick, isClickable }: ProgressBarProps) {
   return (
-    // Fondo blanco que se pega arriba
     <div className="sticky top-0 bg-white shadow-md z-10 py-4 px-8">
       
-      {/* --- (NUEVO CONTENEDOR) --- */}
-      {/* Este div centra el contenido y le da el ancho MÁXIMO 
-          que coincide con el 'page.tsx' */}
       <div className="max-w-5xl mx-auto">
         
-        {/* Contenedor de los pasos (alineado al inicio) */}
         <div className="flex items-start justify-between">
           {steps.map((label, index) => {
             const stepNumber = index + 1;
@@ -49,14 +44,14 @@ export function ProgressBar({ steps, currentStep, onStepClick, isClickable }: Pr
 
             // Clases de estado (color)
             const baseClasses = "transition-colors duration-200";
-            let stateClasses = "text-gray-400"; // Futuro
-            if (isActive) stateClasses = "text-blue-vivid-500 font-bold";
-            if (isCompleted) stateClasses = "text-gray-700";
+            let stateClasses = "text-gray-400"; 
+            if (isActive) stateClasses = "text-blue-vivid-700 font-bold";
+            if (isCompleted) stateClasses = "text-gray-800";
             
             // Clases de cursor
             let cursorClass = "cursor-default";
             if (isClickable && (isCompleted || isActive)) {
-               cursorClass = "cursor-pointer hover:text-blue-vivid-600";
+               cursorClass = "cursor-pointer hover:text-blue-vivid-700";
             }
 
             return (
@@ -65,20 +60,17 @@ export function ProgressBar({ steps, currentStep, onStepClick, isClickable }: Pr
                 className={`flex flex-col items-center px-2 ${cursorClass}`}
                 onClick={() => (isClickable && (isCompleted || isActive)) ? onStepClick(stepNumber) : null}
               >
-                {/* 1. ETIQUETA DE TEXTO (más pequeña) */}
-                <span className={`${baseClasses} ${stateClasses} whitespace-nowrap text-xs font-medium`}>
+                <span className={`${baseClasses} ${stateClasses} whitespace-nowrap text-xs font-bold`}>
                   {label}
                 </span>
                 
-                {/* 2. ICONO (¡NUEVO!) */}
                 <div className={`my-2 ${baseClasses} ${stateClasses}`}>
                   {iconMap[label] || <Home className="w-6 h-6" />}
                 </div>
 
-                {/* 3. PUNTO INDICADOR (Color 'vivid') */}
                 <div 
                   className={`w-3 h-3 rounded-full ${
-                    isActive || isCompleted ? 'bg-blue-vivid-500' : 'bg-gray-200'
+                    isActive || isCompleted ? 'bg-blue-vivid-600' : 'bg-gray-200'
                   }`}
                 ></div>
               </div>
@@ -86,7 +78,6 @@ export function ProgressBar({ steps, currentStep, onStepClick, isClickable }: Pr
           })}
         </div>
         
-        {/* --- (LÍNEA DE PROGRESO CON GRADIENTE) --- */}
         <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
           <div 
             className="bg-gradient-to-r from-blue-vivid-500 to-blue-vivid-600 h-1 rounded-full transition-all duration-300" 
