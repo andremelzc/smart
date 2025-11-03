@@ -2,6 +2,7 @@
 
 import { Heart, Star } from 'lucide-react';
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
 type PropertySearchCardProps = {
   data: Record<string, unknown>;
@@ -94,6 +95,8 @@ export function PropertySearchCard({
   endDate,
   nights,
 }: PropertySearchCardProps) {
+  const router = useRouter();
+  
   const normalized = useMemo(() => {
     const map = new Map<string, unknown>();
     Object.entries(data ?? {}).forEach(([key, value]) => {
@@ -155,6 +158,7 @@ export function PropertySearchCard({
   };
 
   const imageUrl = getString('cover_image', 'image_url', 'main_image', 'photo_url', 'photo', 'thumbnail');
+  const propertyId = getNumber('property_id', 'id', 'propertyid', 'prop_id');
   const propertyName =
     getString('property_name', 'title', 'property_title', 'nombre', 'name', 'headline') ??
     'Propiedad destacada';
@@ -212,8 +216,22 @@ export function PropertySearchCard({
     return parts.join(' · ');
   })();
 
+  const handleCardClick = () => {
+    if (propertyId) {
+      router.push(`/rooms/${propertyId}`);
+    }
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita que se dispare el click del card
+    // Aquí puedes agregar la lógica para favoritos
+  };
+
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-[28px] border border-blue-light-150 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+    <article 
+      className="flex h-full flex-col overflow-hidden rounded-[28px] border border-blue-light-150 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={propertyName} className="h-full w-full object-cover" loading="lazy" />
@@ -239,6 +257,7 @@ export function PropertySearchCard({
 
         <button
           type="button"
+          onClick={handleFavoriteClick}
           className="absolute right-4 top-4 rounded-full bg-white/85 p-2 text-gray-dark-500 shadow-sm backdrop-blur transition hover:bg-white hover:text-blue-light-600"
           aria-label="Guardar en favoritos"
         >

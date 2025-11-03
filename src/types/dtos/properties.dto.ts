@@ -51,3 +51,84 @@ export interface PropertyFilterDto {
   startDate?: string;
   endDate?: string;
 }
+
+// Tipo para la información del host
+export interface HostInfo {
+  id: number;
+  name: string;
+  email?: string;
+  profileImage?: string;
+  memberSince: string;
+  isVerified?: boolean;
+}
+
+// Tipo para amenities
+export interface PropertyAmenity {
+  id?: number;
+  name?: string;
+  icon?: string;
+  description?: string;
+}
+
+// Tipo para imágenes de la propiedad
+export interface PropertyImage {
+  id: number;
+  url: string;
+  alt: string;
+  isPrimary: boolean;
+}
+
+// Tipo para una review individual
+export interface PropertyReview {
+  rating: number;
+  comment: string;
+  createdAt: string;
+  authorName: string;
+}
+
+// Tipo para reviews y ratings
+export interface PropertyReviews {
+  totalCount: number;
+  averageRating: number;
+  reviewsList?: PropertyReview[];
+}
+
+// Tipo para una propiedad completa con todos los detalles
+export interface PropertyDetail {
+  propertyId: number;
+  hostId: number;
+  title: string;
+  propertyType?: string;
+  basePriceNight: number;
+  currencyCode?: string;
+  addressText: string;
+  city: string;
+  stateRegion: string;
+  country: string;
+  postalCode?: string;
+  latitude: number;
+  longitude: number;
+  createdAt?: string;
+  updatedAt?: string;
+  isActive: boolean;
+  // Property details
+  descriptionLong: string;
+  houseRules: string;
+  checkinTime: string;
+  checkoutTime: string;
+  capacity: number;
+  bedrooms: number;
+  bathrooms: number;
+  beds: number;
+  // Related data
+  host: HostInfo;
+  amenities: PropertyAmenity[];
+  images: PropertyImage[];
+  reviews: PropertyReviews;
+}
+
+// Tipo para la respuesta del GET de una propiedad específica
+export interface PropertyDetailResponse {
+  success: true;
+  data: PropertyDetail;
+}

@@ -3,8 +3,61 @@ import { PropertyService } from '@/src/services/property.service';
 import type {
   UpdatePropertyBody,
   UpdatePropertyResponse,
-  PropertyErrorResponse
+  PropertyErrorResponse,
+  PropertyDetailResponse
 } from '@/src/types/dtos/properties.dto';
+
+/**
+ * GET /api/properties/:id
+ * Obtener una propiedad específica con todos los detalles para reserva
+ */
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<PropertyDetailResponse | PropertyErrorResponse>> {
+  try {
+    const { id } = await params;
+    const propertyId = parseInt(id);
+
+    // Validar que el ID sea un número válido
+    if (isNaN(propertyId)) {
+      return NextResponse.json(
+        { error: 'ID de propiedad inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Llamar al servicio para obtener la propiedad
+    const propertyDetail = await PropertyService.getPropertyById(propertyId);
+
+    return NextResponse.json({
+      success: true,
+      data: propertyDetail
+    });
+
+  } catch (error) {
+    console.error('Error al obtener la propiedad:', error);
+
+    // Si es un error conocido del servicio
+    if (error instanceof Error) {
+      // Verificar si es el error de "Propiedad no encontrada"
+      if (error.message.includes('Propiedad no encontrada')) {
+        return NextResponse.json(
+          { error: 'Propiedad no encontrada' },
+          { status: 404 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      {
+        error: 'Error interno del servidor',
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      },
+      { status: 500 }
+    );
+  }
+}
 
 /**
  * PATCH /api/properties/:id
@@ -12,10 +65,11 @@ import type {
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<UpdatePropertyResponse | PropertyErrorResponse>> {
   try {
-    const propertyId = parseInt(params.id);
+    const { id } = await params;
+    const propertyId = parseInt(id);
 
     // Validar que el ID sea un número válido
     if (isNaN(propertyId)) {
