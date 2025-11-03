@@ -218,7 +218,7 @@ export function PropertySearchCard({
 
   const handleCardClick = () => {
     if (propertyId) {
-      router.push(`/rooms/${propertyId}`);
+      router.push(`/properties/${propertyId}`);
     }
   };
 
