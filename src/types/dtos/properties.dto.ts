@@ -47,4 +47,7 @@ export interface PropertyFilterDto {
   lngMin?: number;
   lngMax?: number;
   amenities?: number[];
+  capacityTotal?: number;
+  startDate?: string;
+  endDate?: string;
 }

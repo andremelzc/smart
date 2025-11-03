@@ -30,31 +30,7 @@ export default function Navbar() {
     setActiveSearchPanel((prev) => (prev === panel ? null : panel));
   };
 
-  const formatDisplayDate = (value?: string) => {
-    if (!value) return null;
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return null;
-    return parsed.toLocaleDateString("es-PE", { day: "numeric", month: "short" });
-  };
-
-  const dateSummary = (() => {
-    const start = formatDisplayDate(checkInDate);
-    const end = formatDisplayDate(checkOutDate);
-    if (start && end) return `${start} - ${end}`;
-    if (start) return start;
-    return "Agrega fechas";
-  })();
-
   const totalGuests = guestCounts.adults + guestCounts.children + guestCounts.babies;
-  const guestSummary = totalGuests > 0
-    ? `${totalGuests} huésped${totalGuests > 1 ? "es" : ""}${guestCounts.pets ? ` · ${guestCounts.pets} mascota${guestCounts.pets > 1 ? "s" : ""}` : ""}`
-    : "¿Cuántos?";
-
-  const locationSummary = selectedLocation?.title ?? "Explora destinos";
-  const locationDescription = selectedLocation?.subtitle ?? "Descubre qué hay cerca de ti";
-  const locationTextClass = selectedLocation ? "text-gray-dark-700" : "text-gray-dark-300";
-  const dateTextClass = checkInDate || checkOutDate ? "text-gray-dark-700" : "text-gray-dark-300";
-  const guestTextClass = (totalGuests > 0 || guestCounts.pets > 0) ? "text-gray-dark-700" : "text-gray-dark-300";
 
   const adjustGuestCount = (key: keyof typeof guestCounts, delta: number) => {
     setGuestCounts((prev) => {
@@ -98,7 +74,27 @@ export default function Navbar() {
 
   const handleSearch = () => {
     setActiveSearchPanel(null);
-    router.push("/search");
+
+    const params = new URLSearchParams();
+
+    if (selectedLocation?.value) {
+      params.set("city", selectedLocation.value);
+    }
+
+    if (checkInDate) {
+      params.set("startDate", checkInDate);
+    }
+
+    if (checkOutDate) {
+      params.set("endDate", checkOutDate);
+    }
+
+    if (totalGuests > 0) {
+      params.set("capacityTotal", String(totalGuests));
+    }
+
+    const query = params.toString();
+    router.push(query ? `/search?${query}` : "/search");
   };
 
   const handleFilterToggle = () => {
@@ -134,8 +130,8 @@ export default function Navbar() {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden lg:flex flex-1 max-w-3xl mx-10">
-            <div ref={searchBarRef} className="relative w-full">
+          <div className="hidden lg:flex flex-1 max-w-3xl mx-10 items-center gap-4">
+            <div ref={searchBarRef} className="relative flex-1">
               <div className="w-full flex items-stretch rounded-full border border-blue-light-200 hover:border-blue-light-300 transition-colors bg-white shadow-sm hover:shadow-md">
                 {/* Dónde */}
                 <div className={`relative flex-1 flex items-center gap-3 px-6 py-4 min-w-0 ${activeSearchPanel === "location" ? "bg-blue-light-50" : ""}`}>
@@ -145,14 +141,8 @@ export default function Navbar() {
                     onClick={() => toggleSearchPanel("location")}
                     className="flex-1 min-w-0 text-left"
                   >
-                    <span className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide mb-1">
+                    <span className="block text-sm font-semibold uppercase tracking-wide text-gray-dark-600">
                       Dónde
-                    </span>
-                    <span className={`block truncate text-sm font-medium ${locationTextClass}`}>
-                      {locationSummary}
-                    </span>
-                    <span className="block text-xs text-gray-dark-400">
-                      {locationDescription}
                     </span>
                   </button>
 
@@ -176,14 +166,8 @@ export default function Navbar() {
                     onClick={() => toggleSearchPanel("dates")}
                     className="flex-1 min-w-0 text-left"
                   >
-                    <span className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide mb-1">
+                    <span className="block text-sm font-semibold uppercase tracking-wide text-gray-dark-600">
                       Fechas
-                    </span>
-                    <span className={`block truncate text-sm font-medium ${dateTextClass}`}>
-                      {dateSummary}
-                    </span>
-                    <span className="block text-xs text-gray-dark-400">
-                      {checkInDate && checkOutDate ? "Rango seleccionado" : "Agrega fechas de ingreso y salida"}
                     </span>
                   </button>
                 </div>
@@ -198,14 +182,8 @@ export default function Navbar() {
                     onClick={() => toggleSearchPanel("guests")}
                     className="flex-1 min-w-0 text-left"
                   >
-                    <span className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide mb-1">
+                    <span className="block text-sm font-semibold uppercase tracking-wide text-gray-dark-600">
                       Quién
-                    </span>
-                    <span className={`block truncate text-sm font-medium ${guestTextClass}`}>
-                      {guestSummary}
-                    </span>
-                    <span className="block text-xs text-gray-dark-400">
-                      Añade huéspedes
                     </span>
                   </button>
 
@@ -214,17 +192,6 @@ export default function Navbar() {
                       counts={guestCounts}
                       onChange={(next) => setGuestCounts(next)}
                     />
-                  )}
-
-                  {isSearchPage && (
-                    <button
-                      onClick={handleFilterToggle}
-                      type="button"
-                      className="w-12 h-12 rounded-full border border-blue-light-200 hover:border-blue-light-300 bg-white text-blue-light-600 flex items-center justify-center shadow-sm hover:shadow-md transition-all transform hover:scale-105 ml-2"
-                      aria-label="Filtros avanzados"
-                    >
-                      <Settings className="w-5 h-5" />
-                    </button>
                   )}
 
                   {/* Search Button */}
@@ -249,6 +216,18 @@ export default function Navbar() {
                 />
               )}
             </div>
+
+            {isSearchPage && (
+              <button
+                onClick={handleFilterToggle}
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-blue-light-200 bg-white px-5 py-3 text-sm font-semibold text-gray-dark-600 shadow-sm transition-all hover:border-blue-light-300 hover:shadow-md"
+                aria-label="Abrir filtros avanzados"
+              >
+                <Settings className="h-5 w-5 text-blue-light-500" />
+                Filtros
+              </button>
+            )}
           </div>
 
           {/* Search Button - Mobile */}
@@ -257,10 +236,11 @@ export default function Navbar() {
               <button
                 onClick={handleFilterToggle}
                 type="button"
-                className="flex items-center justify-center w-12 h-12 rounded-full border border-blue-light-200 hover:border-blue-light-300 bg-white shadow-sm hover:shadow-md transition-all"
-                aria-label="Filtros avanzados"
+                className="inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-full border border-blue-light-200 bg-white px-4 py-3 text-sm font-medium text-gray-dark-600 shadow-sm transition-all hover:border-blue-light-300 hover:shadow-md"
+                aria-label="Abrir filtros avanzados"
               >
                 <Settings className="w-5 h-5 text-blue-light-600" />
+                Filtros
               </button>
             )}
             <button

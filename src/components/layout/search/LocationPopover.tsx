@@ -5,6 +5,7 @@ export interface LocationOption {
   title: string;
   subtitle: string;
   description: string;
+  value?: string;
 }
 
 export const LOCATION_OPTIONS: LocationOption[] = [
@@ -12,31 +13,36 @@ export const LOCATION_OPTIONS: LocationOption[] = [
     id: "nearby",
     title: "Cerca",
     subtitle: "Descubre qué hay a tu alrededor",
-    description: "Explora estadías a pocos minutos de ti"
+    description: "Explora estadías a pocos minutos de ti",
+    value: undefined,
   },
   {
     id: "lima",
     title: "Lima, Perú",
     subtitle: "Por lugares emblemáticos como el Centro Histórico",
-    description: "Capital vibrante con gastronomía reconocida"
+    description: "Capital vibrante con gastronomía reconocida",
+    value: "Lima",
   },
   {
     id: "cusco",
     title: "Cusco, Perú",
     subtitle: "Para vivir la aventura del Valle Sagrado",
-    description: "Historia inca y paisajes naturales únicos"
+    description: "Historia inca y paisajes naturales únicos",
+    value: "Cusco",
   },
   {
     id: "buenos-aires",
     title: "Buenos Aires, Argentina",
     subtitle: "Por su impresionante arquitectura",
-    description: "Cultura, tango y vida nocturna"
+    description: "Cultura, tango y vida nocturna",
+    value: "Buenos Aires",
   },
   {
     id: "madrid",
     title: "Madrid, España",
     subtitle: "Por su diversión nocturna",
-    description: "Museos, parques y gastronomía mediterránea"
+    description: "Museos, parques y gastronomía mediterránea",
+    value: "Madrid",
   },
 ];
 

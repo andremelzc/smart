@@ -4,6 +4,8 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePropertySearch } from '@/src/hooks/usePropertySearch';
 import type { PropertyFilterDto } from '@/src/types/dtos/properties.dto';
+import { useSearchParams } from 'next/navigation';
+import { PropertySearchCard } from '@/src/components/features/properties/PropertySearchCard';
 
 const AMENITY_OPTIONS = [
   { id: 53, label: 'Wi-Fi' },
@@ -15,6 +17,9 @@ const AMENITY_OPTIONS = [
 
 type FilterFormState = {
   city: string;
+  startDate: string;
+  endDate: string;
+  capacityTotal: string;
   minPrice: string;
   maxPrice: string;
   rooms: string;
@@ -28,6 +33,9 @@ type FilterFormState = {
 
 const EMPTY_FORM: FilterFormState = {
   city: '',
+  startDate: '',
+  endDate: '',
+  capacityTotal: '',
   minPrice: '',
   maxPrice: '',
   rooms: '',
@@ -41,20 +49,123 @@ const EMPTY_FORM: FilterFormState = {
 
 export default function PropertySearchPage() {
   const { search, results, loading } = usePropertySearch();
-  const [formValues, setFormValues] = useState<FilterFormState>(EMPTY_FORM);
+  const searchParams = useSearchParams();
+  const [formValues, setFormValues] = useState<FilterFormState>({ ...EMPTY_FORM });
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
-  const [showFilters, setShowFilters] = useState(true);
+  const [appliedFilters, setAppliedFilters] = useState<PropertyFilterDto | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchParamsKey = searchParams.toString();
+  useEffect(() => {
+    if (!searchParamsKey) {
+      setFormValues({ ...EMPTY_FORM });
+      setSelectedAmenities([]);
+      setAppliedFilters(null);
+      setError(null);
+      return;
+    }
+
+    const params = new URLSearchParams(searchParamsKey);
+    const nextForm: FilterFormState = {
+      ...EMPTY_FORM,
+      city: params.get('city') ?? '',
+      startDate: params.get('startDate') ?? '',
+      endDate: params.get('endDate') ?? '',
+      capacityTotal: params.get('capacityTotal') ?? '',
+      minPrice: params.get('minPrice') ?? '',
+      maxPrice: params.get('maxPrice') ?? '',
+      rooms: params.get('rooms') ?? '',
+      beds: params.get('beds') ?? '',
+      baths: params.get('baths') ?? '',
+      latMin: params.get('latMin') ?? '',
+      latMax: params.get('latMax') ?? '',
+      lngMin: params.get('lngMin') ?? '',
+      lngMax: params.get('lngMax') ?? '',
+    };
+
+    setFormValues(nextForm);
+
+    const amenityValues = params.getAll('amenities');
+    const amenityTokens = amenityValues.length > 0
+      ? amenityValues
+      : (params.get('amenities') ?? '')
+          .split(',')
+          .map((token) => token.trim())
+          .filter(Boolean);
+
+    const parsedAmenityIds = amenityTokens
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value > 0);
+
+    setSelectedAmenities(parsedAmenityIds);
+    setError(null);
+
+    const initialFilters: PropertyFilterDto = {
+      city: nextForm.city || undefined,
+      startDate: nextForm.startDate || undefined,
+      endDate: nextForm.endDate || undefined,
+      capacityTotal: numericOrUndefined(nextForm.capacityTotal),
+      minPrice: numericOrUndefined(nextForm.minPrice),
+      maxPrice: numericOrUndefined(nextForm.maxPrice),
+      rooms: numericOrUndefined(nextForm.rooms),
+      beds: numericOrUndefined(nextForm.beds),
+      baths: numericOrUndefined(nextForm.baths),
+      latMin: numericOrUndefined(nextForm.latMin),
+      latMax: numericOrUndefined(nextForm.latMax),
+      lngMin: numericOrUndefined(nextForm.lngMin),
+      lngMax: numericOrUndefined(nextForm.lngMax),
+    };
+
+    if (parsedAmenityIds.length > 0) {
+      initialFilters.amenities = parsedAmenityIds;
+    }
+
+    search(initialFilters)
+      .then(() => {
+        setAppliedFilters({
+          ...initialFilters,
+          amenities: initialFilters.amenities ? [...initialFilters.amenities] : undefined,
+        });
+      })
+      .catch((err) => {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('No se pudo realizar la búsqueda.');
+        }
+      });
+  }, [searchParamsKey, search]);
 
   useEffect(() => {
-    const toggleListener = () => setShowFilters((prev) => !prev);
+    const handleOpenFilters = (_event: Event) => setShowFilters(true);
 
-    window.addEventListener('toggle-search-filters', toggleListener as EventListener);
+    window.addEventListener('toggle-search-filters', handleOpenFilters);
 
     return () => {
-      window.removeEventListener('toggle-search-filters', toggleListener as EventListener);
+      window.removeEventListener('toggle-search-filters', handleOpenFilters);
     };
   }, []);
+
+  useEffect(() => {
+    if (!showFilters) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowFilters(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [showFilters]);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -73,9 +184,30 @@ export default function PropertySearchPage() {
     return Number.isFinite(parsed) ? parsed : undefined;
   };
 
+  const nightsCount = useMemo(() => {
+    if (!appliedFilters?.startDate || !appliedFilters?.endDate) {
+      return null;
+    }
+
+    const start = new Date(appliedFilters.startDate);
+    const end = new Date(appliedFilters.endDate);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return null;
+    }
+
+    const diffMs = end.getTime() - start.getTime();
+    const nights = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    return nights > 0 ? nights : null;
+  }, [appliedFilters?.startDate, appliedFilters?.endDate]);
+
   const filters: PropertyFilterDto = useMemo(() => {
     const base: PropertyFilterDto = {
       city: formValues.city || undefined,
+      startDate: formValues.startDate || undefined,
+      endDate: formValues.endDate || undefined,
+      capacityTotal: numericOrUndefined(formValues.capacityTotal),
       minPrice: numericOrUndefined(formValues.minPrice),
       maxPrice: numericOrUndefined(formValues.maxPrice),
       rooms: numericOrUndefined(formValues.rooms),
@@ -94,12 +226,19 @@ export default function PropertySearchPage() {
     return base;
   }, [formValues, selectedAmenities]);
 
+  const closeFilters = () => setShowFilters(false);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
     try {
       await search(filters);
+      setAppliedFilters({
+        ...filters,
+        amenities: filters.amenities ? [...filters.amenities] : undefined,
+      });
+      closeFilters();
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -107,6 +246,13 @@ export default function PropertySearchPage() {
         setError('No se pudo realizar la búsqueda.');
       }
     }
+  };
+
+  const handleReset = () => {
+    setFormValues({ ...EMPTY_FORM });
+    setSelectedAmenities([]);
+    setAppliedFilters(null);
+    setError(null);
   };
 
   return (
@@ -119,152 +265,227 @@ export default function PropertySearchPage() {
       </header>
 
       {showFilters && (
-        <form onSubmit={handleSubmit} className="grid gap-6 rounded-3xl border border-blue-light-150 bg-white p-6 shadow-sm">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Ciudad
-              <input
-                name="city"
-                value={formValues.city}
-                onChange={handleInputChange}
-                placeholder="¿A dónde quieres ir?"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Precio mínimo
-              <input
-                name="minPrice"
-                value={formValues.minPrice}
-                onChange={handleInputChange}
-                placeholder="S/"
-                inputMode="decimal"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Precio máximo
-              <input
-                name="maxPrice"
-                value={formValues.maxPrice}
-                onChange={handleInputChange}
-                placeholder="S/"
-                inputMode="decimal"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Habitaciones
-              <input
-                name="rooms"
-                value={formValues.rooms}
-                onChange={handleInputChange}
-                placeholder="Número"
-                inputMode="numeric"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Camas
-              <input
-                name="beds"
-                value={formValues.beds}
-                onChange={handleInputChange}
-                placeholder="Número"
-                inputMode="numeric"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Baños
-              <input
-                name="baths"
-                value={formValues.baths}
-                onChange={handleInputChange}
-                placeholder="Número"
-                inputMode="numeric"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Latitud mínima
-              <input
-                name="latMin"
-                value={formValues.latMin}
-                onChange={handleInputChange}
-                placeholder="-12.34"
-                inputMode="decimal"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Latitud máxima
-              <input
-                name="latMax"
-                value={formValues.latMax}
-                onChange={handleInputChange}
-                placeholder="-11.90"
-                inputMode="decimal"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Longitud mínima
-              <input
-                name="lngMin"
-                value={formValues.lngMin}
-                onChange={handleInputChange}
-                placeholder="-77.20"
-                inputMode="decimal"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-              Longitud máxima
-              <input
-                name="lngMax"
-                value={formValues.lngMax}
-                onChange={handleInputChange}
-                placeholder="-76.90"
-                inputMode="decimal"
-                className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-              />
-            </label>
-          </div>
+        <div className="fixed inset-0 z-40 flex items-start justify-center px-4 pt-32 pb-10">
+          <div
+            className="absolute inset-0 bg-gray-dark-900/40 backdrop-blur-sm"
+            onClick={closeFilters}
+          />
+          <form
+            onSubmit={handleSubmit}
+            className="relative z-50 flex w-full max-w-3xl flex-col gap-6 rounded-3xl bg-white p-6 shadow-2xl"
+          >
+            <header className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-dark-800">Filtros</h2>
+                <p className="text-sm text-gray-dark-500">
+                  Personaliza tu búsqueda con criterios avanzados.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeFilters}
+                className="h-10 w-10 rounded-full border border-blue-light-200 text-gray-dark-500 transition-all hover:border-blue-light-300 hover:text-gray-dark-700"
+                aria-label="Cerrar filtros"
+              >
+                ×
+              </button>
+            </header>
 
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-gray-dark-600">Amenities</h2>
-            <div className="flex flex-wrap gap-2">
-              {AMENITY_OPTIONS.map((amenity) => {
-                const isSelected = selectedAmenities.includes(amenity.id);
-                return (
-                  <button
-                    type="button"
-                    key={amenity.id}
-                    onClick={() => handleAmenityToggle(amenity.id)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                      isSelected
-                        ? 'bg-blue-vivid-500 text-white shadow-md'
-                        : 'bg-blue-light-50 text-blue-light-700 border border-blue-light-200 hover:border-blue-light-300'
-                    }`}
-                  >
-                    {amenity.label}
-                  </button>
-                );
-              })}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Ciudad
+                <input
+                  name="city"
+                  value={formValues.city}
+                  onChange={handleInputChange}
+                  placeholder="¿A dónde quieres ir?"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Fecha de llegada
+                <input
+                  type="date"
+                  name="startDate"
+                  value={formValues.startDate}
+                  onChange={handleInputChange}
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Fecha de salida
+                <input
+                  type="date"
+                  name="endDate"
+                  value={formValues.endDate}
+                  onChange={handleInputChange}
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Huéspedes
+                <input
+                  name="capacityTotal"
+                  value={formValues.capacityTotal}
+                  onChange={handleInputChange}
+                  placeholder="Número"
+                  inputMode="numeric"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Precio mínimo
+                <input
+                  name="minPrice"
+                  value={formValues.minPrice}
+                  onChange={handleInputChange}
+                  placeholder="S/"
+                  inputMode="decimal"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Precio máximo
+                <input
+                  name="maxPrice"
+                  value={formValues.maxPrice}
+                  onChange={handleInputChange}
+                  placeholder="S/"
+                  inputMode="decimal"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Habitaciones
+                <input
+                  name="rooms"
+                  value={formValues.rooms}
+                  onChange={handleInputChange}
+                  placeholder="Número"
+                  inputMode="numeric"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Camas
+                <input
+                  name="beds"
+                  value={formValues.beds}
+                  onChange={handleInputChange}
+                  placeholder="Número"
+                  inputMode="numeric"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Baños
+                <input
+                  name="baths"
+                  value={formValues.baths}
+                  onChange={handleInputChange}
+                  placeholder="Número"
+                  inputMode="numeric"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Latitud mínima
+                <input
+                  name="latMin"
+                  value={formValues.latMin}
+                  onChange={handleInputChange}
+                  placeholder="-12.34"
+                  inputMode="decimal"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Latitud máxima
+                <input
+                  name="latMax"
+                  value={formValues.latMax}
+                  onChange={handleInputChange}
+                  placeholder="-11.90"
+                  inputMode="decimal"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Longitud mínima
+                <input
+                  name="lngMin"
+                  value={formValues.lngMin}
+                  onChange={handleInputChange}
+                  placeholder="-77.20"
+                  inputMode="decimal"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                Longitud máxima
+                <input
+                  name="lngMax"
+                  value={formValues.lngMax}
+                  onChange={handleInputChange}
+                  placeholder="-76.90"
+                  inputMode="decimal"
+                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                />
+              </label>
             </div>
-          </section>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {error && <span className="text-sm text-red-500">{error}</span>}
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-vivid-500 to-blue-vivid-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:from-blue-vivid-600 hover:to-blue-vivid-700 focus:ring-2 focus:ring-blue-light-200"
-            >
-              {loading ? 'Buscando...' : 'Buscar'}
-            </button>
-          </div>
-        </form>
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-gray-dark-600">Amenities</h2>
+              <div className="flex flex-wrap gap-2">
+                {AMENITY_OPTIONS.map((amenity) => {
+                  const isSelected = selectedAmenities.includes(amenity.id);
+                  return (
+                    <button
+                      type="button"
+                      key={amenity.id}
+                      onClick={() => handleAmenityToggle(amenity.id)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                        isSelected
+                          ? 'bg-blue-vivid-500 text-white shadow-md'
+                          : 'bg-blue-light-50 text-blue-light-700 border border-blue-light-200 hover:border-blue-light-300'
+                      }`}
+                    >
+                      {amenity.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <footer className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2">
+                {error && <span className="text-sm text-red-500">{error}</span>}
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-sm font-semibold text-blue-light-600 underline-offset-4 hover:underline"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <button
+                  type="button"
+                  onClick={closeFilters}
+                  className="rounded-2xl border border-blue-light-200 px-5 py-3 text-sm font-semibold text-gray-dark-600 transition-all hover:border-blue-light-300"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-vivid-500 to-blue-vivid-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:from-blue-vivid-600 hover:to-blue-vivid-700 focus:ring-2 focus:ring-blue-light-200"
+                >
+                  {loading ? 'Buscando...' : 'Mostrar resultados'}
+                </button>
+              </div>
+            </footer>
+          </form>
+        </div>
       )}
 
       <section className="space-y-4">
@@ -273,25 +494,32 @@ export default function PropertySearchPage() {
           {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-light-500" />}
         </header>
 
-        {!loading && results.length === 0 && (
+        {error && !showFilters && (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+
+        {!loading && results.length === 0 && !error && (
           <p className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-6 text-center text-gray-dark-500">
             Usa los filtros para iniciar una búsqueda.
           </p>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {results.map((item, index) => (
-            <article
-              key={index}
-              className="rounded-2xl border border-blue-light-150 bg-white p-5 shadow-sm"
-            >
-              <h3 className="text-lg font-semibold text-gray-dark-700">Propiedad #{index + 1}</h3>
-              <pre className="mt-3 max-h-40 overflow-auto rounded-xl bg-blue-light-50 p-3 text-xs text-gray-dark-600">
-                {JSON.stringify(item, null, 2)}
-              </pre>
-            </article>
-          ))}
-        </div>
+        {results.length > 0 && (
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {results.map((item, index) => (
+              <PropertySearchCard
+                key={index}
+                data={item}
+                index={index}
+                startDate={appliedFilters?.startDate}
+                endDate={appliedFilters?.endDate}
+                nights={nightsCount ?? undefined}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
