@@ -7,7 +7,7 @@ export class PropertyService {
   /**
    * Helper para procesar datos de Oracle de manera segura y evitar referencias circulares
    */
-  private static processOracleData(data: any): any {
+  private static async processOracleData(data: any): Promise<any> {
     if (data === null || data === undefined) {
       return data;
     }
@@ -24,11 +24,46 @@ export class PropertyService {
 
     // Si es un array, procesar cada elemento
     if (Array.isArray(data)) {
-      return data.map(item => this.processOracleData(item));
+      const processedArray = [];
+      for (const item of data) {
+        processedArray.push(await this.processOracleData(item));
+      }
+      return processedArray;
     }
 
-    // Si es un objeto, crear uno nuevo con las propiedades seguras
+    // Si es un objeto, verificar si es un CLOB/BLOB
     if (typeof data === 'object') {
+      // Verificar si es un LOB (CLOB/BLOB) de Oracle
+      if (data && typeof data.getData === 'function') {
+        try {
+          console.log('Reading LOB data...');
+          const lobData = await data.getData();
+          return typeof lobData === 'string' ? lobData : String(lobData || '');
+        } catch (error) {
+          console.warn('Error reading LOB data:', error);
+          return '';
+        }
+      }
+
+      // Si parece ser un objeto CLOB/BLOB basado en sus propiedades
+      if (data.allowHalfOpen !== undefined && data.offset !== undefined) {
+        try {
+          // Intentar convertir usando toString si está disponible
+          if (typeof data.toString === 'function') {
+            const stringValue = data.toString();
+            if (stringValue && stringValue !== '[object Object]') {
+              return stringValue;
+            }
+          }
+          console.warn('Found CLOB-like object but could not convert to string:', data);
+          return '';
+        } catch (error) {
+          console.warn('Error converting CLOB-like object:', error);
+          return '';
+        }
+      }
+
+      // Procesar objeto normal
       const result: any = {};
       
       // Solo copiar propiedades propias del objeto
@@ -44,7 +79,7 @@ export class PropertyService {
             continue;
           }
 
-          result[key] = this.processOracleData(value);
+          result[key] = await this.processOracleData(value);
         }
       }
       
@@ -178,7 +213,7 @@ export class PropertyService {
           let detailsRow: any = null;
           if (detailsCursor) {
             const rawRow = await detailsCursor.getRow();
-            detailsRow = rawRow ? this.processOracleData(rawRow) : null;
+            detailsRow = rawRow ? await this.processOracleData(rawRow) : null;
             await detailsCursor.close();
           }
 
@@ -193,7 +228,7 @@ export class PropertyService {
             let imageRow;
             let imageIndex = 0;
             while ((imageRow = await imagesCursor.getRow())) {
-              const processedImageRow = this.processOracleData(imageRow);
+              const processedImageRow = await this.processOracleData(imageRow);
               images.push({
                 id: imageIndex++,
                 url: processedImageRow.URL || '',
@@ -210,7 +245,7 @@ export class PropertyService {
           if (amenitiesCursor) {
             let amenityRow;
             while ((amenityRow = await amenitiesCursor.getRow())) {
-              const processedAmenityRow = this.processOracleData(amenityRow);
+              const processedAmenityRow = await this.processOracleData(amenityRow);
               amenities.push({
                 name: processedAmenityRow.NAME || '',
                 icon: processedAmenityRow.CODE || '',
@@ -237,7 +272,7 @@ export class PropertyService {
           if (reviewsListCursor) {
             let reviewRow;
             while ((reviewRow = await reviewsListCursor.getRow())) {
-              const processedReviewRow = this.processOracleData(reviewRow);
+              const processedReviewRow = await this.processOracleData(reviewRow);
               reviewsList.push({
                 rating: processedReviewRow.RATING || 0,
                 comment: processedReviewRow.comment || '',
