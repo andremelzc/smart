@@ -150,18 +150,20 @@ export default function PaginaCrearRecinto() {
   };
 
   const handlePublish = () => {
-    console.log("--- SIMULANDO PUBLICACIÓN ---");
-    console.log("DATOS A ENVIAR AL BACKEND:", propertyData);
+    console.log("--- SIMULANDO PUBLICACIÓN ---");
+    console.log("DATOS A ENVIAR AL BACKEND:", propertyData);
+    
     setShowSuccessToast(true);
 
-    setTimeout(() => {
-      setShowSuccessToast(false);
-    }, 4000); 
+    setTimeout(() => {
+      setShowSuccessToast(false);
+    }, 4000);
 
-    setTimeout(() => {
-      console.log("Simulando redirección a /host/dashboard");
-    }, 1500);
-  };
+    setTimeout(() => {
+      console.log("Redirigiendo a /host/dashboard");
+      router.push('/host/dashboard');
+    }, 1500);
+  };
 
   return (
     <div className="bg-blue-light-50 pb-24">
