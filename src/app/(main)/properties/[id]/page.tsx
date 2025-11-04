@@ -172,6 +172,8 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 bedrooms={property.bedrooms}
                 bathrooms={property.bathrooms}
                 beds={property.beds}
+                city={property.city}
+                country={property.country}
               />
 
               {/* Descripción */}
