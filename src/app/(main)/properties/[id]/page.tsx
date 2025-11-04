@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { usePropertyDetail } from '@/src/hooks/usePropertyDetail';
 import { 
   PropertyReviews,
-  PropertyHeader,
   PropertyImageGallery,
   PropertyBasicInfo,
   PropertyHostInfo,
@@ -38,7 +37,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   const { property, isLoading, error } = usePropertyDetail(id);
   
   // Estados para funcionalidades
-  const [isFavorite, setIsFavorite] = useState(false);
   const [selectedDates, setSelectedDates] = useState<BookingDates>({
     checkIn: '',
     checkOut: '',
@@ -101,10 +99,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   const maxGuests = typeof property.capacity === 'number' && property.capacity > 0 ? property.capacity : 1;
 
   // Handlers de eventos
-  const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-  };
-
   const handleDatesChange = (dates: BookingDates) => {
     setSelectedDates(dates);
   };
@@ -136,13 +130,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   return (
     <>
       <div className="min-h-screen bg-white">
-        {/* Header */}
-        <PropertyHeader
-          isFavorite={isFavorite}
-          onToggleFavorite={handleToggleFavorite}
-        />
-
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4">
           {/* Información básica */}
           <PropertyBasicInfo
             title={property.title || 'Título no disponible'}
