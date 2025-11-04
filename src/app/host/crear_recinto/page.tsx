@@ -7,7 +7,7 @@ import { Paso1_TipoRecinto } from '@/src/components/host/crear-recinto/Paso1_Tip
 import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubicacion';
 import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detalles';
 import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
-// import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
+import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
 // import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
 // import { Paso7_Reglas } from '@/src/components/host/crear-recinto/Paso7_Reglas';
 // import { Paso8_Precio } from '@/src/components/host/crear-recinto/Paso8_Precio';
@@ -91,7 +91,7 @@ export default function PaginaCrearRecinto() {
     bathrooms: 1,
     areaM2: 40,
     images: [],
-    amenities: ['wifi', 'ac'],
+    amenities: [],
   });
 
   const goToStep = (step: number) => {
@@ -120,6 +120,13 @@ export default function PaginaCrearRecinto() {
       ...prev,
       ...data
     }));
+  };
+
+  const isNextDisabled = () => {
+    if (currentStep === 5 && propertyData.images.length === 0) {
+      return true;
+    }
+    return false;
   };
 
   const handlePublish = () => {
@@ -185,10 +192,12 @@ export default function PaginaCrearRecinto() {
 
           {currentStep === 5 && (
             // <Paso5_Fotos data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 5: Fotos</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">Componente en construcción...</p>
-            </div>
+            <Paso5_Fotos 
+              data={{
+                images: propertyData.images
+              }} 
+              updateData={updateData} 
+            />
           )}
 
           {currentStep === 6 && (
@@ -237,7 +246,8 @@ export default function PaginaCrearRecinto() {
           {currentStep < 9 ? (
             <button 
               onClick={nextStep}
-              className="flex items-center gap-2 rounded-2xl bg-blue-vivid-600 border-2 border-blue-light-600 px-6 py-3 text-sm font-semibold text-blue-light-0 shadow-md transition-all hover:border-blue-light-800  hover:bg-blue-vivid-700"
+              disabled={isNextDisabled()}
+              className="flex items-center gap-2 rounded-2xl bg-blue-vivid-600 border-2 border-blue-light-600 px-6 py-3 text-sm font-semibold text-blue-light-0 shadow-md transition-all hover:border-blue-light-800  hover:bg-blue-vivid-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
             <CircleChevronRight className="w-6 h-6" />
               Siguiente
