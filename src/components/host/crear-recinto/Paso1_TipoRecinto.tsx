@@ -1,5 +1,6 @@
 // src/components/host/crear-recinto/Paso1_TipoRecinto.tsx
 import { Home, Building, MountainSnow, BedDouble } from 'lucide-react';
+import { StepHeader } from './StepHeader';
 
 const PROPERTY_TYPES = [
   { id: 'casa', label: 'Casa', description: 'Una propiedad completa.', icon: <Home className="w-10 h-10" /> },
@@ -22,21 +23,18 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold text-blue-light-800">
-          ¿Qué tipo de recinto vas a publicar?
-        </h1>
-        <p className="mt-2 text-lg text-gray-dark-500">
-          Elige la opción que mejor describa tu espacio.
-        </p>
-      </div>
+    <div className="flex flex-col gap-4">
+      <StepHeader
+        title="¿Qué tipo de recinto vas a publicar?"
+        subtitle="Elija la opción que mejor describa su espacio."
+        helpText="Haga clic en una de las tarjetas para seleccionar el tipo de propiedad. Al finalizar, presione 'Siguiente'."
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {PROPERTY_TYPES.map((prop) => {
           const isSelected = data.propertyType === prop.id;
           const baseStyle = 'rounded-2xl p-6 cursor-pointer transition-all flex flex-col gap-3 text-center items-center';
-          const unselectedStyle = 'bg-blue-light-50 text-blue-light-700 border-2 border-blue-light-300 hover:border-blue-light-500 hover:bg-blue-light-100';
-          const selectedStyle = 'bg-blue-vivid-600 text-white shadow-lg border border-blue-vivid-500';
+          const unselectedStyle = 'bg-blue-light-50 text-blue-light-700 border-2 border-blue-light-300 hover:border-blue-light-700 hover:bg-blue-light-100';
+          const selectedStyle = 'bg-blue-vivid-600 text-white shadow-lg border-2 border-blue-vivid-700';
           return (
             <button
               type="button"

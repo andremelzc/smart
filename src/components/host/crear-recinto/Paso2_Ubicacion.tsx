@@ -1,6 +1,7 @@
 // src/components/host/crear-recinto/Paso2_Ubicacion.tsx
 import { MapPin, Search } from 'lucide-react';
 import { useState } from 'react';
+import { StepHeader } from './StepHeader';
 
 interface StepProps {
   data: {
@@ -83,20 +84,15 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold text-blue-light-800">
-          Ubicación del Recinto
-        </h1>
-        <p className="mt-2 text-lg text-gray-dark-500">
-          La dirección solo se compartirá con los huéspedes después de que 
-          confirmen una reserva.
-        </p>
-      </div>
+    <div className="flex flex-col gap-4">
+      <StepHeader
+        title="¿Dónde está ubicado tu recinto?"
+        subtitle="Tu dirección solo se compartirá con los huéspedes después de que confirmen una reserva."
+        helpText="Puedes escribir tu dirección y presionar el botón de 'Buscar' o arrastrar el pin en el mapa para ajustar la ubicación exacta. Los campos se rellenarán automáticamente."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {/* Dirección (ocupa 2 columnas) */}
         <label className="flex flex-col gap-2 text-sm font-semibold text-blue-light-700 md:col-span-2">
           Dirección (Calle y Número)
           <div className="flex gap-2">

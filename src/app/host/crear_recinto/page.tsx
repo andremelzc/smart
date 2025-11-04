@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { Paso1_TipoRecinto } from '@/src/components/host/crear-recinto/Paso1_TipoRecinto';
 import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubicacion';
-// import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detalles';
+import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detalles';
 // import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
 // import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
 // import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
@@ -149,9 +149,7 @@ export default function PaginaCrearRecinto() {
           )}
 
           {currentStep === 2 && (
-            // <Paso2_Ubicacion data={...} updateData={updateData} />
             <Paso2_Ubicacion 
-              // Le pasamos solo los datos que necesita
               data={{
                 addressText: propertyData.addressText,
                 city: propertyData.city,
@@ -164,13 +162,16 @@ export default function PaginaCrearRecinto() {
           )}
 
           {currentStep === 3 && (
-            // <Paso3_Detalles data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 3: Detalles</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">
-                (Capacidad, cuartos, baños, camas, m2)
-              </p>
-            </div>
+            <Paso3_Detalles 
+              data={{
+                capacity: propertyData.capacity,
+                bedrooms: propertyData.bedrooms,
+                beds: propertyData.beds,
+                bathrooms: propertyData.bathrooms,
+                areaM2: propertyData.areaM2
+              }} 
+              updateData={updateData} 
+            />
           )}
 
           {currentStep === 4 && (
