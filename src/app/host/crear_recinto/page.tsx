@@ -2,6 +2,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { CheckCircle, X } from 'lucide-react';
 
 import { Paso1_TipoRecinto } from '@/src/components/host/crear-recinto/Paso1_TipoRecinto';
 import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubicacion';
@@ -10,7 +12,7 @@ import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servi
 import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
 import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
 import { Paso7_Precio } from '@/src/components/host/crear-recinto/Paso7_Precio';
-// import { Paso8_Reglas } from '@/src/components/host/crear-recinto/Paso8_Reglas';
+import { Paso8_Reglas } from '@/src/components/host/crear-recinto/Paso8_Reglas';
 import { Paso9_Resumen } from '@/src/components/host/crear-recinto/Paso9_Resumen';
 
 // Barra de progreso
@@ -64,10 +66,13 @@ interface PropertyData {
 }
 
 const MIN_PRICE = 10;
+const MIN_RULES_LENGTH = 20;
 
 export default function PaginaCrearRecinto() {
   
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const [propertyData, setPropertyData] = useState<PropertyData>({
     title: '',
@@ -93,17 +98,18 @@ export default function PaginaCrearRecinto() {
     bathrooms: 1,
     areaM2: 40,
     images: [],
-    amenities: [],
+    amenities: ['28.WIFI', '27.AC'],
   });
 
   const goToStep = (step: number) => {
-    if (currentStep === 9 && step < 9) {
+    if (step === currentStep + 1 || step === currentStep - 1) {
       setCurrentStep(step);
     }
-    else if (step === currentStep + 1 || step === currentStep - 1) {
+    else if (currentStep === 9 && step < 9) {
        setCurrentStep(step);
     }
   };
+
 
   const nextStep = () => {
     if (currentStep < 9) {
@@ -135,17 +141,30 @@ export default function PaginaCrearRecinto() {
     if (currentStep === 7 && propertyData.basePriceNight < MIN_PRICE) {
       return true;
     }
+    if (currentStep === 8) {
+      if (propertyData.checkinTime === '') return true;
+      if (propertyData.checkoutTime === '') return true; 
+      if (propertyData.houseRules.length < MIN_RULES_LENGTH) return true; 
+    }
     return false;
   };
 
   const handlePublish = () => {
     console.log("--- SIMULANDO PUBLICACIÓN ---");
     console.log("DATOS A ENVIAR AL BACKEND:", propertyData);
-    alert("¡Recinto publicado con éxito! (Simulación)");
+    setShowSuccessToast(true);
+
+    setTimeout(() => {
+      setShowSuccessToast(false);
+    }, 4000); 
+
+    setTimeout(() => {
+      console.log("Simulando redirección a /host/dashboard");
+    }, 1500);
   };
 
   return (
-    <div className="bg-blue-light-50">
+    <div className="bg-blue-light-50 pb-24">
       <ProgressBar 
         steps={stepLabels} 
         currentStep={currentStep} 
@@ -229,11 +248,14 @@ export default function PaginaCrearRecinto() {
           )}
           
           {currentStep === 8 && (
-            // <Paso8_Reglas data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 8: Reglas de la casa</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">Componente en construcción...</p>
-            </div>
+            <Paso8_Reglas 
+              data={{
+                houseRules: propertyData.houseRules,
+                checkinTime: propertyData.checkinTime,
+                checkoutTime: propertyData.checkoutTime
+              }} 
+              updateData={updateData} 
+            />
           )}
 
           {currentStep === 9 && (
@@ -275,6 +297,23 @@ export default function PaginaCrearRecinto() {
 
         </div>
       </div>
+      {showSuccessToast && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 
+                        flex items-center gap-3 
+                        bg-gray-dark-800 text-white 
+                        px-6 py-4 rounded-full shadow-lg
+                        border border-gray-dark-700"
+        >
+          <CheckCircle className="w-6 h-6 text-green-500" />
+          <span className="font-medium">Se agregó el recinto correctamente</span>
+          <button
+            onClick={() => setShowSuccessToast(false)}
+            className="ml-2 text-gray-dark-400 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
