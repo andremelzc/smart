@@ -9,8 +9,8 @@ import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detall
 import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
 import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
 import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
-// import { Paso7_Reglas } from '@/src/components/host/crear-recinto/Paso7_Reglas';
-// import { Paso8_Precio } from '@/src/components/host/crear-recinto/Paso8_Precio';
+import { Paso7_Precio } from '@/src/components/host/crear-recinto/Paso7_Precio';
+// import { Paso8_Reglas } from '@/src/components/host/crear-recinto/Paso8_Reglas';
 import { Paso9_Resumen } from '@/src/components/host/crear-recinto/Paso9_Resumen';
 
 // Barra de progreso
@@ -62,6 +62,8 @@ interface PropertyData {
   images: PropertyImageData[];
   amenities: string[];
 }
+
+const MIN_PRICE = 10;
 
 export default function PaginaCrearRecinto() {
   
@@ -129,6 +131,9 @@ export default function PaginaCrearRecinto() {
     if (currentStep === 6) {
       if (propertyData.title.length < 5) return true;
       if (propertyData.descriptionLong.length < 50) return true;
+    }
+    if (currentStep === 7 && propertyData.basePriceNight < MIN_PRICE) {
+      return true;
     }
     return false;
   };
@@ -214,11 +219,13 @@ export default function PaginaCrearRecinto() {
           )}
 
           {currentStep === 7 && (
-            // <Paso7_Precio data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 7: Precio</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">Componente en construcción...</p>
-            </div>
+            <Paso7_Precio 
+              data={{
+                basePriceNight: propertyData.basePriceNight,
+                currencyCode: propertyData.currencyCode
+              }} 
+              updateData={updateData} 
+            />
           )}
           
           {currentStep === 8 && (
