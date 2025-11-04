@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Paso1_TipoRecinto } from '@/src/components/host/crear-recinto/Paso1_TipoRecinto';
 import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubicacion';
 import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detalles';
-// import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
+import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
 // import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
 // import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
 // import { Paso7_Reglas } from '@/src/components/host/crear-recinto/Paso7_Reglas';
@@ -175,11 +175,12 @@ export default function PaginaCrearRecinto() {
           )}
 
           {currentStep === 4 && (
-            // <Paso4_Servicios data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 4: Servicios</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">Componente en construcción...</p>
-            </div>
+            <Paso4_Servicios 
+              data={{
+                amenities: propertyData.amenities
+              }} 
+              updateData={updateData} 
+            />
           )}
 
           {currentStep === 5 && (
