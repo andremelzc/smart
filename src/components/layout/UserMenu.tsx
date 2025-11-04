@@ -48,10 +48,10 @@ export default function UserMenu({
 
   // Función para abrir el modal SIN cerrar el menú
   const handleOpenModal = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsModalOpen(true);
-    onClose(); // Ahora sí cerramos el menú después de abrir el modal
-  };
+  e.stopPropagation();
+  setIsModalOpen(true);
+  // NO llamar a onClose() aquí
+};
 
   return (
     <>
@@ -61,7 +61,7 @@ export default function UserMenu({
         role="menu"
         aria-label={isAuthenticated ? "Menú de usuario" : "Menú de invitado"}
         style={{
-          animation: "fadeInDown 0.2s ease-out forwards"
+          animation: "fadeInDown 0.2s ease-out forwards",
         }}
       >
         {isAuthenticated ? (
@@ -255,9 +255,13 @@ export default function UserMenu({
       </div>
 
       {/* Modal FUERA del menú - se renderiza con Portal */}
+      {console.log("🔥 Rendering BecomeHostModal with isOpen:", isModalOpen)}
       <BecomeHostModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          console.log("🔥 Modal onClose called");
+          setIsModalOpen(false); // ✅ CORRECTO
+        }}
       />
     </>
   );
