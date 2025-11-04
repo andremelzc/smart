@@ -8,7 +8,7 @@ import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubica
 import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detalles';
 import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
 import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
-// import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
+import { Paso6_TituloDescripcion } from '@/src/components/host/crear-recinto/Paso6_TituloDescripcion';
 // import { Paso7_Reglas } from '@/src/components/host/crear-recinto/Paso7_Reglas';
 // import { Paso8_Precio } from '@/src/components/host/crear-recinto/Paso8_Precio';
 import { Paso9_Resumen } from '@/src/components/host/crear-recinto/Paso9_Resumen';
@@ -124,7 +124,11 @@ export default function PaginaCrearRecinto() {
 
   const isNextDisabled = () => {
     if (currentStep === 5 && propertyData.images.length === 0) {
-      return true;
+      return true; 
+    }
+    if (currentStep === 6) {
+      if (propertyData.title.length < 5) return true;
+      if (propertyData.descriptionLong.length < 50) return true;
     }
     return false;
   };
@@ -136,7 +140,7 @@ export default function PaginaCrearRecinto() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-light-50">
+    <div className="bg-blue-light-50">
       <ProgressBar 
         steps={stepLabels} 
         currentStep={currentStep} 
@@ -191,7 +195,6 @@ export default function PaginaCrearRecinto() {
           )}
 
           {currentStep === 5 && (
-            // <Paso5_Fotos data={...} updateData={updateData} />
             <Paso5_Fotos 
               data={{
                 images: propertyData.images
@@ -201,11 +204,13 @@ export default function PaginaCrearRecinto() {
           )}
 
           {currentStep === 6 && (
-            // <Paso6_TituloDescripcion data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 6: Título y Descripción</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">Componente en construcción...</p>
-            </div>
+            <Paso6_TituloDescripcion 
+              data={{
+                title: propertyData.title,
+                descriptionLong: propertyData.descriptionLong
+              }} 
+              updateData={updateData} 
+            />
           )}
 
           {currentStep === 7 && (

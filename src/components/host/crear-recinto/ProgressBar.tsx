@@ -42,13 +42,11 @@ export function ProgressBar({ steps, currentStep, onStepClick, isClickable }: Pr
             const isActive = stepNumber === currentStep;
             const isCompleted = stepNumber < currentStep;
 
-            // Clases de estado (color)
             const baseClasses = "transition-colors duration-200";
             let stateClasses = "text-gray-400"; 
             if (isActive) stateClasses = "text-blue-vivid-700 font-bold";
             if (isCompleted) stateClasses = "text-gray-800";
             
-            // Clases de cursor
             let cursorClass = "cursor-default";
             if (isClickable && (isCompleted || isActive)) {
                cursorClass = "cursor-pointer hover:text-blue-vivid-700";
