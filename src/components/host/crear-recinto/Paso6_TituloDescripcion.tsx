@@ -109,25 +109,25 @@ export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                 <span className="text-gray-dark-700">
-                  ¿Qué hace único a tu espacio? (Ej: "La vista desde el balcón es increíble al atardecer.")
+                  ¿Qué hace único a tu espacio? (Ej: &quot;La vista desde el balcón es increíble al atardecer.&quot;)
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                 <span className="text-gray-dark-700">
-                  ¿A qué tendrán acceso los huéspedes? (Ej: "Acceso completo a la cocina, piscina y gimnasio.")
+                  ¿A qué tendrán acceso los huéspedes? (Ej: &quot;Acceso completo a la cocina, piscina y gimnasio.&quot;)
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                 <span className="text-gray-dark-700">
-                  ¿Cómo es el vecindario? (Ej: "Es una zona tranquila y residencial, a 10 min a pie del centro.")
+                  ¿Cómo es el vecindario? (Ej: &quot;Es una zona tranquila y residencial, a 10 min a pie del centro.&quot;)
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <XCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
                 <span className="text-gray-dark-700">
-                  Evita usar mayúsculas (Ej: "OFERTA IMPERDIBLE").
+                  Evita usar mayúsculas (Ej: &quot;OFERTA IMPERDIBLE&quot;).
                 </span>
               </li>
             </ul>

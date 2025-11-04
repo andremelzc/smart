@@ -13,7 +13,17 @@ interface StepProps {
   updateData: (data: Partial<StepProps['data']>) => void;
 }
 
-function DetailStepper({ icon, label, description, value, onIncrease, onDecrease, min = 0 }: any) {
+interface DetailStepperProps {
+  icon: React.ReactNode;
+  label: string;
+  description?: string;
+  value: number;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  min?: number;
+}
+
+function DetailStepper({ icon, label, description, value, onIncrease, onDecrease, min = 0 }: DetailStepperProps) {
   const isMin = value <= min;
   
   return (
@@ -154,7 +164,7 @@ export function Paso3_Detalles({ data, updateData }: StepProps) {
           </div>
 
           <div className="relative mt-1">
-            <Ruler className="w-6 h-6 text-blue-light-700 absolute left-4 top-1/4 -translate-y-1/y-1/2 z-10" />
+            <Ruler className="w-6 h-6 text-blue-light-700 absolute left-4 top-1/4 -translate-y-1/2 z-10" />
             <input
               type="number"
               name="areaM2"

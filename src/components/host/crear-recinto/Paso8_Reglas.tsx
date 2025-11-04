@@ -125,14 +125,14 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                <span className="text-gray-dark-700">
-                  Ruido: ¿Hay horarios de silencio? (Ej: "No música alta después de las 10 PM").
-                </span>
+                  <span className="text-gray-dark-700">
+                    Ruido: ¿Hay horarios de silencio? (Ej: &quot;No música alta después de las 10 PM&quot;).
+                  </span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                 <span className="text-gray-dark-700">
-                  Seguridad: (Ej: "Cerrar siempre la puerta principal con llave").
+                  Seguridad: (Ej: &quot;Cerrar siempre la puerta principal con llave&quot;).
                 </span>
               </li>
               <li className="flex items-start gap-2">

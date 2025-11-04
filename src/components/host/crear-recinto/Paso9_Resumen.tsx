@@ -2,12 +2,48 @@
 import { StepHeader } from './StepHeader';
 import { Edit, Camera, Home, MapPin, Users, Sparkles, DollarSign, ListChecks } from 'lucide-react';
 
+interface ImageItem {
+  url: string;
+  caption?: string;
+  sortOrder?: number | string;
+}
+
+interface SummaryData {
+  title?: string;
+  propertyType?: string;
+  capacity?: number;
+  bedrooms?: number;
+  beds?: number;
+  bathrooms?: number;
+  areaM2?: number;
+  amenities?: unknown[];
+  checkinTime?: string;
+  checkoutTime?: string;
+  houseRules?: string;
+  images?: ImageItem[];
+  addressText?: string;
+  city?: string;
+  stateRegion?: string;
+  country?: string;
+  postalCode?: string;
+  currencyCode?: string;
+  basePriceNight?: number;
+}
+
 interface StepProps {
-  data: any; 
+  data: SummaryData;
   goToStep: (step: number) => void;
 }
 
-function ResumenSection({ title, editStep, icon, children, goToStep }: any) {
+interface ResumenSectionProps {
+  title: string;
+  editStep: number;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  goToStep: (step: number) => void;
+}
+
+function ResumenSection({ title, editStep, icon, children, goToStep }: ResumenSectionProps) {
   return (
     <div className="rounded-2xl border-2 border-blue-light-300 bg-white">
       <div className="flex justify-between items-center p-4 border-b border-blue-light-300">
@@ -60,17 +96,17 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
 
           <ResumenSection title="Detalles del Espacio" editStep={3} goToStep={goToStep} icon={<Users className="w-6 h-6 text-blue-light-700" />}>
             <ul className="list-disc list-inside text-md text-gray-dark-700 space-y-1">
-              <li>{data.capacity} huéspedes</li>
-              <li>{data.bedrooms} {data.bedrooms === 1 ? 'habitación' : 'habitaciones'}</li>
-              <li>{data.beds} {data.beds === 1 ? 'cama' : 'camas'}</li>
-              <li>{data.bathrooms} {data.bathrooms === 1 ? 'baño' : 'baños'}</li>
-              {data.areaM2 > 0 && <li>{data.areaM2} m²</li>}
+              <li>{data.capacity ?? 0} huéspedes</li>
+              <li>{data.bedrooms ?? 0} {data.bedrooms === 1 ? 'habitación' : 'habitaciones'}</li>
+              <li>{data.beds ?? 0} {data.beds === 1 ? 'cama' : 'camas'}</li>
+              <li>{data.bathrooms ?? 0} {data.bathrooms === 1 ? 'baño' : 'baños'}</li>
+              {typeof data.areaM2 === 'number' && data.areaM2 > 0 && <li>{data.areaM2} m²</li>}
             </ul>
           </ResumenSection>
 
           <ResumenSection title="Servicios" editStep={4} goToStep={goToStep} icon={<Sparkles className="w-6 h-6 text-blue-light-700" />}>
             <p className="text-md text-gray-dark-700">
-              {data.amenities.length} {data.amenities.length === 1 ? 'servicio seleccionado' : 'servicios seleccionados'}.
+              {Array.isArray(data.amenities) ? data.amenities.length : 0} {Array.isArray(data.amenities) && data.amenities.length === 1 ? 'servicio seleccionado' : 'servicios seleccionados'}.
             </p>
           </ResumenSection>
 
@@ -86,12 +122,12 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
 
           <ResumenSection title="Fotos" editStep={5} goToStep={goToStep} icon={<Camera className="w-6 h-6 text-blue-light-700" />}>
             <div className="grid grid-cols-3 gap-2 rounded-lg overflow-hidden border border-blue-light-150">
-              {data.images.slice(0, 3).map((img: any) => ( // Mostramos las primeras 3
-                <div key={img.sortOrder} className="aspect-square">
-                  <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+              {Array.isArray(data.images) && data.images.slice(0, 3).map((img, idx) => (
+                <div key={img.sortOrder ?? idx} className="aspect-square">
+                  <img src={img.url} alt={img.caption ?? `Foto ${idx + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
-              {data.images.length > 3 && (
+              {Array.isArray(data.images) && data.images.length > 3 && (
                 <div className="aspect-square bg-blue-light-50 flex items-center justify-center text-blue-light-700 font-semibold">
                   +{data.images.length - 3} más
                 </div>
@@ -107,7 +143,7 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
 
           <ResumenSection title="Precio" editStep={7} goToStep={goToStep} icon={<DollarSign className="w-6 h-6 text-blue-light-700" />}>
             <span className="text-3xl font-bold text-gray-dark-900">
-              {formatCurrency(data.basePriceNight)}
+              {formatCurrency(data.basePriceNight ?? 0)}
             </span>
             <span className="text-lg text-gray-dark-600"> / noche</span>
           </ResumenSection>

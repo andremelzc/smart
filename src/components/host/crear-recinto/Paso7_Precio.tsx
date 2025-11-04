@@ -1,7 +1,7 @@
 // src/components/host/crear-recinto/Paso7_Precio.tsx
 import { StepHeader } from './StepHeader';
-import { Lightbulb, DollarSign, TrendingUp, Percent, Info } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Lightbulb, TrendingUp, Info } from 'lucide-react';
+import { useState, useEffect, startTransition } from 'react';
 
 interface StepProps {
   data: {
@@ -21,8 +21,11 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
   );
 
   useEffect(() => {
-    setLocalPriceString(data.basePriceNight > 0 ? data.basePriceNight.toString() : '');
-  }, [data.basePriceNight]);
+    const newStr = data.basePriceNight > 0 ? data.basePriceNight.toString() : '';
+    if (newStr !== localPriceString) {
+      startTransition(() => setLocalPriceString(newStr));
+    }
+  }, [data.basePriceNight, localPriceString]);
 
 
   const basePrice = data.basePriceNight;
