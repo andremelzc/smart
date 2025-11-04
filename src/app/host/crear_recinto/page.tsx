@@ -4,7 +4,7 @@
 import { useState } from 'react';
 
 import { Paso1_TipoRecinto } from '@/src/components/host/crear-recinto/Paso1_TipoRecinto';
-// import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubicacion';
+import { Paso2_Ubicacion } from '@/src/components/host/crear-recinto/Paso2_Ubicacion';
 // import { Paso3_Detalles } from '@/src/components/host/crear-recinto/Paso3_Detalles';
 // import { Paso4_Servicios } from '@/src/components/host/crear-recinto/Paso4_Servicios';
 // import { Paso5_Fotos } from '@/src/components/host/crear-recinto/Paso5_Fotos';
@@ -150,10 +150,17 @@ export default function PaginaCrearRecinto() {
 
           {currentStep === 2 && (
             // <Paso2_Ubicacion data={...} updateData={updateData} />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-dark-800">Paso 2: Ubicación</h1>
-              <p className="mt-2 text-lg text-gray-dark-500">Componente en construcción...</p>
-            </div>
+            <Paso2_Ubicacion 
+              // Le pasamos solo los datos que necesita
+              data={{
+                addressText: propertyData.addressText,
+                city: propertyData.city,
+                stateRegion: propertyData.stateRegion,
+                country: propertyData.country,
+                postalCode: propertyData.postalCode
+              }} 
+              updateData={updateData} 
+            />
           )}
 
           {currentStep === 3 && (

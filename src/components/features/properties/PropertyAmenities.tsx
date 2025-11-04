@@ -9,7 +9,26 @@ import {
   Coffee, 
   Shield, 
   Waves, 
-  Dumbbell 
+  Dumbbell,
+  WashingMachine,
+  Flame,
+  Laptop,
+  Wind,
+  Zap,
+  Baby,
+  Bed,
+  ChefHat,
+  Cigarette,
+  MapPin,
+  Mountain,
+  ShieldCheck,
+  ShieldAlert,
+  Heart,
+  Volume2,
+  Accessibility,
+  ParkingCircle,
+  Clock,
+    PawPrintIcon,
 } from 'lucide-react';
 
 interface Amenity {
@@ -22,18 +41,56 @@ interface PropertyAmenitiesProps {
   className?: string;
 }
 
-// Mapeo de iconos para amenities - puede ser extendido fácilmente
+// Mapeo de iconos para amenities basado en la API
 const amenityIcons: Record<string, any> = {
-  wifi: Wifi,
-  parking: Car,
-  tv: Tv,
-  ac: AirVent,
+  // Amenidades básicas
+  AC: AirVent,
+  WIFI: Wifi,
+  TV: Tv,
+  KITCHEN: Coffee,
+  GYM: Dumbbell,
+  POOL: Waves,
+  WASHER: WashingMachine,
+  DRYER: Wind,
+  HEATING: Flame,
+  WORKSPACE: Laptop,
+  HAIR_DRYER: Wind,
+  IRON: Zap,
+  JACUZZI: Waves,
+  PARKING: Car,
+  EV_CHARGER: Zap,
+  CRIB: Baby,
+  KING_BED: Bed,
+  BBQ: ChefHat,
+  BREAKFAST: Coffee,
+  FIREPLACE: Flame,
+  SMOKING: Cigarette,
+
+  // Ubicación
+  BEACHFRONT: Waves,
+  COAST: MapPin,
+  SKI_ACCESS: Mountain,
+
+  // Seguridad
+  SMOKE_DETECTOR: ShieldCheck,
+  CO_DETECTOR: ShieldAlert,
+
+  // Políticas
+  PETS_ALLOWED: PawPrintIcon,
+  SMOKING_ALLOWED: Cigarette,
+  PARTIES_ALLOWED: Volume2,
+  FAMILY_FRIENDLY: Heart,
+  BABY_FRIENDLY: Baby,
+  WHEELCHAIR_ACCESSIBLE: Accessibility,
+  PARKING_AVAILABLE: ParkingCircle,
+  QUIET_HOURS: Clock,
+
+  // Fallbacks para iconos antiguos (mantener compatibilidad)
   air_conditioning: AirVent,
   kitchen: Coffee,
   security: Shield,
   pool: Waves,
   gym: Dumbbell,
-  // Agregar más mapeos según sea necesario
 };
 
 export function PropertyAmenities({ 
@@ -60,11 +117,17 @@ export function PropertyAmenities({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {visibleAmenities.map((amenity, index) => {
-          const IconComponent = amenityIcons[amenity.icon || ''] || Wifi;
+          // Safely get the icon, with fallback to Wifi if not found
+          const iconKey = amenity.icon ? amenity.icon.toUpperCase() : '';
+          const IconComponent = amenityIcons[iconKey] || Wifi;
+
+          // Safely get the amenity name
+          const amenityName = amenity.name || 'Amenidad';
+
           return (
             <div key={index} className="flex items-center gap-3">
               <IconComponent className="w-5 h-5 text-gray-600" />
-              <span>{typeof amenity.name === 'string' ? amenity.name : ''}</span>
+              <span>{amenityName}</span>
             </div>
           );
         })}
