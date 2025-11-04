@@ -1,7 +1,7 @@
 // src/components/host/crear-recinto/Paso4_Servicios.tsx
 import { StepHeader } from './StepHeader';
 import {
-  Wifi, Wind, Car, Utensils, Waves, Dumbbell, Tv, Shirt,
+  Wifi, Wind, Car, Utensils, Waves, Dumbbell, Tv,
   Thermometer, ShieldCheck, Siren, Baby, Dog, HelpCircle, Sparkles,
   Briefcase, Anvil, Bath, BatteryCharging, BedDouble, Flame, Croissant,
   FlameKindling, Cigarette, Sun, Snowflake, PartyPopper, Users,

@@ -1,6 +1,6 @@
 // src/components/host/crear-recinto/Paso5_Fotos.tsx
 import { StepHeader } from './StepHeader';
-import { UploadCloud, Image, Trash2 } from 'lucide-react';
+import { UploadCloud, Trash2 } from 'lucide-react';
 import { useRef } from 'react'; 
 
 
