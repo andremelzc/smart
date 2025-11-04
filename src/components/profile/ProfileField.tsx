@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check, X, Pencil } from 'lucide-react';
-import { formatDateForDisplay, formatDateForInput } from '@/src/utils/dateUtils';
+import { formatDateForDisplay } from '@/src/utils/dateUtils';
 
 interface ProfileFieldProps {
   label: string;

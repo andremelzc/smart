@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Download, Share2, Settings, LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children?: React.ReactNode;
@@ -83,3 +83,5 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     </button>
   );
 });
+
+Button.displayName = 'Button';

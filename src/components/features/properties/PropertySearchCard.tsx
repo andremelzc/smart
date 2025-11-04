@@ -3,6 +3,7 @@
 import { Heart, Star } from 'lucide-react';
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 type PropertySearchCardProps = {
   data: Record<string, unknown>;
@@ -234,7 +235,7 @@ export function PropertySearchCard({
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         {imageUrl ? (
-          <img src={imageUrl} alt={propertyName} className="h-full w-full object-cover" loading="lazy" />
+          <Image src={imageUrl} alt={propertyName} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${gradientClass} text-3xl font-semibold text-white`}>
             {propertyName.charAt(0).toUpperCase()}
@@ -267,7 +268,7 @@ export function PropertySearchCard({
         {(hostName || hostAvatar) && (
           <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-gray-dark-600 shadow-sm backdrop-blur">
             {hostAvatar ? (
-              <img src={hostAvatar} alt={hostName ?? 'Anfitrión'} className="h-7 w-7 rounded-full object-cover" loading="lazy" />
+              <Image src={hostAvatar} alt={hostName ?? 'Anfitrión'} width={28} height={28} className="rounded-full object-cover" />
             ) : (
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-light-200 text-blue-light-700">
                 {hostInitial}

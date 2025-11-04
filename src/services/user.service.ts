@@ -19,7 +19,7 @@ export interface UserProfileResponse {
   updatedAt: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
@@ -54,11 +54,12 @@ export const userService = {
         hostId: data.hostId,
         message: data.message,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error en becomeHost:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
       return {
         success: false,
-        error: error.message || "Error desconocido",
+        error: errorMessage,
       };
     }
   },
@@ -92,9 +93,10 @@ export const userService = {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error en updateProfile:", error);
-      throw new Error(error.message || "Error de conexión");
+      const errorMessage = error instanceof Error ? error.message : "Error de conexión";
+      throw new Error(errorMessage);
     }
   },
 
@@ -118,9 +120,10 @@ export const userService = {
       }
 
       return data.data!;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error en getProfile:", error);
-      throw new Error(error.message || "Error de conexión");
+      const errorMessage = error instanceof Error ? error.message : "Error de conexión";
+      throw new Error(errorMessage);
     }
   },
 

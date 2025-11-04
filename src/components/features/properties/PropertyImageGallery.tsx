@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 
 interface PropertyImage {
   url: string;
@@ -23,7 +23,9 @@ export function PropertyImageGallery({
 
   // Reset to first image when images change
   useEffect(() => {
-    setCurrentImageIndex(0);
+    startTransition(() => {
+      setCurrentImageIndex(0);
+    });
   }, [images]);
 
   const nextImage = () => {

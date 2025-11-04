@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState, startTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePropertySearch } from '@/src/hooks/usePropertySearch';
 import type { PropertyFilterDto } from '@/src/types/dtos/properties.dto';
@@ -101,11 +101,14 @@ export default function PropertySearchPage() {
   const searchParamsKey = searchParams.toString();
   useEffect(() => {
     if (!searchParamsKey) {
-      setFormValues({ ...EMPTY_FORM });
-      setSelectedAmenities([]);
-      setMapBounds(null);
-      setAppliedFilters(null);
-      setError(null);
+      // Use startTransition to batch state updates and prevent cascading renders
+      startTransition(() => {
+        setFormValues({ ...EMPTY_FORM });
+        setSelectedAmenities([]);
+        setMapBounds(null);
+        setAppliedFilters(null);
+        setError(null);
+      });
       return;
     }
 
@@ -123,8 +126,6 @@ export default function PropertySearchPage() {
       baths: params.get('baths') ?? '',
     };
 
-    setFormValues(nextForm);
-
     const amenityValues = params.getAll('amenities');
     const amenityTokens = amenityValues.length > 0
       ? amenityValues
@@ -136,9 +137,6 @@ export default function PropertySearchPage() {
     const parsedAmenityIds = amenityTokens
       .map((value) => Number(value))
       .filter((value) => Number.isInteger(value) && value > 0);
-
-    setSelectedAmenities(parsedAmenityIds);
-    setError(null);
 
     const latMin = parseNumericString(params.get('latMin'));
     const latMax = parseNumericString(params.get('latMax'));
@@ -153,7 +151,13 @@ export default function PropertySearchPage() {
         ? { latMin, latMax, lngMin, lngMax }
         : null;
 
-    setMapBounds(initialBounds);
+    // Batch all state updates to prevent cascading renders
+    startTransition(() => {
+      setFormValues(nextForm);
+      setSelectedAmenities(parsedAmenityIds);
+      setMapBounds(initialBounds);
+      setError(null);
+    });
 
     const initialFilters = buildFilters(nextForm, parsedAmenityIds, initialBounds);
 
@@ -174,7 +178,7 @@ export default function PropertySearchPage() {
   }, [searchParamsKey, search]);
 
   useEffect(() => {
-    const handleOpenFilters = (_event: Event) => setShowFilters(true);
+    const handleOpenFilters = () => setShowFilters(true);
 
     window.addEventListener('toggle-search-filters', handleOpenFilters);
 
@@ -231,7 +235,7 @@ export default function PropertySearchPage() {
     const nights = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
     return nights > 0 ? nights : null;
-  }, [appliedFilters?.startDate, appliedFilters?.endDate]);
+  }, [appliedFilters]);
 
   const closeFilters = () => setShowFilters(false);
 

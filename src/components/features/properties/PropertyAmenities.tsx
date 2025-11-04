@@ -42,7 +42,7 @@ interface PropertyAmenitiesProps {
 }
 
 // Mapeo de iconos para amenities basado en la API
-const amenityIcons: Record<string, any> = {
+const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   // Amenidades básicas
   AC: AirVent,
   WIFI: Wifi,

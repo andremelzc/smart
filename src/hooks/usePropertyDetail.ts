@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PropertyDetail } from '@/src/types/dtos/properties.dto';
 
 interface UsePropertyDetailReturn {
@@ -15,7 +15,7 @@ export const usePropertyDetail = (propertyId: string | number): UsePropertyDetai
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProperty = async () => {
+  const fetchProperty = useCallback(async () => {
     if (!propertyId) {
       setError('ID de propiedad no válido');
       setIsLoading(false);
@@ -52,11 +52,11 @@ export const usePropertyDetail = (propertyId: string | number): UsePropertyDetai
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [propertyId]);
 
   useEffect(() => {
     fetchProperty();
-  }, [propertyId]);
+  }, [fetchProperty]);
 
   const refetch = () => {
     fetchProperty();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, startTransition } from "react";
 import { X, Calendar, User, Hash, FileText, Mail, Phone } from "lucide-react";
 
 type GuestRequestModalProps = {
@@ -32,7 +32,9 @@ export default function GuestRequestModal({
       return () => clearTimeout(timeout);
     }
 
-    setIsVisible(false);
+    startTransition(() => {
+      setIsVisible(false);
+    });
     return undefined;
   }, [open]);
 

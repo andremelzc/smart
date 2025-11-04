@@ -7,7 +7,7 @@ export class PropertyFilterService {
    * Ejecuta el filtro de propiedades usando el SP FILTER_PKG.SP_SEARCH_PROPERTIES
    * y devuelve los resultados como un arreglo de objetos.
    */
-  static async searchProperties(filters: PropertyFilterDto): Promise<any[]> {
+  static async searchProperties(filters: PropertyFilterDto): Promise<Record<string, unknown>[]> {
     let connection: oracledb.Connection | undefined;
 
     try {
@@ -54,9 +54,9 @@ export class PropertyFilterService {
         p_rooms: { val: filters.rooms ?? null, dir: oracledb.BIND_IN },
         p_beds: { val: filters.beds ?? null, dir: oracledb.BIND_IN },
         p_baths: { val: filters.baths ?? null, dir: oracledb.BIND_IN },
-  p_capacity_total: { val: capacityTotal, dir: oracledb.BIND_IN },
-  p_start_date: { dir: oracledb.BIND_IN, type: oracledb.DATE, val: startDate },
-  p_end_date: { dir: oracledb.BIND_IN, type: oracledb.DATE, val: endDate },
+        p_capacity_total: { val: capacityTotal, dir: oracledb.BIND_IN },
+        p_start_date: { dir: oracledb.BIND_IN, type: oracledb.DATE, val: startDate },
+        p_end_date: { dir: oracledb.BIND_IN, type: oracledb.DATE, val: endDate },
         p_lat_min: { val: filters.latMin ?? null, dir: oracledb.BIND_IN },
         p_lat_max: { val: filters.latMax ?? null, dir: oracledb.BIND_IN },
         p_lng_min: { val: filters.lngMin ?? null, dir: oracledb.BIND_IN },
@@ -88,18 +88,21 @@ export class PropertyFilterService {
         END;`,
         bindParams,
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        );
+      );
 
       // ✅ Cast seguro para evitar el error TS
-      const outBinds = result.outBinds as { p_result_set?: oracledb.ResultSet<any> };
+      const outBinds = result.outBinds as { p_result_set?: oracledb.ResultSet<unknown> };
       const cursor = outBinds?.p_result_set;
 
-      const rows: any[] = [];
-      let row;
+      const rows: Record<string, unknown>[] = [];
 
       if (cursor) {
+        let row: unknown;
+        // ✅ FIX: Cast explícito del row al tipo correcto
         while ((row = await cursor.getRow())) {
-          rows.push(row);
+          if (row && typeof row === 'object') {
+            rows.push(row as Record<string, unknown>);
+          }
         }
         await cursor.close();
       }

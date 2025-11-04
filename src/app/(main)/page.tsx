@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { GoogleButton } from '@/src/components/features/auth/GoogleButton';
 import { useAuth } from '@/src/hooks/useAuth';
 import { signOut } from 'next-auth/react';
@@ -25,10 +26,12 @@ export default function Home() {
         <div className="mt-8 flex flex-col items-center gap-6 rounded-lg border border-gray-200 bg-white p-8 shadow-lg">
           <div className="text-center">
             {user?.image && (
-              <img 
+              <Image 
                 src={user.image} 
                 alt={user.name || 'User'} 
-                className="mx-auto mb-4 h-20 w-20 rounded-full"
+                width={80}
+                height={80}
+                className="mx-auto mb-4 h-20 w-20 rounded-full object-cover"
               />
             )}
             <h2 className="text-2xl font-semibold">¡Hola, {user?.name}! 👋</h2>

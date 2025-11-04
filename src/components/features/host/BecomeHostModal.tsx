@@ -38,7 +38,7 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
       } else {
         setError(result.error || 'Error desconocido');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error de conexión. Por favor, inténtalo de nuevo.');
       console.error('Error en handleSubmit:', err);
     } finally {

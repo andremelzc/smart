@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, startTransition } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import L, { type LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -32,7 +32,7 @@ const BOUNDS_TOLERANCE = 1e-5;
 
 const PRICE_KEYS = ['total_price', 'price_total', 'amount_total', 'grand_total', 'price_per_night', 'base_price_night', 'nightly_price', 'price'];
 const CURRENCY_KEYS = ['currency', 'currency_code', 'moneda'];
-const TITLE_KEYS = ['property_name', 'title', 'name', 'headline'];
+// const TITLE_KEYS = ['property_name', 'title', 'name', 'headline']; // Currently unused
 const LATITUDE_KEYS = ['latitude', 'lat', 'latitud'];
 const LONGITUDE_KEYS = ['longitude', 'lng', 'longitud', 'lon'];
 
@@ -218,7 +218,9 @@ export function PropertySearchMap({ items, bounds, loading, onBoundsChange }: Pr
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    startTransition(() => {
+      setIsClient(true);
+    });
   }, []);
 
   const markers = useMemo<MarkerPoint[]>(() => {

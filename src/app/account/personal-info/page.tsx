@@ -44,13 +44,24 @@ export default function PersonalInfoPage() {
 
   const isProfileComplete = missingFields.length === 0;
 
+  // Mapeo de fieldKey a propiedades reales de UserProfile
+  type FieldKey = 'name' | 'email' | 'phone' | 'dni' | 'birthdate';
+  
+  const fieldKeyMap: Record<FieldKey, string> = {
+    'name': 'firstName', // Se maneja especialmente en ProfileField
+    'email': 'email',
+    'phone': 'phone',
+    'dni': 'dni',
+    'birthdate': 'birthDate'
+  };
+
   // Función helper para crear las props de cada campo
-  const getFieldProps = (fieldKey: string, type: 'text' | 'email' | 'tel' | 'date' = 'text') => ({
+  const getFieldProps = (fieldKey: FieldKey, type: 'text' | 'email' | 'tel' | 'date' = 'text') => ({
     fieldKey,
     type,
-    isEditing: editingField === fieldKey,
+    isEditing: editingField === fieldKeyMap[fieldKey],
     isSaving: saving,
-    onEdit: () => handleEdit(fieldKey as any),
+    onEdit: () => handleEdit(fieldKeyMap[fieldKey] as "name" | "email" | "phone" | "dni" | "birthdate"),
     onSave: handleSave,
     onCancel: handleCancel,
     onTempValueChange: (value: string) => setTempData({ [fieldKey]: value }),

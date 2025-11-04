@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Menu, Home, ArrowLeft } from "lucide-react";
-import { Button } from "@/src/components/ui/Button";
 import { useAuth } from "@/src/hooks/useAuth";
 import UserMenu from "@/src/components/layout/UserMenu";
 import { authService } from "@/src/services/auth.service";
@@ -10,7 +9,7 @@ import { authService } from "@/src/services/auth.service";
 export default function AccountNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

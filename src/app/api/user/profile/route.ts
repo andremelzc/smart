@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
       console.log("🔧 Query SQL:", query);
       console.log("🔧 Parámetros:", params);
 
-      const result = await executeQuery(query, params);
+      await executeQuery(query, params);
 
       console.log("✅ Perfil actualizado exitosamente:", {
         userId: session.user.id,
@@ -104,12 +104,13 @@ export async function PUT(request: NextRequest) {
           updatedFields: body,
         },
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error("❌ Error en base de datos:", dbError);
 
       // Manejar errores específicos de Oracle
-      if (dbError.errorNum) {
-        switch (dbError.errorNum) {
+      const oracleError = dbError as { errorNum?: number; message?: string };
+      if (oracleError.errorNum) {
+        switch (oracleError.errorNum) {
           case 1:
             return NextResponse.json(
               { error: "El email ya está en uso por otro usuario" },
@@ -133,13 +134,11 @@ export async function PUT(request: NextRequest) {
 
       throw dbError;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Error general en API:", error);
     return NextResponse.json(
       {
         error: "Error interno del servidor",
-        details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
       { status: 500 }
     );
@@ -147,7 +146,7 @@ export async function PUT(request: NextRequest) {
 }
 
 // Método GET para obtener información del perfil actual usando SP
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -266,12 +265,13 @@ export async function GET(request: NextRequest) {
         success: true,
         data: profileData,
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error("❌ Error en SP obtener perfil:", dbError);
 
       // Manejar errores específicos de Oracle
-      if (dbError.errorNum) {
-        switch (dbError.errorNum) {
+      const oracleError = dbError as { errorNum?: number };
+      if (oracleError.errorNum) {
+        switch (oracleError.errorNum) {
           case 942:
             return NextResponse.json(
               { error: "Stored procedure no encontrado" },
@@ -292,14 +292,15 @@ export async function GET(request: NextRequest) {
 
       throw dbError;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Error general obteniendo perfil:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
 
     return NextResponse.json(
       {
         error: "Error interno del servidor",
         details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === "development" ? errorMessage : undefined,
       },
       { status: 500 }
     );

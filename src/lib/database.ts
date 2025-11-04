@@ -28,28 +28,33 @@ export async function getConnection(): Promise<oracledb.Connection> {
   return connection;
 }
 
-export async function executeQuery(sql: string, binds: any = {}) {
+export async function executeQuery(
+  sql: string, 
+  binds: oracledb.BindParameters = {},
+  options?: oracledb.ExecuteOptions
+) {
   let connection: oracledb.Connection | undefined;
   
   try {
     const poolInstance = await getPool();
     connection = await poolInstance.getConnection();
 
-    const options: oracledb.ExecuteOptions = {
+    const executeOptions: oracledb.ExecuteOptions = {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
-      autoCommit: true 
+      autoCommit: true,
+      ...options
     };
 
-    const result = await connection.execute(sql, binds, options);
+    const result = await connection.execute(sql, binds, executeOptions);
     return result;
 
   } catch (err) {
     console.error("Error en la consulta Oracle:", err);
-    throw err; // Lanza el error para que tu API lo capture
+    throw err;
   } finally {
     if (connection) {
       try {
-        await connection.close(); // ¡CRÍTICO! Devuelve la conexión al pool
+        await connection.close();
       } catch (err) {
         console.error("Error al cerrar la conexión:", err);
       }

@@ -69,7 +69,7 @@ export function useProfileEditing({
       setSaving(true);
       onMessage(null);
 
-      let updateData: UserProfile = {};
+      const updateData: UserProfile = {};
       let validationError = '';
 
       if (editingField === "name") {

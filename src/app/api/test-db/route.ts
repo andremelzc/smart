@@ -24,14 +24,14 @@ export async function GET() {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Error de conexión:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error.message,
-        errorType: error.constructor.name,
+        message: error instanceof Error ? error.message : 'Error de conexión',
+        errorType: error instanceof Error ? error.constructor.name : 'UnknownError',
         env: {
           DB_USERNAME: process.env.DB_USERNAME,
           DB_PASSWORD: process.env.DB_PASSWORD ? "********" : "(vacío)",

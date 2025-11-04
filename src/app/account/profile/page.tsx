@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { 
   User, 
   Briefcase, 
@@ -200,9 +201,11 @@ export default function ProfilePage() {
               <div className="lg:w-80 flex-shrink-0">
                 <div className="text-center">
                   {user?.image ? (
-                    <img
+                    <Image
                       src={user.image}
                       alt={firstName}
+                      width={128}
+                      height={128}
                       className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-gray-100"
                     />
                   ) : (

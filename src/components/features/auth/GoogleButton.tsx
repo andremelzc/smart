@@ -107,3 +107,5 @@ export const GoogleButton = React.forwardRef<HTMLButtonElement, GoogleButtonProp
     </button>
   );
 });
+
+GoogleButton.displayName = 'GoogleButton';

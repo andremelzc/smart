@@ -2,17 +2,15 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   Home,
   Building2,
   Calendar,
-  DollarSign,
-  Settings,
-  BarChart3,
-  MessageSquare,
-  Star,
-  Users,
   ChevronRight,
+  Star,
+  MessageSquare,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
 
@@ -72,10 +70,12 @@ export default function HostSidebar() {
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
           <div className="flex items-center gap-4">
             {user?.image ? (
-              <img
+              <Image
                 src={user.image}
                 alt={user.name || "Usuario"}
-                className="w-16 h-16 rounded-full object-cover border-3 border-white shadow-lg"
+                width={64}
+                height={64}
+                className="rounded-full object-cover border-3 border-white shadow-lg"
               />
             ) : (
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-3 border-white shadow-lg">

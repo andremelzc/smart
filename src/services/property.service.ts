@@ -1,13 +1,70 @@
 import oracledb from 'oracledb';
-import { UpdatePropertyBody, PropertyDetail, HostInfo, PropertyAmenity, PropertyImage, PropertyReviews, PropertyReview } from '@/src/types/dtos/properties.dto';
+import { UpdatePropertyBody, PropertyDetail, PropertyAmenity, PropertyImage, PropertyReview } from '@/src/types/dtos/properties.dto';
 import { getConnection } from '@/src/lib/database';
+
+// Tipos para datos de Oracle
+interface OracleLob {
+  getData: () => Promise<Buffer>;
+  allowHalfOpen?: boolean;
+  offset?: number;
+}
+
+interface OraclePropertyRow {
+  HOST_ID?: number;
+  TITLE?: string;
+  PROPERTY_TYPE?: string;
+  BASE_PRICE_NIGHT?: number;
+  CURRENCY_CODE?: string;
+  FORMATTED_ADDRESS?: string;
+  CITY?: string;
+  STATE_REGION?: string;
+  COUNTRY?: string;
+  LATITUDE?: number;
+  LONGITUDE?: number;
+  DESCRIPTION_LONG?: string;
+  HOUSE_RULES?: string;
+  CHECKIN_TIME?: string;
+  CHECKOUT_TIME?: string;
+  CAPACITY?: number;
+  BEDROOMS?: number;
+  BATHROOMS?: number;
+  BEDS?: number;
+  HOST_FIRST_NAME?: string;
+  HOST_LAST_NAME?: string;
+  HOST_JOINED_AT?: string | Date;
+  HOST_IS_VERIFIED?: number;
+}
+
+interface OracleImageRow {
+  URL?: string;
+  CAPTION?: string;
+}
+
+interface OracleAmenityRow {
+  NAME?: string;
+  CODE?: string;
+  DESCRIPTION?: string;
+}
+
+interface OracleReviewRow {
+  RATING?: number;
+  comment?: string;
+  CREATED_AT?: string | Date;
+  AUTHOR_FIRST_NAME?: string;
+  AUTHOR_LAST_NAME?: string;
+}
+
+interface OracleReviewsSummary {
+  TOTAL_COUNT?: number;
+  AVERAGE_RATING?: number;
+}
 
 export class PropertyService {
 
   /**
    * Helper para procesar datos de Oracle de manera segura y evitar referencias circulares
    */
-  private static async processOracleData(data: any): Promise<any> {
+  private static async processOracleData(data: unknown): Promise<unknown> {
     if (data === null || data === undefined) {
       return data;
     }
@@ -33,8 +90,13 @@ export class PropertyService {
 
     // Si es un objeto, verificar si es un CLOB/BLOB
     if (typeof data === 'object') {
+      // Type guard para LOB de Oracle
+      const isOracleLob = (obj: unknown): obj is OracleLob => {
+        return typeof obj === 'object' && obj !== null && 'getData' in obj && typeof (obj as OracleLob).getData === 'function';
+      };
+      
       // Verificar si es un LOB (CLOB/BLOB) de Oracle
-      if (data && typeof data.getData === 'function') {
+      if (isOracleLob(data)) {
         try {
           console.log('Reading LOB data...');
           const lobData = await data.getData();
@@ -45,8 +107,13 @@ export class PropertyService {
         }
       }
 
+      // Type guard para objeto tipo LOB
+      const hasLobProperties = (obj: unknown): obj is { allowHalfOpen?: boolean; offset?: number; toString?: () => string } => {
+        return typeof obj === 'object' && obj !== null && ('allowHalfOpen' in obj || 'offset' in obj);
+      };
+
       // Si parece ser un objeto CLOB/BLOB basado en sus propiedades
-      if (data.allowHalfOpen !== undefined && data.offset !== undefined) {
+      if (hasLobProperties(data)) {
         try {
           // Intentar convertir usando toString si está disponible
           if (typeof data.toString === 'function') {
@@ -64,22 +131,29 @@ export class PropertyService {
       }
 
       // Procesar objeto normal
-      const result: any = {};
+      const result: Record<string, unknown> = {};
       
-      // Solo copiar propiedades propias del objeto
-      for (const key in data) {
-        if (data.hasOwnProperty(key)) {
-          const value = data[key];
+      // Type guard para objeto indexable
+      const isIndexableObject = (obj: unknown): obj is Record<string, unknown> => {
+        return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+      };
+      
+      if (isIndexableObject(data)) {
+        // Solo copiar propiedades propias del objeto
+        for (const key in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const value = data[key];
           
-          // Evitar propiedades que pueden causar referencias circulares
-          if (key.startsWith('_') || 
-              key === 'constructor' || 
-              key === 'prototype' ||
-              typeof value === 'function') {
-            continue;
-          }
+            // Evitar propiedades que pueden causar referencias circulares
+            if (key.startsWith('_') || 
+                key === 'constructor' || 
+                key === 'prototype' ||
+                typeof value === 'function') {
+              continue;
+            }
 
-          result[key] = await this.processOracleData(value);
+            result[key] = await this.processOracleData(value);
+          }
         }
       }
       
@@ -92,7 +166,7 @@ export class PropertyService {
   /**
    * Helper para mapear resultados de Oracle que pueden venir como arrays
    */
-  private static async mapOracleResults(result: any): Promise<any[]> {
+  private static async mapOracleResults(result: oracledb.Result<unknown>): Promise<Record<string, unknown>[]> {
     console.log('mapOracleResults input:', {
       hasResult: !!result,
       hasRows: !!result?.rows,
@@ -109,11 +183,14 @@ export class PropertyService {
     if (Array.isArray(result.rows[0])) {
       console.log('mapOracleResults: Processing array format');
       // Los datos vienen como arrays, mapear usando metaData
-      const metaData = result.metaData as any[];
+      const metaData = result.metaData as oracledb.Metadata<unknown>[];
       const mapped = [];
       
       for (const row of result.rows) {
-        const obj: any = {};
+        // Type guard para array
+        if (!Array.isArray(row)) continue;
+        
+        const obj: Record<string, unknown> = {};
         
         for (let i = 0; i < metaData.length; i++) {
           const columnName = metaData[i].name;
@@ -150,7 +227,7 @@ export class PropertyService {
     } else {
       console.log('mapOracleResults: Processing object format');
       // Los datos ya vienen como objetos
-      return result.rows as any[];
+      return result.rows as Record<string, unknown>[];
     }
   }
 
@@ -196,11 +273,11 @@ export class PropertyService {
 
           // Verificar si hubo un error
           const outBinds = result.outBinds as {
-            out_details_cursor?: oracledb.ResultSet<any>;
-            out_images_cursor?: oracledb.ResultSet<any>;
-            out_amenities_cursor?: oracledb.ResultSet<any>;
-            out_reviews_summary_cur?: oracledb.ResultSet<any>;
-            out_reviews_list_cursor?: oracledb.ResultSet<any>;
+            out_details_cursor?: oracledb.ResultSet<unknown>;
+            out_images_cursor?: oracledb.ResultSet<unknown>;
+            out_amenities_cursor?: oracledb.ResultSet<unknown>;
+            out_reviews_summary_cur?: oracledb.ResultSet<unknown>;
+            out_reviews_list_cursor?: oracledb.ResultSet<unknown>;
             out_error_code?: string;
           };
 
@@ -210,10 +287,11 @@ export class PropertyService {
 
           // Procesar cursor de detalles
           const detailsCursor = outBinds?.out_details_cursor;
-          let detailsRow: any = null;
+          let detailsRow: OraclePropertyRow | null = null;
           if (detailsCursor) {
             const rawRow = await detailsCursor.getRow();
-            detailsRow = rawRow ? await this.processOracleData(rawRow) : null;
+            const processedRow = rawRow ? await this.processOracleData(rawRow) : null;
+            detailsRow = processedRow as OraclePropertyRow;
             await detailsCursor.close();
           }
 
@@ -228,7 +306,7 @@ export class PropertyService {
             let imageRow;
             let imageIndex = 0;
             while ((imageRow = await imagesCursor.getRow())) {
-              const processedImageRow = await this.processOracleData(imageRow);
+              const processedImageRow = await this.processOracleData(imageRow) as OracleImageRow;
               images.push({
                 id: imageIndex++,
                 url: processedImageRow.URL || '',
@@ -245,7 +323,7 @@ export class PropertyService {
           if (amenitiesCursor) {
             let amenityRow;
             while ((amenityRow = await amenitiesCursor.getRow())) {
-              const processedAmenityRow = await this.processOracleData(amenityRow);
+              const processedAmenityRow = await this.processOracleData(amenityRow) as OracleAmenityRow;
               amenities.push({
                 name: processedAmenityRow.NAME || '',
                 icon: processedAmenityRow.CODE || '',
@@ -257,11 +335,11 @@ export class PropertyService {
 
           // Procesar cursor de resumen de reviews
           const reviewsSummaryCursor = outBinds?.out_reviews_summary_cur;
-          let reviewsSummary: any = { TOTAL_COUNT: 0, AVERAGE_RATING: 0 };
+          let reviewsSummary: OracleReviewsSummary = { TOTAL_COUNT: 0, AVERAGE_RATING: 0 };
           if (reviewsSummaryCursor) {
             const rawSummaryRow = await reviewsSummaryCursor.getRow();
             if (rawSummaryRow) {
-              reviewsSummary = this.processOracleData(rawSummaryRow);
+              reviewsSummary = await this.processOracleData(rawSummaryRow) as OracleReviewsSummary;
             }
             await reviewsSummaryCursor.close();
           }
@@ -272,7 +350,7 @@ export class PropertyService {
           if (reviewsListCursor) {
             let reviewRow;
             while ((reviewRow = await reviewsListCursor.getRow())) {
-              const processedReviewRow = await this.processOracleData(reviewRow);
+              const processedReviewRow = await this.processOracleData(reviewRow) as OracleReviewRow;
               reviewsList.push({
                 rating: processedReviewRow.RATING || 0,
                 comment: processedReviewRow.comment || '',
@@ -497,7 +575,7 @@ export class PropertyService {
       );
 
       // Verificar si hubo un error
-      const errorCode = (result.outBinds as any)?.OUT_ERROR_CODE;
+      const errorCode = (result.outBinds as { OUT_ERROR_CODE?: string })?.OUT_ERROR_CODE;
 
       if (errorCode) {
         // Hubo un error en el SP

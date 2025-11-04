@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { X, Star, Home, CreditCard, Lock } from 'lucide-react';
 import { Button } from '@/src/components/ui/Button';
 
@@ -113,9 +114,11 @@ export function CheckoutModal({
             {/* Información de la propiedad */}
             <div className="flex items-start gap-4 rounded-2xl bg-white p-4 shadow-sm">
               {summaryImage?.url ? (
-                <img
+                <Image
                   src={summaryImage.url}
                   alt={summaryImage.alt || property.title}
+                  width={80}
+                  height={80}
                   className="h-20 w-20 rounded-2xl object-cover"
                 />
               ) : (

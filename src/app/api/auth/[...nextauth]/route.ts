@@ -6,6 +6,52 @@ import GoogleProvider from "next-auth/providers/google";
 // Importamos nuestras funciones de base de datos
 import { executeQuery, oracledb } from "@/src/lib/database";
 
+// Tipos específicos para NextAuth
+interface NextAuthAccount {
+  provider: string;
+  providerAccountId?: string;
+  type?: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+}
+
+interface NextAuthProfile {
+  sub?: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+  iss?: string;
+  aud?: string;
+  exp?: number;
+  iat?: number;
+}
+
+interface OracleResult {
+  rows?: unknown[][];
+  outBinds?: Record<string, unknown>;
+}
+
+interface DatabaseUser {
+  USER_ID: number;
+  EMAIL: string;
+  NAME: string;
+  AVATAR_URL?: string;
+  IS_HOST?: number;
+  IS_VERIFIED?: number;
+  CREATED_AT?: Date | string;
+}
+
+// Tipo extendido que incluye todas las propiedades adicionales
+interface ExtendedUser extends DatabaseUser {
+  id?: string;
+  dbUserId?: number;
+  dbIdentityId?: number;
+  dbRoles?: string[];
+  dbIsTenant?: boolean;
+  dbIsHost?: boolean;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -55,7 +101,9 @@ export const authOptions: NextAuthOptions = {
         END;`;
 
           // Aseguramos providerAccountId (fallback a profile.sub)
-          const providerAccountId = (account as any)?.providerAccountId ?? (profile as any)?.sub ?? "";
+          const typedAccount = account as NextAuthAccount;
+          const typedProfile = profile as NextAuthProfile;
+          const providerAccountId = typedAccount?.providerAccountId ?? typedProfile?.sub ?? "";
           const binds = {
             p_email: email,
             p_name: name,
@@ -72,7 +120,7 @@ export const authOptions: NextAuthOptions = {
             providerAccountId: account.providerAccountId,
           });
 
-          const result: any = await executeQuery(sql, binds);
+          const result = await executeQuery(sql, binds) as OracleResult;
 
           console.log(
             "📥 Respuesta completa de Oracle:",
@@ -82,13 +130,16 @@ export const authOptions: NextAuthOptions = {
           console.log("🔍 out_user_id:", result?.outBinds?.out_user_id);
           console.log("🔍 out_identity_id:", result?.outBinds?.out_identity_id);
 
-          const dbUserId = result?.outBinds?.out_user_id;
-          const dbIdentityId = result?.outBinds?.out_identity_id;
+          const dbUserId = result?.outBinds?.out_user_id as number;
+          const dbIdentityId = result?.outBinds?.out_identity_id as number;
 
           if (dbUserId != null && dbIdentityId != null) {
             console.log("✅ Usuario autenticado con IDs:", { dbUserId, dbIdentityId });
-            (user as any).dbUserId = dbUserId;
-            (user as any).dbIdentityId = dbIdentityId;
+            
+            // Usar el tipo extendido
+            const extendedUser = user as ExtendedUser;
+            extendedUser.dbUserId = dbUserId;
+            extendedUser.dbIdentityId = dbIdentityId;
 
             // Obtener roles del usuario desde USER_PKG.SP_GET_USER_ROLES
             try {
@@ -104,19 +155,19 @@ export const authOptions: NextAuthOptions = {
                 p_user_id: dbUserId,
                 out_is_tenant: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
                 out_is_host: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-              } as const;
+              };
 
-              const rolesRes: any = await executeQuery(rolesSql, rolesBinds);
+              const rolesRes = await executeQuery(rolesSql, rolesBinds) as OracleResult;
               const isTenant = Number(rolesRes?.outBinds?.out_is_tenant) === 1;
               const isHost = Number(rolesRes?.outBinds?.out_is_host) === 1;
 
-              (user as any).dbIsTenant = isTenant;
-              (user as any).dbIsHost = isHost;
-              (user as any).dbRoles = [
+              extendedUser.dbIsTenant = isTenant;
+              extendedUser.dbIsHost = isHost;
+              extendedUser.dbRoles = [
                 ...(isTenant ? ['tenant'] : []),
                 ...(isHost ? ['host'] : []),
               ];
-              console.log('👤 Roles asignados:', (user as any).dbRoles);
+              console.log('👤 Roles asignados:', extendedUser.dbRoles);
             } catch (rolesErr) {
               console.error('⚠️ No se pudieron obtener los roles del usuario:', rolesErr);
               // No bloqueamos el login por roles
@@ -141,19 +192,20 @@ export const authOptions: NextAuthOptions = {
      * 2. Se ejecuta después de 'signIn'.
      * Toma el ID de la BD (que adjuntamos) y lo guarda en el token de sesión.
      */
-    async jwt({ token, user, trigger, account }) {
+    async jwt({ token, user, trigger }) {
       // Solo hacemos esto la primera vez que se crea el token (al iniciar sesión)
       if (trigger === "signIn" && user) {
         // Guardamos el USER_ID en el token
-        if ((user as any)?.dbUserId) {
-          token.id = (user as any).dbUserId;
+        const typedUser = user as ExtendedUser;
+        if (typedUser?.dbUserId) {
+          token.id = typedUser.dbUserId;
         } else if (user.id) {
           // Para Credentials, el ID ya viene en user.id
           token.id = user.id;
         }
 
         // Si tenemos el IDENTITY_ID (viene de OAuth o podríamos obtenerlo de Credentials)
-        const identityId = (user as any)?.dbIdentityId; // ID de USER_AUTH_IDENTITIES
+        const identityId = typedUser?.dbIdentityId; // ID de USER_AUTH_IDENTITIES
 
         if (identityId) {
           token.identityId = identityId; // Guardamos identityId en el token
@@ -185,14 +237,15 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Persistir roles en el token
-        if ((user as any)?.dbRoles) {
-          (token as any).roles = (user as any).dbRoles as string[];
+        const userWithRoles = user as ExtendedUser;
+        if (userWithRoles?.dbRoles) {
+          (token as Record<string, unknown>).roles = userWithRoles.dbRoles;
         }
-        if (typeof (user as any)?.dbIsTenant !== 'undefined') {
-          (token as any).isTenant = (user as any).dbIsTenant as boolean;
+        if (typeof userWithRoles?.dbIsTenant !== 'undefined') {
+          (token as Record<string, unknown>).isTenant = userWithRoles.dbIsTenant;
         }
-        if (typeof (user as any)?.dbIsHost !== 'undefined') {
-          (token as any).isHost = (user as any).dbIsHost as boolean;
+        if (typeof userWithRoles?.dbIsHost !== 'undefined') {
+          (token as Record<string, unknown>).isHost = userWithRoles.dbIsHost;
         }
       }
       return token;
@@ -206,9 +259,11 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.id) {
         session.user.id = token.id as string;
         // Exponer roles a la sesión del cliente
-        (session.user as any).roles = (token as any).roles ?? [];
-        (session.user as any).isTenant = (token as any).isTenant ?? false;
-        (session.user as any).isHost = (token as any).isHost ?? false;
+        const extendedUser = session.user as Record<string, unknown>;
+        const extendedToken = token as Record<string, unknown>;
+        extendedUser.roles = extendedToken.roles ?? [];
+        extendedUser.isTenant = extendedToken.isTenant ?? false;
+        extendedUser.isHost = extendedToken.isHost ?? false;
       }
       return session;
     },

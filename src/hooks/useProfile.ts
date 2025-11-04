@@ -33,11 +33,12 @@ export function useProfile(): UseProfileReturn {
       
       // getProfile retorna directamente UserProfileResponse, no ApiResponse
       setProfileData(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching profile:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al conectar con el servidor';
       setMessage({
         type: 'error',
-        text: error.message || 'Error al conectar con el servidor'
+        text: errorMessage
       });
     } finally {
       setLoading(false);
@@ -68,11 +69,12 @@ export function useProfile(): UseProfileReturn {
         });
         return false;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating profile:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al conectar con el servidor';
       setMessage({
         type: 'error',
-        text: error.message || 'Error al conectar con el servidor'
+        text: errorMessage
       });
       return false;
     }

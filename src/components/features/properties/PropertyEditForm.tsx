@@ -12,7 +12,7 @@ interface PropertyEditFormProps {
   onCancel?: () => void;
 }
 
-interface FormData extends UpdatePropertyBody {}
+type FormData = UpdatePropertyBody;
 
 interface ValidationErrors {
   [key: string]: string;

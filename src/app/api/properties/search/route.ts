@@ -30,10 +30,11 @@ export async function GET() {
       data: results,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error en GET /api/properties/search:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor';
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: errorMessage },
       { status: 500 }
     );
   }
@@ -67,10 +68,11 @@ export async function POST(req: Request) {
       data: results
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error en /api/properties/search:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor';
     return NextResponse.json(
-      { success: false, message: error.message || 'Error interno del servidor' },
+      { success: false, message: errorMessage },
       { status: 500 }
     );
   }

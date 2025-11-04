@@ -16,12 +16,12 @@ export default function Navbar() {
   const [checkOutDate, setCheckOutDate] = useState<string | undefined>(undefined);
   const [guestCounts, setGuestCounts] = useState({ adults: 0, children: 0, babies: 0, pets: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0); // Para futuro uso
+  const [unreadNotifications] = useState(0); // Para futuro uso
   const [activeSearchPanel, setActiveSearchPanel] = useState<"location" | "dates" | "guests" | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const isSearchPage = pathname === "/search";

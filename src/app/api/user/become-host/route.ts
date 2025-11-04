@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     } as const;
 
     console.log(`📤 Llamando a ${qualifiedName} para userId:`, userId);
-    const result: any = await executeQuery(sql, binds);
+    const result = await executeQuery(sql, binds) as { outBinds?: { out_host_id?: number } };
     const hostId = result?.outBinds?.out_host_id;
 
     if (hostId == null) {
@@ -67,13 +67,14 @@ export async function POST(req: NextRequest) {
       message: "Ahora eres anfitrión. Por favor, vuelve a iniciar sesión para actualizar tu sesión.",
       hostId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("💥 Error en /api/user/become-host:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     return NextResponse.json(
       {
         success: false,
         error: "Error al procesar la solicitud",
-        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined,
       },
       { status: 500 }
     );
