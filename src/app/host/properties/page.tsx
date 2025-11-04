@@ -105,7 +105,7 @@ export default function PropertiesPage() {
         </div>
         <Button
           leftIcon={Plus}
-          onClick={() => router.push('/host/properties/publish')}
+          onClick={() => router.push('/host/properties/create')}
         >
           Nueva Propiedad
         </Button>
