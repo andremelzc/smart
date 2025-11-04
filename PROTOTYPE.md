@@ -86,14 +86,4 @@ El anfitrión accede a su panel de gestión donde puede ver todas sus propiedade
 - `/host/properties` — Panel principal de gestión con vista de todas las propiedades  
 - `/host/properties/publish` — Formulario para crear nueva publicación (actualmente en desarrollo)  
 - `/host/properties/edit/[id]` — Edición de propiedades existentes  
-- `/host/dashboard` — Acceso rápido desde dashboard con botón "Agregar propiedad"   
-
-
----
-
-## Guía rápida para probar los prototipos
-
-1. Accede a la ruta principal del escenario (por ejemplo, `/host/dashboard`).
-2. Sigue el flujo sugerido: selecciona fechas, aplica filtros, explora resultados, realiza una reserva o publica una habitación.
-3. Observa las automatizaciones: bloqueo de fechas, desglose de precios, validación de formularios, sincronía entre lista y mapa, etc.
-4. Verifica los estados y notificaciones generados por el sistema.
+- `/host/dashboard` — Acceso rápido desde dashboard con botón "Agregar propiedad"
