@@ -1,12 +1,24 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState, startTransition } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState, startTransition, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePropertySearch } from '@/src/hooks/usePropertySearch';
 import type { PropertyFilterDto } from '@/src/types/dtos/properties.dto';
 import { useSearchParams } from 'next/navigation';
 import { PropertySearchCard } from '@/src/components/features/properties/PropertySearchCard';
-import { PropertySearchMap, type MapBounds } from '@/src/components/features/properties/PropertySearchMap';
+import dynamic from 'next/dynamic';
+import type { MapBounds } from '@/src/components/features/properties/PropertySearchMap';
+
+// Importación dinámica del mapa para evitar problemas de SSR
+const PropertySearchMap = dynamic(
+  () => import('@/src/components/features/properties/PropertySearchMap').then(mod => mod.PropertySearchMap),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+    </div>
+  }
+);
 
 const AMENITY_OPTIONS = [
   { id: 53, label: 'Wi-Fi' },
@@ -89,7 +101,8 @@ const areBoundsEqual = (a: MapBounds | null, b: MapBounds | null) => {
   );
 };
 
-export default function PropertySearchPage() {
+// Componente separado que usa useSearchParams
+function PropertySearchContent() {
   const { search, results, loading } = usePropertySearch();
   const searchParams = useSearchParams();
   const [formValues, setFormValues] = useState<FilterFormState>({ ...EMPTY_FORM });
@@ -530,5 +543,18 @@ export default function PropertySearchPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Componente principal con Suspense boundary
+export default function PropertySearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <PropertySearchContent />
+    </Suspense>
   );
 }
