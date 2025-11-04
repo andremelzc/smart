@@ -34,7 +34,7 @@ export default function HostNavbar() {
 
   return (
     <nav className="w-full bg-blue-light-50 border-b border-blue-light-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-5 lg:py-6">
           {/* Left Side - Logo */}
           <div className="flex items-center">

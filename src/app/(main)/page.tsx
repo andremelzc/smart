@@ -49,7 +49,7 @@ export default function Home() {
       ) : (
         <div className="mt-8 flex flex-col items-center gap-4 w-full px-4">
           <p className="text-lg text-gray-600 text-center break-words w-full">
-            Inicia sesión para dsadadasasdasdasdasdsadasdasdasdadasadsadadasasdasdsadassssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+            Inicia sesión para continuar con el prototipo
           </p>
           <GoogleButton size="lg" />
         </div>
