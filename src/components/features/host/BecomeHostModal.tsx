@@ -13,16 +13,18 @@ interface BecomeHostModalProps {
 export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
 
-  // Animación de entrada
+  // Prevenir scroll del body cuando el modal está abierto
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => setIsVisible(true), 10);
+      document.body.style.overflow = 'hidden';
     } else {
-      setIsVisible(false);
+      document.body.style.overflow = 'unset';
     }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   const handleSubmit = async () => {
@@ -44,11 +46,6 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 200);
   };
 
   if (!isOpen) return null;
@@ -86,23 +83,20 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
 
   return (
     <div 
-      className={`fixed inset-0 bg-gray-dark-500/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-200 ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
-      onClick={handleClose}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 animate-fadeIn"
+      onClick={onClose}
     >
       <div 
-        className={`bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-auto transform transition-all duration-200 ${
-          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        }`}
+        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header con gradiente de tu paleta */}
+        {/* Header con gradiente */}
         <div className="relative bg-gradient-to-r from-blue-light-500 to-blue-vivid-500 p-8 rounded-t-2xl">
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/20 cursor-pointer hover:bg-white/30 transition-all"
             disabled={isLoading}
+            type="button"
           >
             <X className="w-5 h-5 text-white" />
           </button>
@@ -136,7 +130,7 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
               return (
                 <div 
                   key={index}
-                  className="group p-4 rounded-xl border border-neutral-500 hover:border-blue-light-400 hover:shadow-md transition-all duration-200 cursor-default"
+                  className="group p-4 rounded-xl border border-neutral-500 hover:border-blue-light-400 hover:shadow-md transition-all duration-200"
                 >
                   <div className="flex items-start gap-3">
                     <div className={`w-12 h-12 ${benefit.bgColor} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200`}>
@@ -188,8 +182,9 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
         {/* Footer */}
         <div className="p-8 pt-0 flex flex-col sm:flex-row gap-3">
           <button
-            onClick={handleClose}
+            onClick={onClose}
             disabled={isLoading}
+            type="button"
             className="flex-1 px-6 py-3 text-sm font-semibold cursor-pointer text-gray-medium-500 hover:bg-neutral-500 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all border border-neutral-500"
           >
             Quizás más tarde
@@ -198,6 +193,7 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
           <button
             onClick={handleSubmit}
             disabled={isLoading}
+            type="button"
             className="flex-1 bg-gradient-to-r from-blue-light-500 to-blue-vivid-500 cursor-pointer hover:from-blue-light-600 hover:to-blue-vivid-600 disabled:from-blue-light-300 disabled:to-blue-vivid-300 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
           >
             {isLoading ? (
@@ -214,6 +210,36 @@ export default function BecomeHostModal({ isOpen, onClose }: BecomeHostModalProp
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

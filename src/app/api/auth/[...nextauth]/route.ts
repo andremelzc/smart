@@ -81,18 +81,25 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google" && profile) {
         try {
           const email = user.email;
-          const name = user.name;
+          const name = user.name || "";
 
           if (!email) {
             console.error("❌ No se pudo obtener el email de Google.");
             return false;
           }
 
+          // Dividir el nombre en first_name y last_name aquí (más limpio)
+          const safeName = name && name.trim() ? name.trim() : "Usuario";
+          const nameParts = safeName.split(" ");
+          const firstName = nameParts[0] || "Usuario";
+          const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
           const sql = `
         BEGIN 
           AUTH_PKG.SP_FIND_OR_CREATE_USER_OAUTH(
             :p_email, 
-            :p_name, 
+            :p_first_name,
+            :p_last_name,
             :p_provider, 
             :p_provider_account_id, 
             :out_user_id,
@@ -106,7 +113,8 @@ export const authOptions: NextAuthOptions = {
           const providerAccountId = typedAccount?.providerAccountId ?? typedProfile?.sub ?? "";
           const binds = {
             p_email: email,
-            p_name: name,
+            p_first_name: firstName,
+            p_last_name: lastName,
             p_provider: account.provider,
             p_provider_account_id: providerAccountId,
             out_user_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
@@ -115,7 +123,8 @@ export const authOptions: NextAuthOptions = {
 
           console.log("📤 Enviando a Oracle:", {
             email,
-            name,
+            firstName,
+            lastName,
             provider: account.provider,
             providerAccountId: account.providerAccountId,
           });
