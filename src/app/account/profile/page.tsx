@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { 
   User, 
@@ -10,39 +10,80 @@ import {
   PawPrint,
   Globe,
   Edit3,
-  MessageSquare
+  MessageSquare,
+  AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
+import { useProfileDetails } from "@/src/hooks/useProfileDetails";
 
 export default function ProfilePage() {
   const { user, isAuthenticated } = useAuth();
+  const { profileData: spProfileData, preferences, loading, message, updateProfileDetails } = useProfileDetails();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Datos del perfil público
-  const [firstName] = useState("André");
+  // Estado para las preferencias editables
+  const [editablePreferences, setEditablePreferences] = useState<{[key: number]: string}>({});
+  const [editableBio, setEditableBio] = useState('');
+  
+  // Datos del perfil público estático (fallback)
   const [profileData, setProfileData] = useState({
-    work: "Estudiante en UNMSM",
-    location: "Países con clima frío",
-    interests: "Escuchar música y ver videos",
-    pets: "Tengo un perro que se llama Oreo",
-    decade: "Nací en la década de los 00",
     bio: "Me encanta viajar y conocer nuevas culturas. Soy una persona responsable y respetuosa que siempre cuida los espacios donde se hospeda."
   });
+
+  // Inicializar valores editables cuando cambien las preferencias
+  useEffect(() => {
+    if (preferences.length > 0) {
+      const prefValues: {[key: number]: string} = {};
+      preferences.forEach(pref => {
+        prefValues[pref.preferenceId] = pref.valueText || '';
+      });
+      setEditablePreferences(prefValues);
+    }
+    setEditableBio(spProfileData?.bio || profileData.bio || '');
+  }, [preferences, spProfileData, profileData.bio]);
 
   const [tempProfileData, setTempProfileData] = useState(profileData);
 
   const handleEdit = () => {
     setIsEditing(true);
-    setTempProfileData(profileData);
+    // Los valores ya están sincronizados en el useEffect
   };
 
-  const handleSave = () => {
-    setProfileData(tempProfileData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      // Convertir las preferencias editables al formato esperado por la API
+      const preferencesToUpdate = preferences.map(pref => ({
+        code: pref.code,
+        value: editablePreferences[pref.preferenceId] || ''
+      }));
+
+      console.log('Saving changes:', {
+        bio: editableBio,
+        preferences: preferencesToUpdate
+      });
+
+      // Llamar al hook para actualizar
+      const success = await updateProfileDetails(editableBio, preferencesToUpdate);
+      
+      if (success) {
+        setIsEditing(false);
+      }
+      // Si hay error, el mensaje se muestra automáticamente via el hook
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
   };
 
   const handleCancel = () => {
-    setTempProfileData(profileData);
+    // Restaurar valores originales
+    if (preferences.length > 0) {
+      const prefValues: {[key: number]: string} = {};
+      preferences.forEach(pref => {
+        prefValues[pref.preferenceId] = pref.valueText || '';
+      });
+      setEditablePreferences(prefValues);
+    }
+    setEditableBio(spProfileData?.bio || profileData.bio || '');
     setIsEditing(false);
   };
 
@@ -92,105 +133,61 @@ export default function ProfilePage() {
           {isEditing ? (
             // Editing Mode
             <div className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Work */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-dark-700 mb-2">
-                    Ocupación
-                  </label>
-                  <input
-                    type="text"
-                    value={tempProfileData.work}
-                    onChange={(e) => setTempProfileData({...tempProfileData, work: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="¿A qué te dedicas?"
-                  />
-                </div>
-
-                {/* Location */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-dark-700 mb-2">
-                    Lugares que quiero visitar
-                  </label>
-                  <input
-                    type="text"
-                    value={tempProfileData.location}
-                    onChange={(e) => setTempProfileData({...tempProfileData, location: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Destinos de tus sueños"
-                  />
-                </div>
-
-                {/* Interests */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-dark-700 mb-2">
-                    Intereses y pasatiempos
-                  </label>
-                  <input
-                    type="text"
-                    value={tempProfileData.interests}
-                    onChange={(e) => setTempProfileData({...tempProfileData, interests: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="¿Qué te gusta hacer?"
-                  />
-                </div>
-
-                {/* Pets */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-dark-700 mb-2">
-                    Mascotas
-                  </label>
-                  <input
-                    type="text"
-                    value={tempProfileData.pets}
-                    onChange={(e) => setTempProfileData({...tempProfileData, pets: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="¿Tienes mascotas?"
-                  />
-                </div>
-
-                {/* Decade */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-dark-700 mb-2">
-                    Década de nacimiento
-                  </label>
-                  <input
-                    type="text"
-                    value={tempProfileData.decade}
-                    onChange={(e) => setTempProfileData({...tempProfileData, decade: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ej: Nací en la década de los 90"
-                  />
-                </div>
-              </div>
-
               {/* Bio */}
               <div>
                 <label className="block text-sm font-medium text-gray-dark-700 mb-2">
                   Biografía
                 </label>
                 <textarea
-                  value={tempProfileData.bio}
-                  onChange={(e) => setTempProfileData({...tempProfileData, bio: e.target.value})}
+                  value={editableBio}
+                  onChange={(e) => setEditableBio(e.target.value)}
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Cuéntanos algo sobre ti..."
                 />
               </div>
 
+              {/* Preferencias dinámicas */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {preferences?.map((preference) => (
+                  <div key={preference.preferenceId}>
+                    <label className="block text-sm font-medium text-gray-dark-700 mb-2">
+                      {preference.name}
+                    </label>
+                    <input
+                      type="text"
+                      value={editablePreferences[preference.preferenceId] || ''}
+                      onChange={(e) => {
+                        setEditablePreferences(prev => ({
+                          ...prev,
+                          [preference.preferenceId]: e.target.value
+                        }));
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={preference.description}
+                    />
+                  </div>
+                ))}
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleCancel}
-                  className="text-gray-dark-700 font-medium hover:text-gray-dark-900 underline"
+                  disabled={loading}
+                  className="text-gray-dark-700 font-medium hover:text-gray-dark-900 underline disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  disabled={loading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Guardar cambios
+                  {loading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {loading ? 'Guardando...' : 'Guardar cambios'}
                 </button>
               </div>
             </div>
@@ -203,7 +200,7 @@ export default function ProfilePage() {
                   {user?.image ? (
                     <Image
                       src={user.image}
-                      alt={firstName}
+                      alt={spProfileData?.firstName || user?.name || "Usuario"}
                       width={128}
                       height={128}
                       className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-gray-100"
@@ -211,12 +208,15 @@ export default function ProfilePage() {
                   ) : (
                     <div className="w-32 h-32 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-5xl font-bold text-white">
-                        {firstName.charAt(0)}
+                        {(spProfileData?.firstName || user?.name || "U").charAt(0)}
                       </span>
                     </div>
                   )}
                   <h3 className="text-2xl font-bold text-gray-dark-900 mb-1">
-                    {firstName}
+                    {spProfileData?.firstName ? 
+                      `${spProfileData.firstName} ${spProfileData.lastName || ''}`.trim() : 
+                      user?.name || "Usuario"
+                    }
                   </h3>
                   <p className="text-gray-dark-500 mb-4">Huésped</p>
                   
@@ -236,71 +236,60 @@ export default function ProfilePage() {
 
               {/* Info List */}
               <div className="flex-1 space-y-6">
-                {/* Bio */}
-                {profileData.bio && (
+                {/* Bio - usar datos del SP cuando estén disponibles */}
+                {(spProfileData?.bio || profileData.bio) && (
                   <div className="flex items-start gap-4">
                     <MessageSquare className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-gray-dark-900 leading-relaxed">
-                        {profileData.bio}
+                        {spProfileData?.bio || profileData.bio}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {profileData.work && (
-                  <div className="flex items-start gap-4">
-                    <Briefcase className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-gray-dark-900 font-medium">
-                        Ocupación: {profileData.work}
-                      </p>
-                    </div>
+                {/* Renderizar preferencias dinámicamente desde el SP */}
+                {loading ? (
+                  <div className="flex items-center gap-4">
+                    <div className="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-300 rounded w-48 animate-pulse"></div>
                   </div>
-                )}
+                ) : (
+                  preferences?.map((preference) => {
+                    // Solo mostrar preferencias que tienen valores
+                    if (!preference.valueText) return null;
+                    
+                    // Mapear iconos según el código de preferencia
+                    const getIcon = (code: string) => {
+                      switch (code) {
+                        case 'WORK':
+                          return <Briefcase className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                        case 'LOCATION':
+                          return <HomeIcon className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                        case 'INTERESTS':
+                          return <Clock className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                        case 'PETS':
+                          return <PawPrint className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                        case 'LANGUAGE':
+                          return <Globe className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                        case 'SCHOOL':
+                          return <User className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                        default:
+                          return <AlertCircle className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />;
+                      }
+                    };
 
-                {profileData.location && (
-                  <div className="flex items-start gap-4">
-                    <HomeIcon className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-gray-dark-900 font-medium">
-                        Lugares que quiero visitar: {profileData.location}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {profileData.interests && (
-                  <div className="flex items-start gap-4">
-                    <Clock className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-gray-dark-900 font-medium">
-                        Intereses: {profileData.interests}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {profileData.pets && (
-                  <div className="flex items-start gap-4">
-                    <PawPrint className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-gray-dark-900 font-medium">
-                        Mascotas: {profileData.pets}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {profileData.decade && (
-                  <div className="flex items-start gap-4">
-                    <Globe className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-gray-dark-900 font-medium">
-                        {profileData.decade}
-                      </p>
-                    </div>
-                  </div>
+                    return (
+                      <div key={preference.preferenceId} className="flex items-start gap-4">
+                        {getIcon(preference.code)}
+                        <div>
+                          <p className="text-gray-dark-900 font-medium">
+                            {preference.name}: {preference.valueText}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -322,6 +311,33 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Mensajes del sistema */}
+      {message && (
+        <div className={`border-l-4 rounded-lg p-4 shadow-sm ${
+          message.type === 'error' 
+            ? 'bg-red-50 border-red-400' 
+            : 'bg-green-50 border-green-400'
+        }`}>
+          <div className="flex items-start gap-3">
+            <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+              message.type === 'error' ? 'text-red-600' : 'text-green-600'
+            }`} />
+            <div>
+              <h3 className={`text-sm font-semibold mb-1 ${
+                message.type === 'error' ? 'text-red-900' : 'text-green-900'
+              }`}>
+                {message.type === 'error' ? 'Error' : 'Éxito'}
+              </h3>
+              <p className={`text-sm ${
+                message.type === 'error' ? 'text-red-800' : 'text-green-800'
+              }`}>
+                {message.text}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
