@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Menu, Home, MapPin, Calendar, Users, Bell, Settings } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
@@ -278,11 +279,23 @@ export default function Navbar() {
                 aria-label="Menú"
               >
                 <Menu className="w-5 h-5 text-gray-dark-600" />
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-light-400 to-blue-light-500 flex items-center justify-center shadow-sm">
-                  <span className="text-sm font-semibold text-white">
-                    {isAuthenticated && user?.name ? user.name.charAt(0).toUpperCase() : "?"}
-                  </span>
-                </div>
+                {isAuthenticated && user?.image ? (
+                  <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-blue-light-200">
+                    <Image
+                      src={user.image}
+                      alt={user.name || "Avatar del usuario"}
+                      width={36}
+                      height={36}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-light-400 to-blue-light-500 flex items-center justify-center shadow-sm">
+                    <span className="text-sm font-semibold text-white">
+                      {isAuthenticated && user?.name ? user.name.charAt(0).toUpperCase() : "?"}
+                    </span>
+                  </div>
+                )}
               </button>
 
               {/* User Menu Dropdown */}
