@@ -16,6 +16,24 @@ interface LocationPopoverProps {
   onSelect: (option: LocationOption) => void;
 }
 
+type LocationApiRow = {
+  ciudad?: unknown;
+  CITY?: unknown;
+  pais?: unknown;
+  COUNTRY?: unknown;
+};
+
+type LocationApiResponse = {
+  data?: LocationApiRow[];
+  message?: string;
+};
+
+const toText = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return '';
+};
+
 export function LocationPopover({ onSelect }: LocationPopoverProps) {
   const [locations, setLocations] = useState<LocationOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,22 +45,20 @@ export function LocationPopover({ onSelect }: LocationPopoverProps) {
       setLoading(true);
       try {
         const res = await fetch('/api/locations');
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(payload?.message || 'Error fetching locations');
+        const payload = (await res.json().catch(() => ({}))) as LocationApiResponse;
+        if (!res.ok) throw new Error(payload.message || 'Error fetching locations');
 
-        const rows = Array.isArray(payload?.data) ? payload.data : [];
-        const transformed: LocationOption[] = rows.map((r: any, idx: number) => {
-          const ciudadRaw = (r.ciudad ?? r.CITY ?? '')?.toString() ?? '';
-          const paisRaw = (r.pais ?? r.COUNTRY ?? '')?.toString() ?? '';
-          const ciudad = ciudadRaw.trim();
-          const pais = paisRaw.trim();
+        const rows = Array.isArray(payload.data) ? payload.data : [];
+        const transformed: LocationOption[] = rows.map((row, idx) => {
+          const ciudad = toText(row.ciudad ?? row.CITY).trim();
+          const pais = toText(row.pais ?? row.COUNTRY).trim();
           const title = [ciudad, pais].filter(Boolean).join(', ');
           const value = ciudad.replace(/\s+/g, '-');
           return { id: `${value}-${idx}`, title, subtitle: '', description: '', value };
         });
 
         if (mounted) setLocations(transformed.length > 0 ? transformed : LOCATION_OPTIONS);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Failed to load locations', err);
         if (mounted) setLocations(LOCATION_OPTIONS);
       } finally {

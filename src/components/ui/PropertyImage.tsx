@@ -1,5 +1,6 @@
 'use client';
 
+import Image, { type ImageProps } from 'next/image';
 import { useState } from 'react';
 
 interface PropertyImageProps {
@@ -8,18 +9,26 @@ interface PropertyImageProps {
   className?: string;
   fill?: boolean;
   sizes?: string;
+  width?: number;
+  height?: number;
+  priority?: ImageProps['priority'];
 }
 
 export const PropertyImage = ({ 
   src, 
   alt, 
   className = '', 
-  fill = false
+  fill = false,
+  sizes = '100vw',
+  width,
+  height,
+  priority = false,
 }: PropertyImageProps) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fallbackSrc = '/placeholder-room.svg';
+  const displaySrc = imageError ? fallbackSrc : src;
 
   return (
     <div className={`relative ${className}`}>
@@ -28,18 +37,27 @@ export const PropertyImage = ({
           <span className="text-gray-400 text-sm">Cargando...</span>
         </div>
       )}
-      
-      <img
-        src={imageError ? fallbackSrc : src}
+
+      <Image
+        src={displaySrc}
         alt={alt}
-        className={`${fill ? 'absolute inset-0 w-full h-full' : ''} object-cover transition-opacity duration-300 ${
+        className={`object-cover transition-opacity duration-300 ${
           isLoading ? 'opacity-0' : 'opacity-100'
-        }`}
-        onLoad={() => setIsLoading(false)}
+        } ${fill ? 'absolute inset-0' : ''}`}
+        {...(fill
+          ? { fill: true as const, sizes }
+          : {
+              width: width ?? 400,
+              height: height ?? 300,
+              sizes,
+            })}
+        priority={priority}
+        onLoadingComplete={() => setIsLoading(false)}
         onError={() => {
           setImageError(true);
           setIsLoading(false);
         }}
+        placeholder="empty"
       />
     </div>
   );

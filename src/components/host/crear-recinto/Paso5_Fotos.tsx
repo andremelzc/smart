@@ -1,7 +1,10 @@
+'use client';
+
 // src/components/host/crear-recinto/Paso5_Fotos.tsx
 import { StepHeader } from './StepHeader';
 import { UploadCloud, Trash2 } from 'lucide-react';
 import { useRef } from 'react'; 
+import Image from 'next/image';
 
 
 interface ImageData {
@@ -106,10 +109,12 @@ export function Paso5_Fotos({ data, updateData }: StepProps) {
                 key={image.sortOrder} 
                 className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 group shadow-sm"
               >
-                <img
-                  src={image.url}
-                  alt={image.caption}
-                  className="w-full h-full object-cover"
+                <Image
+                  src={image.url || '/placeholder-room.svg'}
+                  alt={image.caption || 'Imagen del recinto'}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-cover"
                 />
                 
                 {image.sortOrder === 1 && (

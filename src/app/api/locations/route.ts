@@ -1,6 +1,32 @@
 import { NextResponse } from 'next/server';
 import { executeQuery } from '@/src/lib/database';
 
+type LocationRow = {
+  CIUDAD?: unknown;
+  ciudad?: unknown;
+  CITY?: unknown;
+  city?: unknown;
+  PAIS?: unknown;
+  pais?: unknown;
+  COUNTRY?: unknown;
+  country?: unknown;
+  PROPERTY_COUNT?: unknown;
+  property_count?: unknown;
+};
+
+const toText = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  return '';
+};
+
+const toNumber = (value: unknown): number => {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
 export async function GET() {
   const sql = `
     SELECT CITY AS ciudad,
@@ -15,15 +41,16 @@ export async function GET() {
 
   try {
     const result = await executeQuery(sql);
-    const rows = (result.rows ?? []).map((r: any) => ({
-      ciudad: r.CIUDAD ?? r.ciudad ?? r.CITY ?? r.city,
-      pais: r.PAIS ?? r.pais ?? r.COUNTRY ?? r.country,
-      property_count: Number(r.PROPERTY_COUNT ?? r.property_count ?? 0),
+    const rows = ((result.rows ?? []) as LocationRow[]).map((row) => ({
+      ciudad: toText(row.CIUDAD ?? row.ciudad ?? row.CITY ?? row.city),
+      pais: toText(row.PAIS ?? row.pais ?? row.COUNTRY ?? row.country),
+      property_count: toNumber(row.PROPERTY_COUNT ?? row.property_count ?? 0),
     }));
 
     return NextResponse.json({ success: true, data: rows });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching locations:', error);
-    return NextResponse.json({ success: false, message: error?.message ?? String(error) }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'No se pudo obtener las ubicaciones.';
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

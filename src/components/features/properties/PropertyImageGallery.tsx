@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import { useState, useEffect, startTransition } from 'react';
 
 interface PropertyImage {
@@ -20,6 +21,7 @@ export function PropertyImageGallery({
   className = '' 
 }: PropertyImageGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
 
   // Reset to first image when images change
   useEffect(() => {
@@ -59,13 +61,28 @@ export function PropertyImageGallery({
   }
 
   const currentImage = images[currentImageIndex];
+  const imageKey = `${currentImageIndex}-${currentImage?.url ?? 'placeholder'}`;
+  const resolvedSrc = brokenImages[currentImageIndex]
+    ? '/placeholder-room.svg'
+    : currentImage?.url || '/placeholder-room.svg';
 
   return (
     <div className={`relative h-96 md:h-[500px] rounded-xl overflow-hidden bg-gray-200 ${className}`}>
-      <img
-        src={currentImage?.url || '/placeholder-room.svg'}
+      <Image
+        key={imageKey}
+        src={resolvedSrc}
         alt={currentImage?.alt || title}
-        className="w-full h-full object-cover"
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 50vw"
+        className="object-cover"
+        onError={() =>
+          setBrokenImages((prev) => (
+            prev[currentImageIndex]
+              ? prev
+              : { ...prev, [currentImageIndex]: true }
+          ))
+        }
+        priority
       />
       
       {images.length > 1 && (

@@ -1,4 +1,5 @@
 // src/components/host/crear-recinto/Paso9_Resumen.tsx
+import Image from 'next/image';
 import { StepHeader } from './StepHeader';
 import { Edit, Camera, Home, MapPin, Users, Sparkles, DollarSign, ListChecks } from 'lucide-react';
 
@@ -123,8 +124,14 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
           <ResumenSection title="Fotos" editStep={5} goToStep={goToStep} icon={<Camera className="w-6 h-6 text-blue-light-700" />}>
             <div className="grid grid-cols-3 gap-2 rounded-lg overflow-hidden border border-blue-light-150">
               {Array.isArray(data.images) && data.images.slice(0, 3).map((img, idx) => (
-                <div key={img.sortOrder ?? idx} className="aspect-square">
-                  <img src={img.url} alt={img.caption ?? `Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                <div key={img.sortOrder ?? idx} className="relative aspect-square">
+                  <Image
+                    src={img.url || '/placeholder-room.svg'}
+                    alt={img.caption ?? `Foto ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 15vw"
+                    className="object-cover"
+                  />
                 </div>
               ))}
               {Array.isArray(data.images) && data.images.length > 3 && (

@@ -38,10 +38,11 @@ export async function GET() {
     }).filter((item) => Number.isInteger(item.id) && item.id > 0 && item.label.length > 0);
 
     return NextResponse.json({ success: true, data: rows });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching amenities:', error);
+    const message = error instanceof Error ? error.message : 'No se pudo obtener los amenities.';
     return NextResponse.json(
-      { success: false, message: error?.message ?? String(error) },
+      { success: false, message },
       { status: 500 },
     );
   }

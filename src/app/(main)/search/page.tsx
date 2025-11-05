@@ -25,6 +25,16 @@ type AmenityOption = {
   label: string;
 };
 
+type AmenityApiItem = {
+  id?: unknown;
+  label?: unknown;
+};
+
+type AmenityApiResponse = {
+  data?: AmenityApiItem[];
+  message?: string;
+};
+
 const FALLBACK_AMENITIES: AmenityOption[] = [
   { id: 53, label: 'Wi-Fi' },
   { id: 54, label: 'Estacionamiento' },
@@ -249,36 +259,44 @@ function PropertySearchContent() {
         setAmenitiesError(null);
 
         const response = await fetch('/api/amenities');
-        const payload = await response.json().catch(() => ({}));
+        const payload = (await response.json().catch(() => ({}))) as AmenityApiResponse;
 
         if (!response.ok) {
-          const message =
-            typeof payload?.message === 'string'
-              ? payload.message
-              : 'No se pudo obtener la lista de amenities.';
+          const message = payload.message ?? 'No se pudo obtener la lista de amenities.';
           throw new Error(message);
         }
 
-        const rawItems = Array.isArray(payload?.data) ? payload.data : [];
-        const mappedAmenities: AmenityOption[] = rawItems.map((item: any) => ({
-          id: Number(item?.id),
-          label: typeof item?.label === 'string' ? item.label.trim() : '',
-        }));
+        const rawItems = Array.isArray(payload.data) ? payload.data : [];
 
-        const nextOptions = mappedAmenities.filter((item): item is AmenityOption =>
-          Number.isInteger(item.id) && item.id > 0 && item.label.length > 0,
-        );
+        const toAmenityOption = (item: AmenityApiItem): AmenityOption | null => {
+          const idValue = item.id;
+          const labelValue = item.label;
+
+          const id = typeof idValue === 'number' || typeof idValue === 'string' ? Number(idValue) : NaN;
+          const label = typeof labelValue === 'string' ? labelValue.trim() : '';
+
+          if (!Number.isInteger(id) || id <= 0 || label.length === 0) {
+            return null;
+          }
+
+          return { id, label };
+        };
+
+        const nextOptions = rawItems
+          .map(toAmenityOption)
+          .filter((item): item is AmenityOption => item !== null);
 
         if (!cancelled) {
           setAmenityOptions(nextOptions.length > 0 ? nextOptions : FALLBACK_AMENITIES);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         if (cancelled) {
           return;
         }
 
         setAmenityOptions((prev) => (prev.length > 0 ? prev : FALLBACK_AMENITIES));
-        setAmenitiesError(err instanceof Error ? err.message : 'No se pudo obtener la lista de amenities.');
+        const message = err instanceof Error ? err.message : 'No se pudo obtener la lista de amenities.';
+        setAmenitiesError(message);
       } finally {
         if (!cancelled) {
           setAmenitiesLoading(false);
