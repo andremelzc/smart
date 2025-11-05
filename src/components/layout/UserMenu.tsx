@@ -12,6 +12,12 @@ import {
   Bell,
   HelpCircle,
   LogIn,
+  Building2,
+  Star,
+  CreditCard,
+  Shield,
+  FileText,
+  Users,
 } from "lucide-react";
 
 import { useAuth } from "@/src/hooks/useAuth";
@@ -66,7 +72,7 @@ export default function UserMenu({
       >
         {isAuthenticated ? (
           role === "tenant" ? (
-            // --- MENÚ TENANT ---
+            // --- MENÚ TENANT/HUÉSPED ---
             <>
               <Link
                 href="/account/profile"
@@ -74,20 +80,31 @@ export default function UserMenu({
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
-                <User className="w-5 h-5" /> Mi perfil
+                <User className="w-5 h-5" /> Mi perfil público
               </Link>
               <Link
-                href="/bookings"
+                href="/account/personal-info"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <FileText className="w-5 h-5" /> Información personal
+              </Link>
+
+              <div className="border-t border-gray-200 my-2"></div>
+
+              <Link
+                href="/account/reservas"
                 onClick={handleClickLink}
                 className="flex items-center gap-3 px-4 py-2.5  text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
-                <Calendar className="w-5 h-5" /> Viajes
+                <Calendar className="w-5 h-5" /> Mis reservas
               </Link>
               <Link
-                href="/messages"
+                href="/account/messages"
                 onClick={handleClickLink}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
                 <MessageSquare className="w-5 h-5" /> Mensajes
@@ -96,22 +113,34 @@ export default function UserMenu({
               <div className="border-t border-gray-200 my-2"></div>
 
               <Link
-                href="/account/settings"
-                onClick={handleClickLink}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
-                role="menuitem"
-              >
-                <Settings className="w-5 h-5" /> Configuración de la cuenta
-              </Link>
-
-              <Link
                 href="/account/notifications"
                 onClick={handleClickLink}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
                 <Bell className="w-5 h-5" /> Notificaciones
               </Link>
+              <Link
+                href="/account/security"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Shield className="w-5 h-5" /> Privacidad y seguridad
+              </Link>
+
+              {user?.isHost && (
+                <>
+                  <Link
+                    href="/account/billing"
+                    onClick={handleClickLink}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                    role="menuitem"
+                  >
+                    <CreditCard className="w-5 h-5" /> Pagos y facturación
+                  </Link>
+                </>
+              )}
 
               <div className="border-t border-gray-200 my-2"></div>
 
@@ -119,23 +148,34 @@ export default function UserMenu({
                 <Link
                   href="/host/dashboard"
                   onClick={handleClickLink}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
                   role="menuitem"
                 >
-                  <Home className="w-5 h-5" />
+                  <Building2 className="w-5 h-5" />
                   Cambia a anfitrión
                 </Link>
               ) : (
                 <button
                   onClick={handleOpenModal}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700  cursor-pointer hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-blue-600 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors w-full text-left"
                   role="menuitem"
                   type="button"
                 >
-                  <Home className="w-5 h-5" />
+                  <Building2 className="w-5 h-5" />
                   Conviértete en anfitrión
                 </button>
               )}
+
+              <div className="border-t border-gray-200 my-2"></div>
+
+              <Link
+                href="/help"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <HelpCircle className="w-5 h-5" /> Centro de ayuda
+              </Link>
 
               <div className="border-t border-gray-200 my-2"></div>
 
@@ -146,37 +186,81 @@ export default function UserMenu({
                 type="button"
               >
                 <LogOut className="w-5 h-5" />
-                Cerrar Sesión
+                Cerrar sesión
               </button>
             </>
           ) : (
-            // --- MENÚ HOST U OTRO ROL ---
+            // --- MENÚ HOST/ANFITRIÓN ---
             <>
               <Link
-                href="/messages"
+                href="/host/dashboard"
                 onClick={handleClickLink}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
-                <MessageSquare className="w-5 h-5" /> Mensajes
+                <Home className="w-5 h-5" /> Dashboard de host
               </Link>
+              <Link
+                href="/host/properties"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Building2 className="w-5 h-5" /> Mis recintos
+              </Link>
+
+              <div className="border-t border-gray-200 my-2"></div>
+
+              <Link
+                href="/host/bookings"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Calendar className="w-5 h-5" /> Reservas y calendario
+              </Link>
+              <Link
+                href="/host/messages"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <MessageSquare className="w-5 h-5" /> Mensajes con huéspedes
+              </Link>
+              <Link
+                href="/host/reviews"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Star className="w-5 h-5" /> Reseñas de huéspedes
+              </Link>
+
+              <div className="border-t border-gray-200 my-2"></div>
+
               <Link
                 href="/account/profile"
                 onClick={handleClickLink}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
-                <User className="w-5 h-5" /> Mi perfil
+                <User className="w-5 h-5" /> Mi perfil público
               </Link>
-              <div className="border-t border-gray-200 my-2"></div>
-
               <Link
-                href="/account/settings"
+                href="/host/notifications"
                 onClick={handleClickLink}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
-                <Settings className="w-5 h-5" /> Configuración de la cuenta
+                <Bell className="w-5 h-5" /> Notificaciones
+              </Link>
+              <Link
+                href="/account/billing"
+                onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <CreditCard className="w-5 h-5" /> Pagos y facturación
               </Link>
 
               <div className="border-t border-gray-200 my-2"></div>
@@ -184,11 +268,22 @@ export default function UserMenu({
               <Link
                 href="/"
                 onClick={handleClickLink}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
+                role="menuitem"
+              >
+                <Users className="w-5 h-5" />
+                Cambia a huésped
+              </Link>
+
+              <div className="border-t border-gray-200 my-2"></div>
+
+              <Link
+                href="/help"
+                onClick={handleClickLink}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
                 role="menuitem"
               >
-                <Home className="w-5 h-5" />
-                Cambia a huésped
+                <HelpCircle className="w-5 h-5" /> Centro de ayuda
               </Link>
 
               <div className="border-t border-gray-200 my-2"></div>
@@ -200,7 +295,7 @@ export default function UserMenu({
                 type="button"
               >
                 <LogOut className="w-5 h-5" />
-                Cerrar Sesión
+                Cerrar sesión
               </button>
             </>
           )
@@ -208,34 +303,42 @@ export default function UserMenu({
           // --- MENÚ INVITADO ---
           <>
             <Link
-              href="/help"
+              href="/register"
               onClick={handleClickLink}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
               role="menuitem"
             >
-              <HelpCircle className="w-5 h-5" /> Centro de ayuda
+              <User className="w-5 h-5" /> Registrarse
+            </Link>
+            <Link
+              href="/login"
+              onClick={handleClickLink}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+              role="menuitem"
+            >
+              <LogIn className="w-5 h-5" /> Iniciar sesión
             </Link>
 
             <div className="border-t border-gray-200 my-2"></div>
 
             <button
               onClick={handleOpenModal}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 cursor-pointer hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors w-full text-left"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-blue-600 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors w-full text-left"
               role="menuitem"
               type="button"
             >
-              <Home className="w-5 h-5" /> Conviértete en anfitrión
+              <Building2 className="w-5 h-5" /> Conviértete en anfitrión
             </button>
 
             <div className="border-t border-gray-200 my-2"></div>
 
             <Link
-              href="/login"
+              href="/help"
               onClick={handleClickLink}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors rounded-b-lg"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-dark-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
               role="menuitem"
             >
-              <LogIn className="w-5 h-5" /> Iniciar sesión o registrarse
+              <HelpCircle className="w-5 h-5" /> Centro de ayuda
             </Link>
           </>
         )}
