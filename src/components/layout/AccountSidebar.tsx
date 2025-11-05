@@ -30,12 +30,6 @@ const sidebarItems = [
     description: "Datos privados y verificación",
   },
   {
-    name: "Mis viajes",
-    href: "/account/trips",
-    icon: MapPin,
-    description: "Historial de reservas y viajes",
-  },
-  {
     name: "Mis reservas",
     href: "/account/reservas",
     icon: Calendar,

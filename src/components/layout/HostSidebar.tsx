@@ -11,6 +11,7 @@ import {
   Star,
   MessageSquare,
   Users,
+  Bell
 } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
 
@@ -44,6 +45,12 @@ const navigationItems = [
     label: "Mensajes",
     icon: MessageSquare,
     description: "Comunicación con huéspedes",
+  },
+  {
+    href: "/host/notifications",
+    label: "Notificaciones",
+    icon: Bell,
+    description: "Configuración de alertas",
   },
 ];
 
