@@ -20,7 +20,12 @@ const PropertySearchMap = dynamic(
   }
 );
 
-const AMENITY_OPTIONS = [
+type AmenityOption = {
+  id: number;
+  label: string;
+};
+
+const FALLBACK_AMENITIES: AmenityOption[] = [
   { id: 53, label: 'Wi-Fi' },
   { id: 54, label: 'Estacionamiento' },
   { id: 55, label: 'Piscina' },
@@ -107,6 +112,9 @@ function PropertySearchContent() {
   const searchParams = useSearchParams();
   const [formValues, setFormValues] = useState<FilterFormState>({ ...EMPTY_FORM });
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
+  const [amenityOptions, setAmenityOptions] = useState<AmenityOption[]>(FALLBACK_AMENITIES);
+  const [amenitiesLoading, setAmenitiesLoading] = useState(true);
+  const [amenitiesError, setAmenitiesError] = useState<string | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<PropertyFilterDto | null>(null);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -231,6 +239,59 @@ function PropertySearchContent() {
       prev.includes(id) ? prev.filter((amenityId) => amenityId !== id) : [...prev, id],
     );
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAmenities = async () => {
+      try {
+        setAmenitiesLoading(true);
+        setAmenitiesError(null);
+
+        const response = await fetch('/api/amenities');
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const message =
+            typeof payload?.message === 'string'
+              ? payload.message
+              : 'No se pudo obtener la lista de amenities.';
+          throw new Error(message);
+        }
+
+        const rawItems = Array.isArray(payload?.data) ? payload.data : [];
+        const mappedAmenities: AmenityOption[] = rawItems.map((item: any) => ({
+          id: Number(item?.id),
+          label: typeof item?.label === 'string' ? item.label.trim() : '',
+        }));
+
+        const nextOptions = mappedAmenities.filter((item): item is AmenityOption =>
+          Number.isInteger(item.id) && item.id > 0 && item.label.length > 0,
+        );
+
+        if (!cancelled) {
+          setAmenityOptions(nextOptions.length > 0 ? nextOptions : FALLBACK_AMENITIES);
+        }
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
+        setAmenityOptions((prev) => (prev.length > 0 ? prev : FALLBACK_AMENITIES));
+        setAmenitiesError(err instanceof Error ? err.message : 'No se pudo obtener la lista de amenities.');
+      } finally {
+        if (!cancelled) {
+          setAmenitiesLoading(false);
+        }
+      }
+    };
+
+    fetchAmenities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const nightsCount = useMemo(() => {
     if (!appliedFilters?.startDate || !appliedFilters?.endDate) {
@@ -446,24 +507,38 @@ function PropertySearchContent() {
 
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-gray-dark-600">Amenities</h2>
+              {amenitiesError && (
+                <p className="text-sm text-red-500">{amenitiesError}</p>
+              )}
               <div className="flex flex-wrap gap-2">
-                {AMENITY_OPTIONS.map((amenity) => {
-                  const isSelected = selectedAmenities.includes(amenity.id);
-                  return (
-                    <button
-                      type="button"
-                      key={amenity.id}
-                      onClick={() => handleAmenityToggle(amenity.id)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                        isSelected
-                          ? 'bg-blue-vivid-500 text-white shadow-md'
-                          : 'bg-blue-light-50 text-blue-light-700 border border-blue-light-200 hover:border-blue-light-300'
-                      }`}
-                    >
-                      {amenity.label}
-                    </button>
-                  );
-                })}
+                {amenitiesLoading ? (
+                  <span className="flex items-center gap-2 text-sm text-gray-dark-500">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-light-500" />
+                    Cargando amenities...
+                  </span>
+                ) : amenityOptions.length === 0 ? (
+                  <span className="text-sm text-gray-dark-500">
+                    No hay amenities disponibles.
+                  </span>
+                ) : (
+                  amenityOptions.map((amenity) => {
+                    const isSelected = selectedAmenities.includes(amenity.id);
+                    return (
+                      <button
+                        type="button"
+                        key={amenity.id}
+                        onClick={() => handleAmenityToggle(amenity.id)}
+                        className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                          isSelected
+                            ? 'bg-blue-vivid-500 text-white shadow-md'
+                            : 'bg-blue-light-50 text-blue-light-700 border border-blue-light-200 hover:border-blue-light-300'
+                        }`}
+                      >
+                        {amenity.label}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </section>
 
