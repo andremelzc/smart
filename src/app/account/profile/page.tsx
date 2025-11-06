@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, startTransition } from "react";
 import Image from "next/image";
 import { 
   User, 
@@ -26,9 +26,9 @@ export default function ProfilePage() {
   const [editableBio, setEditableBio] = useState('');
   
   // Datos del perfil público estático (fallback)
-  const [profileData, setProfileData] = useState({
+  const profileData = {
     bio: "Me encanta viajar y conocer nuevas culturas. Soy una persona responsable y respetuosa que siempre cuida los espacios donde se hospeda."
-  });
+  };
 
   // Inicializar valores editables cuando cambien las preferencias
   useEffect(() => {
@@ -37,12 +37,21 @@ export default function ProfilePage() {
       preferences.forEach(pref => {
         prefValues[pref.preferenceId] = pref.valueText || '';
       });
-      setEditablePreferences(prefValues);
+      // Use startTransition to avoid cascading renders
+      startTransition(() => {
+        setEditablePreferences(prefValues);
+      });
     }
-    setEditableBio(spProfileData?.bio || profileData.bio || '');
-  }, [preferences, spProfileData, profileData.bio]);
+  }, [preferences]);
 
-  const [tempProfileData, setTempProfileData] = useState(profileData);
+  // Separate effect for bio to avoid cascading renders
+  useEffect(() => {
+    const bio = spProfileData?.bio || profileData.bio || '';
+    // Use startTransition to avoid cascading renders
+    startTransition(() => {
+      setEditableBio(bio);
+    });
+  }, [spProfileData?.bio, profileData.bio]);
 
   const handleEdit = () => {
     setIsEditing(true);

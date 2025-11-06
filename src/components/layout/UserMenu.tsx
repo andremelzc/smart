@@ -8,7 +8,6 @@ import {
   Calendar,
   Home,
   MessageSquare,
-  Settings,
   Bell,
   HelpCircle,
   LogIn,

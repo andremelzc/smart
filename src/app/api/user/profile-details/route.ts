@@ -4,9 +4,14 @@ import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import { getConnection } from "@/src/lib/database";
 import oracledb from "oracledb";
 
+// Type for Oracle CLOB handling
+interface OracleClob {
+  getData(): Promise<Buffer>;
+}
+
 // GET - Obtener perfil público del usuario
-export async function GET(request: NextRequest) {
-  let connection: any = null;
+export async function GET(_: NextRequest) {
+  let connection: oracledb.Connection | null = null;
 
   try {
     // Verificar autenticación
@@ -46,11 +51,11 @@ export async function GET(request: NextRequest) {
       if (profileRows.length > 0) {
         const row = profileRows[0] as unknown[];
         
-        // Procesar CLOB en la biografía
+        // Procesar CLOB en la biografía  
         let bio = null;
         if (row[2] && typeof row[2] === "object" && "getData" in row[2]) {
           try {
-            const bioBuffer = await (row[2] as any).getData();
+            const bioBuffer = await (row[2] as OracleClob).getData();
             bio = bioBuffer.toString();
           } catch (error) {
             console.error("Error reading bio CLOB:", error);
@@ -87,9 +92,9 @@ export async function GET(request: NextRequest) {
         let description = null;
         if (row[3] && typeof row[3] === "object" && "getData" in row[3]) {
           try {
-            const descBuffer = await (row[3] as any).getData();
+            const descBuffer = await (row[3] as OracleClob).getData();
             description = descBuffer.toString();
-          } catch (error) {
+          } catch (_) {
             description = "Error reading description";
           }
         } else {
@@ -151,7 +156,7 @@ export async function GET(request: NextRequest) {
 
 // PUT - Actualizar perfil público del usuario
 export async function PUT(request: NextRequest) {
-  let connection: any = null;
+  let connection: oracledb.Connection | null = null;
 
   try {
     // Verificar autenticación

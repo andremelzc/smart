@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   User,
-  MapPin,
   Bell,
   Shield,
   CreditCard,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { userService } from '@/src/services/user.service';
-import type { UserProfileDetails, UserPreference } from '@/src/services/user.service';
+import type { UserPreference } from '@/src/services/user.service';
 
 interface UseProfileDetailsReturn {
   profileData: {
