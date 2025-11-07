@@ -18,6 +18,19 @@ export interface TenantBooking {
   imageUrl: string | null;
 }
 
+export interface HostBooking {
+  bookingId: number;
+  checkinDate: string;
+  checkoutDate: string;
+  status: string;
+  guestCount: number;
+  totalAmount: number;
+  propertyTitle: string;
+  tenantFirstName: string;
+  tenantLastName: string;
+  imageUrl: string | null;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
@@ -160,5 +173,83 @@ export const bookingService = {
       'in-progress': 'En curso'
     };
     return statusTranslations[status.toLowerCase()] || status;
+  },
+
+  // === FUNCIONES ESPECÍFICAS PARA HOST ===
+
+  /**
+   * Obtiene todas las reservas del host autenticado
+   * @returns Promise con las reservas donde el usuario es anfitrión
+   */
+  getHostBookings: async (): Promise<HostBooking[]> => {
+    try {
+      const response = await fetch("/api/bookings/host", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data: ApiResponse<HostBooking[]> = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al obtener las reservas del host");
+      }
+
+      return data.data || [];
+    } catch (error: unknown) {
+      console.error("❌ Error en getHostBookings:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error de conexión";
+      throw new Error(errorMessage);
+    }
+  },
+
+  /**
+   * Obtiene el nombre completo del huésped (tenant) formateado correctamente
+   * @param booking - Reserva con datos del huésped
+   * @returns Nombre completo del huésped formateado (ej: "Maria Lopez")
+   */
+  getTenantFullName: (booking: HostBooking): string => {
+    return formatFullName(booking.tenantFirstName, booking.tenantLastName);
+  },
+
+  /**
+   * Calcula el total de ingresos de un array de reservas
+   * @param bookings - Array de reservas
+   * @returns Total de ingresos
+   */
+  calculateTotalRevenue: (bookings: HostBooking[]): number => {
+    return bookings.reduce((total, booking) => {
+      // Solo contar reservas confirmadas y completadas
+      if (['confirmed', 'completed'].includes(booking.status.toLowerCase())) {
+        return total + booking.totalAmount;
+      }
+      return total;
+    }, 0);
+  },
+
+  /**
+   * Cuenta las reservas por estado
+   * @param bookings - Array de reservas
+   * @returns Objeto con contadores por estado
+   */
+  getBookingCounts: (bookings: HostBooking[]): Record<string, number> => {
+    const counts = {
+      total: bookings.length,
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+      completed: 0,
+      'in-progress': 0
+    };
+
+    bookings.forEach(booking => {
+      const status = booking.status.toLowerCase();
+      if (status in counts) {
+        counts[status as keyof typeof counts]++;
+      }
+    });
+
+    return counts;
   }
 };
