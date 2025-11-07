@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
 import { useProfileDetails } from "@/src/hooks/useProfileDetails";
+import { formatFullName } from "@/src/lib/formatters";
 
 export default function ProfilePage() {
   const { user, isAuthenticated } = useAuth();
@@ -223,7 +224,7 @@ export default function ProfilePage() {
                   )}
                   <h3 className="text-2xl font-bold text-gray-dark-900 mb-1">
                     {spProfileData?.firstName ? 
-                      `${spProfileData.firstName} ${spProfileData.lastName || ''}`.trim() : 
+                      formatFullName(spProfileData.firstName, spProfileData.lastName) : 
                       user?.name || "Usuario"
                     }
                   </h3>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Calendar,
   MapPin,
@@ -11,73 +12,44 @@ import {
   Hotel,
   CheckCircle,
   XCircle,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { useTenantBookings } from "@/src/hooks/useTenantBookings";
+import { bookingService } from "@/src/services/booking.service";
+import type { TenantBooking } from "@/src/services/booking.service";
 
 type ReservationStatus = "current" | "upcoming" | "past" | "cancelled";
 
-type Reservation = {
-  id: string;
-  propertyName: string;
-  location: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  status: ReservationStatus;
-  hostName: string;
-  price: string;
-  notes?: string;
-};
+// Función para determinar el estado de una reserva basado en las fechas
+const getBookingStatus = (checkinDate: string, checkoutDate: string, dbStatus: string): ReservationStatus => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const checkin = new Date(checkinDate);
+  checkin.setHours(0, 0, 0, 0);
+  
+  const checkout = new Date(checkoutDate);
+  checkout.setHours(0, 0, 0, 0);
 
-const reservationsMock: Reservation[] = [
-  {
-    id: "RES-2045",
-    propertyName: "Loft moderno en Miraflores",
-    location: "Lima, Perú",
-    checkIn: "2025-10-24",
-    checkOut: "2025-10-28",
-    guests: 2,
-    status: "current",
-    hostName: "Ana Rodríguez",
-    price: "S/. 1,320",
-    notes: "Check-in autónomo. Código enviado al correo.",
-  },
-  {
-    id: "RES-2076",
-    propertyName: "Casa frente al mar en Máncora",
-    location: "Talara, Perú",
-    checkIn: "2025-12-12",
-    checkOut: "2025-12-18",
-    guests: 4,
-    status: "upcoming",
-    hostName: "Luis Flores",
-    price: "S/. 2,450",
-    notes: "El anfitrión confirmará disponibilidad de tabla de surf.",
-  },
-  {
-    id: "RES-1989",
-    propertyName: "Departamento céntrico en Cusco",
-    location: "Cusco, Perú",
-    checkIn: "2025-09-02",
-    checkOut: "2025-09-07",
-    guests: 3,
-    status: "past",
-    hostName: "María Pacheco",
-    price: "S/. 980",
-    notes: "Recuerda dejar una reseña para ayudar a la comunidad.",
-  },
-  {
-    id: "RES-1904",
-    propertyName: "Refugio ecológico en Oxapampa",
-    location: "Pasco, Perú",
-    checkIn: "2025-08-15",
-    checkOut: "2025-08-18",
-    guests: 2,
-    status: "cancelled",
-    hostName: "Diego Vargas",
-    price: "S/. 720",
-    notes: "Reserva cancelada el 05 de agosto. Reembolso procesado.",
-  },
-];
+  // Si está cancelado en la BD, es cancelado
+  if (dbStatus.toLowerCase() === 'cancelled') {
+    return 'cancelled';
+  }
+
+  // Si hoy está entre checkin y checkout, está en curso
+  if (today >= checkin && today < checkout) {
+    return 'current';
+  }
+
+  // Si checkin es futuro, es próxima
+  if (checkin > today) {
+    return 'upcoming';
+  }
+
+  // Si checkout es pasado, es finalizada
+  return 'past';
+};
 
 const statusStyles: Record<
   ReservationStatus,
@@ -126,18 +98,66 @@ const formatRange = (checkIn: string, checkOut: string) => {
 };
 
 export default function ReservationsPage() {
-  const [selectedFilter, setSelectedFilter] =
-    useState<"all" | ReservationStatus>("all");
+  const [selectedFilter, setSelectedFilter] = useState<"all" | ReservationStatus>("all");
+  const { bookings, loading, error, refreshBookings } = useTenantBookings();
 
+  // Convertir los bookings de la BD al formato de la UI
   const reservations = useMemo(() => {
+    const formattedBookings = bookings.map((booking: TenantBooking) => {
+      const status = getBookingStatus(booking.checkinDate, booking.checkoutDate, booking.status);
+      
+      return {
+        id: `RES-${booking.bookingId}`,
+        propertyName: booking.title,
+        location: `${booking.city}, ${booking.stateRegion}`,
+        checkIn: booking.checkinDate,
+        checkOut: booking.checkoutDate,
+        guests: booking.guestCount,
+        status,
+        hostName: bookingService.getHostFullName(booking),
+        price: bookingService.formatCurrency(booking.totalAmount),
+        notes: booking.hostNote || "Sin notas adicionales del anfitrión.",
+        imageUrl: booking.imageUrl,
+      };
+    });
+
     if (selectedFilter === "all") {
-      return reservationsMock;
+      return formattedBookings;
     }
 
-    return reservationsMock.filter(
+    return formattedBookings.filter(
       (reservation) => reservation.status === selectedFilter,
     );
-  }, [selectedFilter]);
+  }, [bookings, selectedFilter]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Cargando reservas...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <div>
+            <h3 className="font-semibold text-red-900">Error al cargar reservas</h3>
+            <p className="text-sm text-red-700">{error}</p>
+            <button
+              onClick={refreshBookings}
+              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            >
+              Intentar nuevamente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -184,11 +204,16 @@ export default function ReservationsPage() {
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
             <Clock className="h-10 w-10 text-gray-400" />
             <h3 className="text-lg font-semibold text-gray-900">
-              No hay reservas bajo este filtro
+              {selectedFilter === "all" 
+                ? "No tienes reservas" 
+                : "No hay reservas bajo este filtro"
+              }
             </h3>
             <p className="text-sm text-gray-600">
-              Cambia el estado seleccionado o realiza una nueva reserva para
-              verla aquí.
+              {selectedFilter === "all"
+                ? "Cuando hagas una reserva, aparecerá aquí."
+                : "Cambia el estado seleccionado o realiza una nueva reserva para verla aquí."
+              }
             </p>
           </div>
         ) : (
@@ -202,8 +227,20 @@ export default function ReservationsPage() {
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex flex-1 items-start gap-4">
-                    <div className="hidden h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl bg-blue-light-50 text-blue-light-500 lg:flex">
-                      <Hotel className="h-10 w-10" />
+                    <div className="hidden h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl lg:block">
+                      {reservation.imageUrl ? (
+                        <Image
+                          src={reservation.imageUrl}
+                          alt={reservation.propertyName}
+                          width={96}
+                          height={96}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-blue-light-50 text-blue-light-500">
+                          <Hotel className="h-10 w-10" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 space-y-3">
