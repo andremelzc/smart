@@ -156,7 +156,7 @@ export const authStoredProcedures = {
           outBinds?: { 
             out_success?: number; 
             out_error_code?: string; 
-            out_user_cursor?: any 
+            out_user_cursor?: { getRows: (numRows: number) => Promise<unknown[][]>; close: () => Promise<void> }
           } 
         };
         
@@ -198,11 +198,11 @@ export const authStoredProcedures = {
               return {
                 success: true,
                 userData: {
-                  userId: userRow[0], // USER_ID
-                  firstName: userRow[1], // FIRST_NAME  
-                  lastName: userRow[2], // LAST_NAME
-                  email: userRow[3], // EMAIL
-                  status: userRow[8] || 'active', // Posición aproximada del STATUS
+                  userId: userRow[0] as number, // USER_ID
+                  firstName: userRow[1] as string, // FIRST_NAME  
+                  lastName: userRow[2] as string, // LAST_NAME
+                  email: userRow[3] as string, // EMAIL
+                  status: (userRow[8] as string) || 'active', // Posición aproximada del STATUS
                   emailVerified: true // Por defecto true si llegó hasta aquí
                 }
               };
