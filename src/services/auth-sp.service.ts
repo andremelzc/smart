@@ -56,7 +56,7 @@ export const authStoredProcedures = {
     try {
       console.log("Ejecutando SP_REGISTER_WITH_CREDENTIALS con:", { email, firstName, lastName });
       
-      const result = await executeQuery(sql, binds) as any;
+      const result = await executeQuery(sql, binds) as { outBinds?: { out_success?: number; out_error_code?: string; out_user_id?: number } };
       
       console.log("Resultado completo del SP:", JSON.stringify(result, null, 2));
       
@@ -96,7 +96,7 @@ export const authStoredProcedures = {
       
       console.log("Buscando hash para email:", email);
       
-      const userHashResult = await executeQuery(getUserHashSql, { email }) as any;
+      const userHashResult = await executeQuery(getUserHashSql, { email }) as { rows?: { PASSWORD_HASH: string }[] };
       
       console.log("Resultado de búsqueda de hash:", JSON.stringify(userHashResult, null, 2));
       
@@ -152,7 +152,13 @@ export const authStoredProcedures = {
         console.log("Ejecutando SP_LOGIN_WITH_CREDENTIALS...");
         
         // Para cursores, no usar executeOptions especiales
-        const result = await connection.execute(sql, binds) as any;
+        const result = await connection.execute(sql, binds) as { 
+          outBinds?: { 
+            out_success?: number; 
+            out_error_code?: string; 
+            out_user_cursor?: any 
+          } 
+        };
         
         console.log("Resultado del SP de login:", JSON.stringify({
           outBinds: result?.outBinds ? {
