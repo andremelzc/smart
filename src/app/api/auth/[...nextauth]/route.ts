@@ -3,8 +3,10 @@ export const runtime = "nodejs";
 
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 // Importamos nuestras funciones de base de datos
 import { executeQuery, oracledb } from "@/src/lib/database";
+import { authStoredProcedures } from "@/src/services/auth-sp.service";
 
 // Tipos específicos para NextAuth
 interface NextAuthAccount {
@@ -64,6 +66,48 @@ export const authOptions: NextAuthOptions = {
           response_type: "code",
         },
       },
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
+        try {
+          const result = await authStoredProcedures.validateCredentials(
+            credentials.email, 
+            credentials.password
+          );
+
+          if (!result.success || !result.userData) {
+            throw new Error(authStoredProcedures.getErrorMessage(result.errorCode || 'INVALID_CREDENTIALS'));
+          }
+
+          const userData = result.userData;
+          
+          return {
+            id: userData.userId.toString(),
+            email: userData.email,
+            name: `${userData.firstName} ${userData.lastName}`.trim(),
+            dbUserId: userData.userId,
+            // Agregar otros campos que necesites
+          };
+          
+        } catch (error) {
+          console.error("Error in credentials authorization:", error);
+          
+          if (error instanceof Error) {
+            throw error;
+          }
+          
+          throw new Error("Error interno del servidor");
+        }
+      }
     }),
   ],
 
