@@ -34,6 +34,56 @@ export interface PropertyErrorResponse {
   details?: string;
 }
 
+// ========================================
+// AVAILABILITY TYPES
+// ========================================
+
+// Tipo para un día específico de disponibilidad
+export interface PropertyAvailabilityDay {
+  date: string; // YYYY-MM-DD
+  available: boolean;
+  reason: 'available' | 'booked' | 'blocked' | 'maintenance';
+}
+
+// Tipo para resumen de disponibilidad
+export interface AvailabilitySummary {
+  totalDays: number;
+  availableDays: number;
+  bookedDays: number;
+  blockedDays: number;
+  maintenanceDays: number;
+}
+
+// Tipo para respuesta de disponibilidad
+export interface PropertyAvailabilityResponse {
+  success: boolean;
+  data: PropertyAvailabilityDay[];
+  meta: {
+    propertyId: number;
+    startDate: string;
+    endDate: string;
+    totalDays: number;
+    availableDays: number;
+    bookedDays: number;
+    blockedDays: number;
+    maintenanceDays: number;
+  };
+}
+
+// Tipo para verificar rango de disponibilidad
+export interface AvailabilityCheckRequest {
+  checkinDate: string; // YYYY-MM-DD
+  checkoutDate: string; // YYYY-MM-DD
+}
+
+export interface AvailabilityCheckResponse {
+  success: boolean;
+  available: boolean;
+  message: string;
+  checkinDate: string;
+  checkoutDate: string;
+}
+
 // Tipo para los filtros de búsqueda de propiedades
 export interface PropertyFilterDto {
   city?: string;
