@@ -86,6 +86,14 @@ export async function POST(req: Request) {
             .map((value: unknown) => Number(value))
             .filter((value: number) => Number.isFinite(value))
         : undefined,
+      orderBy: (() => {
+        const raw = Array.isArray(body.orderBy) ? body.orderBy[0] : body.orderBy;
+        if (typeof raw !== 'string') {
+          return undefined;
+        }
+        const normalized = raw.trim().toLowerCase();
+        return normalized === 'price' || normalized === 'rating' ? normalized : undefined;
+      })(),
     };
 
     // Ejemplo de logs para debugging (puedes quitar en producción)

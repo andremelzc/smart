@@ -103,6 +103,7 @@ export interface PropertyFilterDto {
   pets?: number;
   startDate?: string;
   endDate?: string;
+  orderBy?: 'price' | 'rating';
 }
 
 // Tipo para la información del host

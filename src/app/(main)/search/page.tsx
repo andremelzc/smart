@@ -43,6 +43,7 @@ const PropertySearchMap = dynamic(
 
 
 type QuantityFieldKey = 'rooms' | 'beds' | 'baths';
+type OrderByValue = '' | 'price' | 'rating';
 
 
 
@@ -104,6 +105,23 @@ const QUANTITY_FIELDS: Array<{
   { key: 'baths', label: 'Banos', description: 'Cantidad de banos completos' },
 ];
 
+const ORDER_OPTIONS: Array<{
+  value: Exclude<OrderByValue, ''>;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'price',
+    label: 'Precio',
+    description: 'Ordena por tarifa base de menor a mayor.',
+  },
+  {
+    value: 'rating',
+    label: 'Calificacion',
+    description: 'Destaca primero las mejores reseñas.',
+  },
+];
+
 type FilterFormState = {
   city: string;
   startDate: string;
@@ -117,6 +135,7 @@ type FilterFormState = {
   children: string;
   babies: string;
   pets: string;
+  orderBy: OrderByValue;
 };
 
 const EMPTY_FORM: FilterFormState = {
@@ -132,6 +151,7 @@ const EMPTY_FORM: FilterFormState = {
   children: '0',
   babies: '0',
   pets: '0',
+  orderBy: '',
 };
 
 const parseNumericString = (value: string | null | undefined): number | undefined => {
@@ -175,6 +195,10 @@ const buildFilters = (
     babies: parsePositiveInteger(values.babies),
     pets: parsePositiveInteger(values.pets),
   };
+
+  if (values.orderBy) {
+    base.orderBy = values.orderBy;
+  }
 
   if (amenities.length > 0) {
     base.amenities = [...amenities];
@@ -268,6 +292,11 @@ function PropertySearchContent() {
 
     const params = new URLSearchParams(searchParamsKey);
 
+    const orderByRawList = params.getAll('orderBy');
+    const primaryOrderRaw = orderByRawList.length > 0 ? orderByRawList[0] : params.get('orderBy');
+    const normalizedOrder = typeof primaryOrderRaw === 'string' ? primaryOrderRaw.trim().toLowerCase() : '';
+    const orderByValue: OrderByValue = normalizedOrder === 'price' || normalizedOrder === 'rating' ? normalizedOrder : '';
+
     const nextForm: FilterFormState = {
 
       ...EMPTY_FORM,
@@ -295,6 +324,8 @@ function PropertySearchContent() {
       babies: params.get('babies') ?? '0',
 
       pets: params.get('pets') ?? '0',
+
+      orderBy: orderByValue,
 
     };
 
@@ -379,6 +410,8 @@ function PropertySearchContent() {
           ...initialFilters,
 
           amenities: initialFilters.amenities ? [...initialFilters.amenities] : undefined,
+
+          orderBy: initialFilters.orderBy,
 
         });
 
@@ -466,9 +499,9 @@ function PropertySearchContent() {
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
 
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
 
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    setFormValues((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
 
   };
 
@@ -485,6 +518,20 @@ function PropertySearchContent() {
       return { ...prev, [field]: String(nextValue) };
 
     });
+
+  };
+
+
+
+  const handleOrderBySelect = (value: 'price' | 'rating') => {
+
+    setFormValues((prev) => ({
+
+      ...prev,
+
+      orderBy: prev.orderBy === value ? '' : value,
+
+    }));
 
   };
 
@@ -696,6 +743,8 @@ function PropertySearchContent() {
 
           amenities: nextFilters.amenities ? [...nextFilters.amenities] : undefined,
 
+          orderBy: nextFilters.orderBy,
+
         });
 
       } catch (err) {
@@ -739,6 +788,8 @@ function PropertySearchContent() {
         ...requestFilters,
 
         amenities: requestFilters.amenities ? [...requestFilters.amenities] : undefined,
+
+        orderBy: requestFilters.orderBy,
 
       });
 
@@ -991,6 +1042,84 @@ function PropertySearchContent() {
                       </div>
 
                     </div>
+
+                  );
+
+                })}
+
+              </div>
+
+            </section>
+
+
+
+            <section className="space-y-3">
+
+              <h2 className="text-sm font-semibold text-gray-dark-600">Ordenar por</h2>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+
+                {ORDER_OPTIONS.map(({ value, label, description }) => {
+
+                  const isActive = formValues.orderBy === value;
+
+                  return (
+
+                    <button
+
+                      key={value}
+
+                      type="button"
+
+                      onClick={() => handleOrderBySelect(value)}
+
+                      className={`flex flex-1 items-start gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+
+                        isActive
+
+                          ? 'border-blue-vivid-500 bg-blue-vivid-50 text-blue-vivid-700 shadow-sm'
+
+                          : 'border-blue-light-150 bg-blue-light-50 text-gray-dark-600 hover:border-blue-light-300'
+
+                      }`}
+
+                      aria-pressed={isActive}
+
+                    >
+
+                      <span
+
+                        className={`mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border ${
+
+                          isActive
+
+                            ? 'border-blue-vivid-500 bg-blue-vivid-500'
+
+                            : 'border-blue-light-300 bg-white'
+
+                        }`}
+
+                        aria-hidden="true"
+
+                      >
+
+                        <span
+
+                          className={`h-2 w-2 rounded-full ${isActive ? 'bg-white' : 'bg-transparent'}`}
+
+                        />
+
+                      </span>
+
+                      <span className="flex-1">
+
+                        <p className="text-sm font-semibold text-gray-dark-700">{label}</p>
+
+                        <p className="text-xs text-gray-dark-500">{description}</p>
+
+                      </span>
+
+                    </button>
 
                   );
 
