@@ -31,6 +31,46 @@ export interface HostBooking {
   imageUrl: string | null;
 }
 
+export interface DetailedBookingInfo {
+  // Datos básicos de la reserva
+  bookingId: number;
+  status: string;
+  checkinDate: string;
+  checkoutDate: string;
+  guestCount: number;
+  totalAmount: number;
+  basePrice: number;
+  serviceFee: number;
+  cleaningFee: number;
+  taxes: number;
+  createdAt: string;
+  completedAt: string | null;
+  hostNote: string | null;
+  guestMessage: string | null;
+  checkinCode: string | null;
+
+  // Datos del huésped
+  tenantId: number;
+  guestFirstName: string;
+  guestLastName: string;
+  guestEmail: string;
+  guestPhone: string;
+
+  // Datos de la propiedad
+  propertyId: number;
+  propertyName: string;
+  hostId: number;
+  propertyAddress: string;
+
+  // Datos de pagos
+  paymentStatus: string | null;
+  paymentMessage: string | null;
+
+  // Datos de reseñas
+  hasHostReview: boolean;
+  hasGuestReview: boolean;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
@@ -38,7 +78,7 @@ export interface ApiResponse<T = unknown> {
   error?: string;
 }
 
-import { formatFullName } from '@/src/lib/formatters';
+import { formatFullName } from "@/src/lib/formatters";
 
 /**
  * Servicio de operaciones de reservas
@@ -67,7 +107,8 @@ export const bookingService = {
       return data.data || [];
     } catch (error: unknown) {
       console.error("❌ Error en getTenantBookings:", error);
-      const errorMessage = error instanceof Error ? error.message : "Error de conexión";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error de conexión";
       throw new Error(errorMessage);
     }
   },
@@ -80,10 +121,10 @@ export const bookingService = {
   formatDate: (dateString: string): string => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
+      return date.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
       });
     } catch {
       return dateString;
@@ -105,8 +146,13 @@ export const bookingService = {
    * @returns Dirección completa formateada
    */
   getFullAddress: (booking: TenantBooking): string => {
-    const parts = [booking.formattedAddress, booking.city, booking.stateRegion, booking.country];
-    return parts.filter(part => part && part.trim()).join(', ');
+    const parts = [
+      booking.formattedAddress,
+      booking.city,
+      booking.stateRegion,
+      booking.country,
+    ];
+    return parts.filter((part) => part && part.trim()).join(", ");
   },
 
   /**
@@ -115,7 +161,10 @@ export const bookingService = {
    * @param checkoutDate - Fecha de check-out
    * @returns Número de días de estadía
    */
-  calculateStayDuration: (checkinDate: string, checkoutDate: string): number => {
+  calculateStayDuration: (
+    checkinDate: string,
+    checkoutDate: string
+  ): number => {
     try {
       const checkin = new Date(checkinDate);
       const checkout = new Date(checkoutDate);
@@ -134,9 +183,9 @@ export const bookingService = {
    */
   formatCurrency: (amount: number): string => {
     try {
-      return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN'
+      return new Intl.NumberFormat("es-PE", {
+        style: "currency",
+        currency: "PEN",
       }).format(amount);
     } catch {
       return `S/ ${amount.toFixed(2)}`;
@@ -150,13 +199,13 @@ export const bookingService = {
    */
   getStatusColor: (status: string): string => {
     const statusColors: Record<string, string> = {
-      'confirmed': 'bg-green-100 text-green-800',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'cancelled': 'bg-red-100 text-red-800',
-      'completed': 'bg-blue-100 text-blue-800',
-      'in-progress': 'bg-purple-100 text-purple-800'
+      confirmed: "bg-green-100 text-green-800",
+      pending: "bg-yellow-100 text-yellow-800",
+      cancelled: "bg-red-100 text-red-800",
+      completed: "bg-blue-100 text-blue-800",
+      "in-progress": "bg-purple-100 text-purple-800",
     };
-    return statusColors[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    return statusColors[status.toLowerCase()] || "bg-gray-100 text-gray-800";
   },
 
   /**
@@ -166,11 +215,11 @@ export const bookingService = {
    */
   translateStatus: (status: string): string => {
     const statusTranslations: Record<string, string> = {
-      'confirmed': 'Confirmada',
-      'pending': 'Pendiente',
-      'cancelled': 'Cancelada',
-      'completed': 'Completada',
-      'in-progress': 'En curso'
+      confirmed: "Confirmada",
+      pending: "Pendiente",
+      cancelled: "Cancelada",
+      completed: "Completada",
+      "in-progress": "En curso",
     };
     return statusTranslations[status.toLowerCase()] || status;
   },
@@ -191,6 +240,7 @@ export const bookingService = {
       });
 
       const data: ApiResponse<HostBooking[]> = await response.json();
+      console.log("📅 Reservas del host obtenidas:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Error al obtener las reservas del host");
@@ -199,9 +249,84 @@ export const bookingService = {
       return data.data || [];
     } catch (error: unknown) {
       console.error("❌ Error en getHostBookings:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error de conexión";
+      throw new Error(errorMessage);
+    }
+  },
+
+  /**
+   * Obtiene información detallada de una reserva específica
+   * @param bookingId - ID de la reserva
+   * @returns Promise con la información detallada de la reserva
+   */
+  getDetailedBookingInfo: async (bookingId: number): Promise<DetailedBookingInfo> => {
+    try {
+      const response = await fetch(`/api/bookings/detail/${bookingId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data: ApiResponse<DetailedBookingInfo> = await response.json();
+      console.log("🔍 Detalle de reserva obtenido:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al obtener los detalles de la reserva");
+      }
+
+      if (!data.data) {
+        throw new Error("No se encontraron datos de la reserva");
+      }
+
+      return data.data;
+    } catch (error: unknown) {
+      console.error("❌ Error en getDetailedBookingInfo:", error);
       const errorMessage = error instanceof Error ? error.message : "Error de conexión";
       throw new Error(errorMessage);
     }
+  },
+
+  /**
+   * Mapea DetailedBookingInfo del API a DetailedReservation para el modal
+   * @param bookingInfo - Información detallada de la reserva del API
+   * @returns Objeto DetailedReservation para usar en el modal
+   */
+  mapToDetailedReservation: (bookingInfo: DetailedBookingInfo) => {
+    return {
+      id: bookingInfo.bookingId.toString(),
+      guestName: `${bookingInfo.guestFirstName} ${bookingInfo.guestLastName}`,
+      propertyName: bookingInfo.propertyName,
+      checkIn: bookingInfo.checkinDate,
+      checkOut: bookingInfo.checkoutDate,
+      guestCount: bookingInfo.guestCount,
+      status: bookingInfo.status.toLowerCase() as "pending" | "confirmed" | "completed" | "declined" | "cancelled",
+      roomId: bookingInfo.propertyId.toString(),
+      
+      // Información financiera
+      basePrice: bookingInfo.basePrice || undefined,
+      serviceFee: bookingInfo.serviceFee || undefined,
+      totalAmount: bookingInfo.totalAmount,
+      
+      // Información de contacto (solo para confirmed/completed)
+      contactEmail: bookingInfo.guestEmail || undefined,
+      contactPhone: bookingInfo.guestPhone || undefined,
+      
+      // Información adicional
+      propertyAddress: bookingInfo.propertyAddress || undefined,
+      hostNote: bookingInfo.hostNote || undefined,
+      checkinCode: bookingInfo.checkinCode || undefined,
+      createdAt: bookingInfo.createdAt,
+      completedAt: bookingInfo.completedAt || undefined,
+      
+      // Mensajes y reseñas
+      guestMessage: bookingInfo.guestMessage || undefined,
+      paymentStatus: bookingInfo.paymentStatus || undefined,
+      paymentMessage: bookingInfo.paymentMessage || undefined,
+      hasHostReview: bookingInfo.hasHostReview,
+      hasGuestReview: bookingInfo.hasGuestReview,
+    };
   },
 
   /**
@@ -221,7 +346,7 @@ export const bookingService = {
   calculateTotalRevenue: (bookings: HostBooking[]): number => {
     return bookings.reduce((total, booking) => {
       // Solo contar reservas confirmadas y completadas
-      if (['confirmed', 'completed'].includes(booking.status.toLowerCase())) {
+      if (["confirmed", "completed"].includes(booking.status.toLowerCase())) {
         return total + booking.totalAmount;
       }
       return total;
@@ -240,10 +365,10 @@ export const bookingService = {
       pending: 0,
       cancelled: 0,
       completed: 0,
-      'in-progress': 0
+      "in-progress": 0,
     };
 
-    bookings.forEach(booking => {
+    bookings.forEach((booking) => {
       const status = booking.status.toLowerCase();
       if (status in counts) {
         counts[status as keyof typeof counts]++;
@@ -251,5 +376,5 @@ export const bookingService = {
     });
 
     return counts;
-  }
+  },
 };
