@@ -23,7 +23,10 @@ export class PropertyFilterService {
       const amenitiesType = await connection.getDbObjectClass('SYS.ODCINUMBERLIST');
       const amenitiesValue = amenitiesList.length > 0 ? new amenitiesType(amenitiesList) : null;
 
-      const capacityTotal = typeof filters.capacityTotal === 'number' ? filters.capacityTotal : null;
+  const adults = typeof filters.adults === 'number' ? filters.adults : null;
+  const children = typeof filters.children === 'number' ? filters.children : null;
+  const babies = typeof filters.babies === 'number' ? filters.babies : null;
+  const pets = typeof filters.pets === 'number' ? filters.pets : null;
 
       const toOracleDate = (value?: string): Date | null => {
         if (!value) return null;
@@ -53,8 +56,11 @@ export class PropertyFilterService {
         p_max_price: { val: filters.maxPrice ?? null, dir: oracledb.BIND_IN },
         p_rooms: { val: filters.rooms ?? null, dir: oracledb.BIND_IN },
         p_beds: { val: filters.beds ?? null, dir: oracledb.BIND_IN },
-        p_baths: { val: filters.baths ?? null, dir: oracledb.BIND_IN },
-        p_capacity_total: { val: capacityTotal, dir: oracledb.BIND_IN },
+    p_baths: { val: filters.baths ?? null, dir: oracledb.BIND_IN },
+    p_max_adults: { val: adults, dir: oracledb.BIND_IN },
+    p_max_children: { val: children, dir: oracledb.BIND_IN },
+    p_max_baby: { val: babies, dir: oracledb.BIND_IN },
+    p_max_pet: { val: pets, dir: oracledb.BIND_IN },
         p_start_date: { dir: oracledb.BIND_IN, type: oracledb.DATE, val: startDate },
         p_end_date: { dir: oracledb.BIND_IN, type: oracledb.DATE, val: endDate },
         p_lat_min: { val: filters.latMin ?? null, dir: oracledb.BIND_IN },
@@ -75,7 +81,10 @@ export class PropertyFilterService {
             p_rooms       => :p_rooms,
             p_beds        => :p_beds,
             p_baths       => :p_baths,
-            p_capacity_total => :p_capacity_total,
+            p_max_adults  => :p_max_adults,
+            p_max_children => :p_max_children,
+            p_max_baby    => :p_max_baby,
+            p_max_pet     => :p_max_pet,
             p_start_date  => :p_start_date,
             p_end_date    => :p_end_date,
             p_lat_min     => :p_lat_min,

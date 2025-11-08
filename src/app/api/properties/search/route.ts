@@ -11,7 +11,10 @@ export async function GET() {
     rooms: 1,
     beds: 1,
     baths: 1,
-    capacityTotal: 2,
+    adults: 2,
+    children: 1,
+    babies: 0,
+    pets: 0,
     startDate: "2025-11-01",
     endDate: "2025-11-05",
     latMin: -12.3,
@@ -47,9 +50,37 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    const parseOptionalNumber = (value: unknown): number | undefined => {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+      }
+      if (typeof value === 'string' && value.trim().length > 0) {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+      return undefined;
+    };
+
     // Normaliza los filtros para mantener tipos consistentes
     const filters: PropertyFilterDto = {
-      ...body,
+      city: typeof body.city === 'string' ? body.city : undefined,
+      minPrice: parseOptionalNumber(body.minPrice),
+      maxPrice: parseOptionalNumber(body.maxPrice),
+      rooms: parseOptionalNumber(body.rooms),
+      beds: parseOptionalNumber(body.beds),
+      baths: parseOptionalNumber(body.baths),
+      latMin: parseOptionalNumber(body.latMin),
+      latMax: parseOptionalNumber(body.latMax),
+      lngMin: parseOptionalNumber(body.lngMin),
+      lngMax: parseOptionalNumber(body.lngMax),
+      startDate: typeof body.startDate === 'string' ? body.startDate : undefined,
+      endDate: typeof body.endDate === 'string' ? body.endDate : undefined,
+      adults: parseOptionalNumber(body.adults),
+      children: parseOptionalNumber(body.children),
+      babies: parseOptionalNumber(body.babies),
+      pets: parseOptionalNumber(body.pets),
       amenities: Array.isArray(body.amenities)
         ? body.amenities
             .map((value: unknown) => Number(value))
