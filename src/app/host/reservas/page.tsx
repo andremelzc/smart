@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { Loader2, AlertCircle } from "lucide-react";
 import {
   HostReservationCard,
   ReservationFilters,
@@ -8,93 +9,12 @@ import {
   type HostReservation,
   type FilterSegment,
 } from "@/src/components/features/reservations";
-import GuestRequestModal from "@/src/components/features/host/GuestRequestModal";
+import GuestRequestModal, { type DetailedReservation } from "@/src/components/features/host/GuestRequestModal";
+import { useHostBookings } from "@/src/hooks/useHostBookings";
+import { bookingService } from "@/src/services/booking.service";
 
-type HostReservationStatus = "pending" | "accepted" | "confirmed" | "cancelled";
+type HostReservationStatus = "pending" | "confirmed" | "completed" | "declined" | "cancelled";
 type TimeFilter = "present" | "upcoming" | "past" | "all";
-
-type LocalHostReservation = {
-  id: string;
-  guestName: string;
-  propertyName: string;
-  location: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  status: HostReservationStatus;
-  total: string;
-  roomId: string;
-  requestDescription: string;
-  contactEmail: string;
-  contactPhone: string;
-};
-
-const reservationsMock: LocalHostReservation[] = [
-  {
-    id: "SOL-1048",
-    guestName: "Natalia Gamarra",
-    propertyName: "Estudio creativo en Barranco",
-    location: "Lima, Peru",
-    checkIn: "2025-10-25T15:00:00Z",
-    checkOut: "2025-10-27T12:00:00Z",
-    guests: 2,
-    status: "pending",
-    total: "S/. 540",
-    roomId: "ROOM-08C",
-    requestDescription:
-      "Natalia produce un workshop de fotografia y necesita un ambiente iluminado con acceso a proyector.",
-    contactEmail: "natalia.gamarra@example.com",
-    contactPhone: "+51 987 111 222",
-  },
-  {
-    id: "RES-2051",
-    guestName: "Sergio Paredes",
-    propertyName: "Casa familiar con terraza",
-    location: "Arequipa, Peru",
-    checkIn: "2025-11-05T14:00:00Z",
-    checkOut: "2025-11-09T11:00:00Z",
-    guests: 4,
-    status: "confirmed",
-    total: "S/. 1,350",
-    roomId: "ROOM-10B",
-    requestDescription:
-      "Reserva confirmada para un viaje familiar. Solicitan recomendaciones gastronomicas cercanas.",
-    contactEmail: "sergio.paredes@example.com",
-    contactPhone: "+51 944 555 111",
-  },
-  {
-    id: "RES-2022",
-    guestName: "Camila Huaman",
-    propertyName: "Loft urbano minimalista",
-    location: "Cusco, Peru",
-    checkIn: "2025-09-18T15:00:00Z",
-    checkOut: "2025-09-22T11:00:00Z",
-    guests: 1,
-    status: "accepted",
-    total: "S/. 720",
-    roomId: "ROOM-04A",
-    requestDescription:
-      "Solicitud aceptada. Camila participara en un congreso y pidio silla ergonomica para teletrabajo.",
-    contactEmail: "camila.huaman@example.com",
-    contactPhone: "+51 913 222 654",
-  },
-  {
-    id: "RES-1980",
-    guestName: "Daniel Vega",
-    propertyName: "Cabana ecologica",
-    location: "Oxapampa, Peru",
-    checkIn: "2025-08-01T13:00:00Z",
-    checkOut: "2025-08-04T12:00:00Z",
-    guests: 3,
-    status: "cancelled",
-    total: "S/. 890",
-    roomId: "ROOM-02F",
-    requestDescription:
-      "Reserva cancelada por el huesped. Se aplico politica flexible con reembolso del 80%.",
-    contactEmail: "daniel.vega@example.com",
-    contactPhone: "+51 955 888 300",
-  },
-];
 
 const statusConfig: Record<
   HostReservationStatus,
@@ -104,13 +24,17 @@ const statusConfig: Record<
     label: "Pendiente",
     badge: "bg-yellow-50 text-yellow-800 border border-yellow-200",
   },
-  accepted: {
-    label: "Aceptada",
-    badge: "bg-blue-50 text-blue-700 border border-blue-200",
-  },
   confirmed: {
     label: "Confirmada",
     badge: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  },
+  completed: {
+    label: "Completada",
+    badge: "bg-green-50 text-green-700 border border-green-200",
+  },
+  declined: {
+    label: "Rechazada",
+    badge: "bg-gray-50 text-gray-700 border border-gray-200",
   },
   cancelled: {
     label: "Cancelada",
@@ -121,8 +45,9 @@ const statusConfig: Record<
 const statusSegments: FilterSegment<"all" | HostReservationStatus>[] = [
   { key: "all", label: "Todas" },
   { key: "pending", label: "Pendientes" },
-  { key: "accepted", label: "Aceptadas" },
   { key: "confirmed", label: "Confirmadas" },
+  { key: "completed", label: "Completadas" },
+  { key: "declined", label: "Rechazadas" },
   { key: "cancelled", label: "Canceladas" },
 ];
 
@@ -138,16 +63,7 @@ const normalizeDate = (value: string | Date) => {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 };
 
-const formatRange = (checkIn: string, checkOut: string) => {
-  const formatter = new Intl.DateTimeFormat("es-PE", {
-    day: "numeric",
-    month: "short",
-  });
 
-  return `${formatter.format(new Date(checkIn))} - ${formatter.format(
-    new Date(checkOut),
-  )}`;
-};
 
 const formatDay = (value: string) =>
   new Intl.DateTimeFormat("es-PE", {
@@ -163,21 +79,54 @@ export default function HostReservationsPage() {
   const [selectedReservationId, setSelectedReservationId] = useState<
     string | null
   >(null);
+  const [selectedReservation, setSelectedReservation] = useState<DetailedReservation | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  
+  const { bookings, loading, error, refreshBookings } = useHostBookings();
 
   const today = normalizeDate(new Date());
 
-  const sampleUpcomingReservation = reservationsMock.find(
-    (reservation) => normalizeDate(reservation.checkIn) > today,
-  );
+  // Mapear el estado de la BD al estado de la UI
+  const getReservationStatus = (dbStatus: string): HostReservationStatus => {
+    const status = dbStatus.toLowerCase();
+    switch (status) {
+      case "pending":
+        return "pending";
+      case "accepted":
+      case "confirmed":
+        return "confirmed";
+      case "completed":
+        return "completed";
+      case "declined":
+        return "declined";
+      case "cancelled":
+        return "cancelled";
+      default:
+        return "pending";
+    }
+  };
 
-  const upcomingExampleText = sampleUpcomingReservation
-    ? `Ejemplo: usa el filtro "Proximas" para ver reservas como "${sampleUpcomingReservation.propertyName}" con check-in el ${formatDay(
-        sampleUpcomingReservation.checkIn,
-      )}.`
-    : 'Ejemplo: usa el filtro "Proximas" para mostrar reservas con check-in posterior a hoy.';
+  // Convertir bookings de BD al formato de la UI
+  const formattedReservations = useMemo(() => {
+    return bookings.map((booking) => ({
+      id: `RES-${booking.bookingId}`,
+      propertyName: booking.propertyTitle,
+      location: "Lima, Peru", // TODO: agregar ubicación a la BD
+      checkIn: booking.checkinDate,
+      checkOut: booking.checkoutDate,
+      guests: booking.guestCount,
+      status: getReservationStatus(booking.status),
+      guestName: bookingService.getTenantFullName(booking),
+      total: bookingService.formatCurrency(booking.totalAmount),
+      roomId: `ROOM-${booking.bookingId.toString().padStart(3, '0')}`,
+      requestDescription: "Solicitud de reserva pendiente de revisión.",
+      contactEmail: "guest@example.com", // TODO: agregar email a la BD
+      contactPhone: "+51 900 000 000", // TODO: agregar teléfono a la BD
+    }));
+  }, [bookings]);
 
   const filteredReservations = useMemo(() => {
-    return reservationsMock.filter((reservation) => {
+    return formattedReservations.filter((reservation) => {
       const checkIn = normalizeDate(reservation.checkIn);
       const checkOut = normalizeDate(reservation.checkOut);
       const matchesStatus =
@@ -194,7 +143,17 @@ export default function HostReservationsPage() {
 
       return matchesStatus && matchesTime;
     });
-  }, [statusFilter, timeFilter, today]);
+  }, [formattedReservations, statusFilter, timeFilter, today]);
+
+  const sampleUpcomingReservation = filteredReservations.find(
+    (reservation) => normalizeDate(reservation.checkIn) > today,
+  );
+
+  const upcomingExampleText = sampleUpcomingReservation
+    ? `Ejemplo: usa el filtro "Proximas" para ver reservas como "${sampleUpcomingReservation.propertyName}" con check-in el ${formatDay(
+        sampleUpcomingReservation.checkIn,
+      )}.`
+    : 'Ejemplo: usa el filtro "Proximas" para mostrar reservas con check-in posterior a hoy.';
 
   // Convert to HostReservation format for the component
   const hostReservations = useMemo((): HostReservation[] => {
@@ -215,25 +174,154 @@ export default function HostReservationsPage() {
     }));
   }, [filteredReservations]);
 
-  const selectedReservation = useMemo(() => {
-    if (!selectedReservationId) return null;
-    const reservation = reservationsMock.find(
-      (item) => item.id === selectedReservationId,
-    );
-    if (!reservation) return null;
+  // Función para cargar detalles de reserva cuando se selecciona una
+  const loadReservationDetails = async (reservationId: string) => {
+    try {
+      setLoadingDetail(true);
+      
+      // Extraer booking ID del formato "RES-123"
+      const bookingId = parseInt(reservationId.replace('RES-', ''));
+      
+      // Obtener detalles completos de la reserva
+      const detailedInfo = await bookingService.getDetailedBookingInfo(bookingId);
+      
+      // Mapear a formato del modal
+      const detailedReservation = bookingService.mapToDetailedReservation(detailedInfo);
+      
+      setSelectedReservation(detailedReservation);
+    } catch (error) {
+      console.error('Error al cargar detalles de reserva:', error);
+      // En caso de error, usar datos básicos disponibles
+      const reservation = formattedReservations.find(
+        (item) => item.id === reservationId,
+      );
+      if (reservation) {
+        const originalBooking = bookings.find(
+          booking => `RES-${booking.bookingId}` === reservation.id
+        );
+        
+        setSelectedReservation({
+          id: reservation.id,
+          guestName: reservation.guestName,
+          propertyName: reservation.propertyName,
+          checkIn: reservation.checkIn,
+          checkOut: reservation.checkOut,
+          guestCount: reservation.guests,
+          status: reservation.status as DetailedReservation['status'],
+          roomId: reservation.roomId,
+          totalAmount: originalBooking?.totalAmount || 0,
+          createdAt: reservation.checkIn,
+          // Campos básicos por defecto
+          basePrice: undefined,
+          serviceFee: undefined,
+          contactEmail: undefined,
+          contactPhone: undefined,
+          propertyAddress: undefined,
+          hostNote: undefined,
+          checkinCode: undefined,
+          completedAt: undefined,
+          guestMessage: undefined,
+          paymentStatus: undefined,
+          paymentMessage: undefined,
+          hasHostReview: false,
+          hasGuestReview: false,
+        });
+      }
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
-    return {
-      id: reservation.id,
-      guestName: reservation.guestName,
-      requestDate: reservation.checkIn,
-      roomId: reservation.roomId,
-      stayDates: formatRange(reservation.checkIn, reservation.checkOut),
-      description: reservation.requestDescription,
-      status: statusConfig[reservation.status].label,
-      contactEmail: reservation.contactEmail,
-      contactPhone: reservation.contactPhone,
-    };
+  // Effect para cargar detalles cuando se selecciona una reserva
+  useEffect(() => {
+    if (selectedReservationId) {
+      loadReservationDetails(selectedReservationId);
+    } else {
+      setSelectedReservation(null);
+    }
   }, [selectedReservationId]);
+
+  // Funciones de callback para las acciones del modal
+  const handleAcceptReservation = (requestId: string) => {
+    console.log('Aceptar reserva:', requestId);
+    // TODO: Implementar lógica de aceptar reserva
+    setSelectedReservationId(null);
+  };
+
+  const handleDeclineReservation = (requestId: string) => {
+    console.log('Rechazar reserva:', requestId);
+    // TODO: Implementar lógica de rechazar reserva
+    setSelectedReservationId(null);
+  };
+
+  const handleCancelReservation = (requestId: string) => {
+    if (confirm('¿Estás seguro de que quieres cancelar esta reserva?')) {
+      console.log('Cancelar reserva:', requestId);
+      // TODO: Implementar lógica de cancelar reserva
+      setSelectedReservationId(null);
+    }
+  };
+
+  const handleSendMessage = (requestId: string) => {
+    console.log('Enviar mensaje:', requestId);
+    // TODO: Redirigir a la página de mensajes
+    setSelectedReservationId(null);
+  };
+
+  const handleWriteReview = (requestId: string) => {
+    console.log('Escribir reseña:', requestId);
+    // TODO: Abrir modal de reseña
+    setSelectedReservationId(null);
+  };
+
+  const handleViewReviews = (requestId: string) => {
+    console.log('Ver reseñas:', requestId);
+    // TODO: Mostrar modal de reseñas
+    setSelectedReservationId(null);
+  };
+
+  const handleViewMessages = (requestId: string) => {
+    console.log('Ver mensajes:', requestId);
+    // TODO: Redirigir a historial de mensajes
+    setSelectedReservationId(null);
+  };
+
+  const handleModifyReservation = (requestId: string) => {
+    console.log('Modificar reserva:', requestId);
+    // TODO: Abrir modal de modificación
+    setSelectedReservationId(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Cargando reservas...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <div>
+            <h3 className="font-semibold text-red-900">
+              Error al cargar reservas
+            </h3>
+            <p className="text-sm text-red-700">{error}</p>
+            <button
+              onClick={refreshBookings}
+              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            >
+              Intentar nuevamente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -287,10 +375,33 @@ export default function HostReservationsPage() {
       </div>
 
       <GuestRequestModal
-        open={Boolean(selectedReservation)}
-        request={selectedReservation}
+        open={Boolean(selectedReservationId)}
+        request={loadingDetail ? null : selectedReservation}
         onClose={() => setSelectedReservationId(null)}
+        onAccept={handleAcceptReservation}
+        onDecline={handleDeclineReservation}
+        onCancel={handleCancelReservation}
+        onSendMessage={handleSendMessage}
+        onWriteReview={handleWriteReview}
+        onViewReviews={handleViewReviews}
+        onViewMessages={handleViewMessages}
+        onModifyReservation={handleModifyReservation}
       />
+
+      {/* Modal de carga para detalles */}
+      {loadingDetail && selectedReservationId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-dark-500/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Cargando detalles
+            </h3>
+            <p className="text-gray-600">
+              Obteniendo información completa de la reserva...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
