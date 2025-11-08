@@ -2,21 +2,18 @@
 
 import { useMemo, useState } from "react";
 import {
-  Calendar,
-  MapPin,
-  Users,
-  Clock,
-  Filter,
-  ChevronRight,
-  Hourglass,
-} from "lucide-react";
-import { Button } from "@/src/components/ui/Button";
+  HostReservationCard,
+  ReservationFilters,
+  ReservationEmptyState,
+  type HostReservation,
+  type FilterSegment,
+} from "@/src/components/features/reservations";
 import GuestRequestModal from "@/src/components/features/host/GuestRequestModal";
 
 type HostReservationStatus = "pending" | "accepted" | "confirmed" | "cancelled";
 type TimeFilter = "present" | "upcoming" | "past" | "all";
 
-type HostReservation = {
+type LocalHostReservation = {
   id: string;
   guestName: string;
   propertyName: string;
@@ -32,7 +29,7 @@ type HostReservation = {
   contactPhone: string;
 };
 
-const reservationsMock: HostReservation[] = [
+const reservationsMock: LocalHostReservation[] = [
   {
     id: "SOL-1048",
     guestName: "Natalia Gamarra",
@@ -121,9 +118,7 @@ const statusConfig: Record<
   },
 };
 
-const statusSegments: Array<
-  { key: "all" | HostReservationStatus; label: string }
-> = [
+const statusSegments: FilterSegment<"all" | HostReservationStatus>[] = [
   { key: "all", label: "Todas" },
   { key: "pending", label: "Pendientes" },
   { key: "accepted", label: "Aceptadas" },
@@ -131,7 +126,7 @@ const statusSegments: Array<
   { key: "cancelled", label: "Canceladas" },
 ];
 
-const timeSegments: Array<{ key: TimeFilter; label: string }> = [
+const timeSegments: FilterSegment<TimeFilter>[] = [
   { key: "present", label: "Presentes" },
   { key: "upcoming", label: "Proximas" },
   { key: "past", label: "Pasadas" },
@@ -201,6 +196,25 @@ export default function HostReservationsPage() {
     });
   }, [statusFilter, timeFilter, today]);
 
+  // Convert to HostReservation format for the component
+  const hostReservations = useMemo((): HostReservation[] => {
+    return filteredReservations.map((reservation) => ({
+      id: reservation.id,
+      propertyName: reservation.propertyName,
+      location: reservation.location,
+      checkIn: reservation.checkIn,
+      checkOut: reservation.checkOut,
+      guests: reservation.guests,
+      status: reservation.status,
+      guestName: reservation.guestName,
+      total: reservation.total,
+      roomId: reservation.roomId,
+      requestDescription: reservation.requestDescription,
+      contactEmail: reservation.contactEmail,
+      contactPhone: reservation.contactPhone,
+    }));
+  }, [filteredReservations]);
+
   const selectedReservation = useMemo(() => {
     if (!selectedReservationId) return null;
     const reservation = reservationsMock.find(
@@ -235,145 +249,37 @@ export default function HostReservationsPage() {
           </p>
         </header>
 
-        <section className="rounded-xl border border-gray-100 bg-white p-6">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
-            <Filter className="h-4 w-4 text-gray-500" />
-            Configura la vista
-          </div>
-
-          <div className="flex flex-col gap-6 md:flex-row md:items-start">
-            <div className="flex-1 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Estado de la reserva
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {statusSegments.map((segment) => {
-                  const isActive = statusFilter === segment.key;
-                  return (
-                    <button
-                      key={segment.key}
-                      onClick={() => setStatusFilter(segment.key)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                        isActive
-                          ? "bg-blue-light-100 text-blue-light-700 border border-blue-light-300"
-                          : "text-gray-600 border border-transparent hover:bg-gray-100"
-                      }`}
-                    >
-                      {segment.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="border-t border-gray-100 md:border-t-0 md:border-l md:border-gray-100 md:h-20" />
-
-            <div className="flex-1 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Relevancia temporal
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {timeSegments.map((segment) => {
-                  const isActive = timeFilter === segment.key;
-                  return (
-                    <button
-                      key={segment.key}
-                      onClick={() => setTimeFilter(segment.key)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                        isActive
-                          ? "bg-blue-light-100 text-blue-light-700 border border-blue-light-300"
-                          : "text-gray-600 border border-transparent hover:bg-gray-100"
-                      }`}
-                    >
-                      {segment.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-gray-500">{upcomingExampleText}</p>
-            </div>
-          </div>
-        </section>
+        <ReservationFilters
+          title="Configura la vista"
+          statusSegments={statusSegments}
+          selectedStatus={statusFilter}
+          onStatusChange={setStatusFilter}
+          timeSegments={timeSegments}
+          selectedTime={timeFilter}
+          onTimeChange={(time) => setTimeFilter(time as TimeFilter)}
+          helpText={upcomingExampleText}
+        />
 
         <section className="space-y-4">
-          {filteredReservations.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-              <Hourglass className="mx-auto mb-4 h-10 w-10 text-gray-400" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                No hay reservas bajo este criterio
-              </h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Ajusta los filtros para explorar otras ventanas de tiempo o
-                estados.
-              </p>
-            </div>
+          {hostReservations.length === 0 ? (
+            <ReservationEmptyState 
+              variant="host" 
+              filterType={statusFilter === "all" && timeFilter === "all" ? "all" : "filtered"} 
+            />
           ) : (
-            filteredReservations.map((reservation) => {
-              const statusInfo = statusConfig[reservation.status];
+            hostReservations.map((reservation) => {
               const isSelected = selectedReservationId === reservation.id;
-
+              
               return (
-                <article
+                <HostReservationCard
                   key={reservation.id}
-                  className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-1 flex-col gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-800">
-                          {reservation.propertyName}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {reservation.roomId}
-                        </span>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusInfo.badge}`}
-                        >
-                          {statusInfo.label}
-                        </span>
-                      </div>
-                      <p className="flex items-center gap-2 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 text-blue-light-500" />
-                        {reservation.location}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
-                        <span className="inline-flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          {formatRange(
-                            reservation.checkIn,
-                            reservation.checkOut,
-                          )}
-                        </span>
-                        <span className="inline-flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          {reservation.guests}{" "}
-                          {reservation.guests === 1 ? "huesped" : "huespedes"}
-                        </span>
-                        <span className="inline-flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          Entrada {formatDay(reservation.checkIn)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-start gap-2 text-right">
-                      <span className="text-sm text-gray-500">Total</span>
-                      <p className="text-xl font-semibold text-gray-900">
-                        {reservation.total}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          setSelectedReservationId(isSelected ? null : reservation.id)
-                        }
-                        className="mt-2 text-blue-light-600 hover:text-blue-light-700"
-                      >
-                        {isSelected ? "Cerrar" : "Ver detalle"}
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </article>
+                  reservation={reservation}
+                  statusConfig={statusConfig}
+                  onViewDetails={() =>
+                    setSelectedReservationId(isSelected ? null : reservation.id)
+                  }
+                  isSelected={isSelected}
+                />
               );
             })
           )}
