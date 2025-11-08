@@ -97,7 +97,10 @@ export interface PropertyFilterDto {
   lngMin?: number;
   lngMax?: number;
   amenities?: number[];
-  capacityTotal?: number;
+  adults?: number;
+  children?: number;
+  babies?: number;
+  pets?: number;
   startDate?: string;
   endDate?: string;
 }
