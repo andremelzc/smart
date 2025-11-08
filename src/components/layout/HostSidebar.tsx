@@ -29,10 +29,10 @@ const navigationItems = [
     description: "Gestiona tus recintos",
   },
   {
-    href: "/host/bookings",
+    href: "/host/reservas",
     label: "Reservas",
     icon: Calendar,
-    description: "Reservas y calendario",
+    description: "Listado centralizado",
   },
   {
     href: "/host/reviews",
