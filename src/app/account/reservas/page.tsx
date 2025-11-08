@@ -1,26 +1,18 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  Calendar,
-  MapPin,
-  Users,
-  Clock,
-  Filter,
-  ChevronRight,
-  Hotel,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  AlertCircle,
-  MessageCircle,
-} from "lucide-react";
+import { Loader2, AlertCircle, MessageCircle } from "lucide-react";
 import { useTenantBookings } from "@/src/hooks/useTenantBookings";
 import { bookingService } from "@/src/services/booking.service";
 import type { TenantBooking } from "@/src/services/booking.service";
-import { Button } from "@/src/components/ui/Button";
+import {
+  GuestReservationCard,
+  ReservationFilters,
+  ReservationEmptyState,
+  type GuestReservation,
+  type FilterSegment,
+} from "@/src/components/features/reservations";
 
 type ReservationStatus = "current" | "upcoming" | "past" | "cancelled";
 
@@ -103,41 +95,21 @@ const statusStyles: Record<
   },
 };
 
-const filterSegments: Array<{ key: "all" | ReservationStatus; label: string }> =
-  [
-    { key: "all", label: "Todas" },
-    { key: "current", label: "En curso" },
-    { key: "upcoming", label: "Proximas" },
-    { key: "past", label: "Pasadas" },
-    { key: "cancelled", label: "Canceladas" },
-  ];
+const filterSegments: FilterSegment<"all" | ReservationStatus>[] = [
+  { key: "all", label: "Todas" },
+  { key: "current", label: "En curso" },
+  { key: "upcoming", label: "Proximas" },
+  { key: "past", label: "Pasadas" },
+  { key: "cancelled", label: "Canceladas" },
+];
 
-type FormattedReservation = {
-  id: string;
-  propertyName: string;
-  location: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
+type FormattedReservation = GuestReservation & {
   status: ReservationStatus;
-  hostName: string;
-  price: string;
-  notes: string;
-  imageUrl?: string;
 };
 
 const CHAT_STORAGE_KEY = "smart-guest-chats";
 
-const formatRange = (checkIn: string, checkOut: string) => {
-  const formatter = new Intl.DateTimeFormat("es-PE", {
-    month: "short",
-    day: "numeric",
-  });
 
-  return `${formatter.format(new Date(checkIn))} - ${formatter.format(
-    new Date(checkOut)
-  )}`;
-};
 
 export default function ReservationsPage() {
   const [selectedFilter, setSelectedFilter] = useState<
@@ -215,8 +187,8 @@ export default function ReservationsPage() {
   );
 
   // Convertir los bookings de la BD al formato de la UI
-  const reservations = useMemo<FormattedReservation[]>(() => {
-    const formattedBookings: FormattedReservation[] = bookings.map(
+  const reservations = useMemo<GuestReservation[]>(() => {
+    const formattedBookings: GuestReservation[] = bookings.map(
       (booking: TenantBooking) => {
         const status = getBookingStatus(
           booking.checkinDate,
@@ -227,23 +199,14 @@ export default function ReservationsPage() {
         return {
           id: `RES-${booking.bookingId}`,
           propertyName: booking.title,
-
           location: `${booking.city}, ${booking.stateRegion}`,
-
           checkIn: booking.checkinDate,
-
           checkOut: booking.checkoutDate,
-
           guests: booking.guestCount,
-
           status,
-
           hostName: bookingService.getHostFullName(booking),
-
           price: bookingService.formatCurrency(booking.totalAmount),
-
           notes: booking.hostNote || "Sin notas adicionales del anfitrion.",
-
           imageUrl: booking.imageUrl ?? undefined,
         };
       }
@@ -304,203 +267,33 @@ export default function ReservationsPage() {
         </p>
       </header>
 
-      <section className="rounded-xl border border-gray-100 bg-white p-5">
-        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-          <Filter className="h-4 w-4 text-gray-500" />
-
-          <span className="font-medium text-gray-700">Filtrar por estado:</span>
-
-          <div className="flex flex-wrap gap-2">
-            {filterSegments.map((segment) => {
-              const isSelected = selectedFilter === segment.key;
-
-              return (
-                <button
-                  key={segment.key}
-                  onClick={() => setSelectedFilter(segment.key)}
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isSelected
-                      ? "bg-blue-light-100 text-blue-light-700 border border-blue-light-300"
-                      : "text-gray-600 hover:bg-gray-100 border border-transparent"
-                  }`}
-                >
-                  {segment.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <ReservationFilters
+        title="Filtrar por estado"
+        statusSegments={filterSegments}
+        selectedStatus={selectedFilter}
+        onStatusChange={setSelectedFilter}
+      />
 
       <section className="space-y-4">
         {reservations.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-            <Clock className="h-10 w-10 text-gray-400" />
-
-            <h3 className="text-lg font-semibold text-gray-900">
-              {selectedFilter === "all"
-                ? "No tienes reservas"
-                : "No hay reservas bajo este filtro"}
-            </h3>
-
-            <p className="text-sm text-gray-600">
-              {selectedFilter === "all"
-                ? "Cuando hagas una reserva, aparecera aqui."
-                : "Cambia el estado seleccionado o realiza una nueva reserva para verla aqui."}
-            </p>
-          </div>
+          <ReservationEmptyState 
+            variant="guest" 
+            filterType={selectedFilter === "all" ? "all" : "filtered"} 
+          />
         ) : (
           reservations.map((reservation) => {
-            const statusInfo = statusStyles[reservation.status];
             const canStartChat =
               reservation.status === "current" ||
               reservation.status === "upcoming";
 
             return (
-              <article
+              <GuestReservationCard
                 key={reservation.id}
-                className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="flex flex-1 items-start gap-4">
-                    <div className="hidden h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl lg:block">
-                      {reservation.imageUrl ? (
-                        <Image
-                          src={reservation.imageUrl}
-                          alt={reservation.propertyName}
-                          width={96}
-                          height={96}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-blue-light-50 text-blue-light-500">
-                          <Hotel className="h-10 w-10" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 space-y-3">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            {reservation.propertyName}
-                          </h2>
-
-                          <p className="flex items-center gap-2 text-sm text-gray-600">
-                            <MapPin className="h-4 w-4 text-blue-light-500" />
-
-                            {reservation.location}
-                          </p>
-                        </div>
-
-                        <span
-                          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.badge}`}
-                        >
-                          <span
-                            className={`h-2.5 w-2.5 rounded-full ${statusInfo.dot}`}
-                          />
-
-                          {statusInfo.label}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                        <span className="inline-flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-
-                          {formatRange(
-                            reservation.checkIn,
-                            reservation.checkOut
-                          )}
-                        </span>
-
-                        <span className="inline-flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          {reservation.guests}{" "}
-                          {reservation.guests === 1 ? "huesped" : "huespedes"}
-                        </span>
-
-                        <span className="inline-flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          Check-in:{" "}
-                          {new Date(reservation.checkIn).toLocaleTimeString(
-                            "es-PE",
-
-                            {
-                              hour: "2-digit",
-
-                              minute: "2-digit",
-                            }
-                          )}{" "}
-                          / Check-out:{" "}
-                          {new Date(reservation.checkOut).toLocaleTimeString(
-                            "es-PE",
-
-                            {
-                              hour: "2-digit",
-
-                              minute: "2-digit",
-                            }
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="grid gap-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-700 sm:grid-cols-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-
-                          <span>
-                            Anfitrion:{" "}
-                            <span className="font-medium text-gray-900">
-                              {reservation.hostName}
-                            </span>
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <XCircle className="h-4 w-4 text-blue-light-500" />
-
-                          <span>
-                            Codigo de reserva:{" "}
-                            <span className="font-medium text-gray-900">
-                              {reservation.id}
-                            </span>
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <ChevronRight className="h-4 w-4 text-blue-light-500" />
-
-                          <span>
-                            Total pagado:{" "}
-                            <span className="font-semibold text-gray-900">
-                              {reservation.price}
-                            </span>
-                          </span>
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <Clock className="mt-0.5 h-4 w-4 text-blue-light-500" />
-
-                          <span>{reservation.notes}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-                  {canStartChat && (
-                    <Button
-                      variant="ghost"
-                      leftIcon={MessageCircle}
-                      onClick={() => handleChatClick(reservation)}
-                    >
-                      Chat con anfitrion
-                    </Button>
-                  )}
-                </div>
-              </article>
+                reservation={reservation}
+                statusConfig={statusStyles}
+                onChatWithHost={(res) => handleChatClick(res as FormattedReservation)}
+                canStartChat={canStartChat}
+              />
             );
           })
         )}
