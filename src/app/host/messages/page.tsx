@@ -39,11 +39,11 @@ type Conversation = {
 const conversationsMock: Conversation[] = [
   {
     id: "REQ-2101",
-    guestName: "María López",
+    guestName: "Maria Lopez",
     propertyName: "Loft creativo en Barranco",
-    location: "Lima, Perú",
+    location: "Lima, Peru",
     intentSummary:
-      "Interesada en reservar del 12 al 15 de noviembre para un viaje de trabajo con sesiones híbridas.",
+      "Interesada en reservar del 12 al 15 de noviembre para un viaje de trabajo con sesiones hibridas.",
     checkIn: "2025-11-12T15:00:00Z",
     checkOut: "2025-11-15T11:00:00Z",
     guests: 2,
@@ -56,37 +56,37 @@ const conversationsMock: Conversation[] = [
         id: "m1",
         sender: "guest",
         content:
-          "Hola! ¿Tu espacio sigue disponible? Necesito una sala tranquila para reuniones virtuales.",
+          "Hola! Tu espacio sigue disponible? Necesito una sala tranquila para reuniones virtuales.",
         timestamp: "2025-10-26T09:40:00Z",
       },
       {
         id: "m2",
         sender: "host",
         content:
-          "Hola María, sí está disponible. ¿Requieres algún equipamiento adicional?",
+          "Hola Maria, si esta disponible. Requieres algun equipamiento adicional?",
         timestamp: "2025-10-26T09:45:00Z",
       },
       {
         id: "m3",
         sender: "guest",
         content:
-          "Solo un escritorio amplio y buena conexión. También quisiera confirmar estacionamiento.",
+          "Solo un escritorio amplio y buena conexion. Tambien quisiera confirmar estacionamiento.",
         timestamp: "2025-10-26T09:47:00Z",
       },
     ],
   },
   {
     id: "REQ-2102",
-    guestName: "Carlos Fernández",
+    guestName: "Carlos Fernandez",
     propertyName: "Casa familiar con terraza",
-    location: "Arequipa, Perú",
+    location: "Arequipa, Peru",
     intentSummary:
       "Busca confirmar disponibilidad para diciembre; desea visita previa virtual.",
     checkIn: "2025-12-02T14:00:00Z",
     checkOut: "2025-12-06T11:00:00Z",
     guests: 4,
     status: "accepted",
-    interestChannel: "Recomendación Smart",
+    interestChannel: "Recomendacion Smart",
     requestId: "SOL-98245",
     roomId: "ROOM-07A",
     messages: [
@@ -94,36 +94,36 @@ const conversationsMock: Conversation[] = [
         id: "m1",
         sender: "guest",
         content:
-          "Hola, estoy organizando una estadía familiar. ¿Puedo hacer una videollamada para conocer la casa?",
+          "Hola, estoy organizando una estadia familiar. Puedo hacer una videollamada para conocer la casa?",
         timestamp: "2025-10-24T18:20:00Z",
       },
       {
         id: "m2",
         sender: "host",
         content:
-          "Hola Carlos, claro. Te puedo compartir un enlace mañana a las 7pm.",
+          "Hola Carlos, claro. Te puedo compartir un enlace manana a las 7pm.",
         timestamp: "2025-10-24T18:23:00Z",
       },
       {
         id: "m3",
         sender: "guest",
-        content: "Perfecto, quedo atento al enlace. ¡Gracias!",
+        content: "Perfecto, quedo atento al enlace. Gracias!",
         timestamp: "2025-10-24T18:24:00Z",
       },
     ],
   },
   {
     id: "REQ-2103",
-    guestName: "Lucía Medina",
-    propertyName: "Cabaña ecológica en Oxapampa",
-    location: "Pasco, Perú",
+    guestName: "Lucia Medina",
+    propertyName: "Cabana ecologica en Oxapampa",
+    location: "Pasco, Peru",
     intentSummary:
-      "Interesada en retiro creativo. Solicita confirmar disponibilidad de estudio acústico.",
+      "Interesada en retiro creativo. Solicita confirmar disponibilidad de estudio acustico.",
     checkIn: "2025-11-28T13:00:00Z",
     checkOut: "2025-12-02T12:00:00Z",
     guests: 3,
     status: "pending",
-    interestChannel: "Campaña Host Destacado",
+    interestChannel: "Campana Host Destacado",
     requestId: "SOL-98255",
     roomId: "ROOM-02F",
     messages: [
@@ -131,21 +131,21 @@ const conversationsMock: Conversation[] = [
         id: "m1",
         sender: "guest",
         content:
-          "Hola, me enamoré de la cabaña. Quiero confirmar si cuentan con estudio acústico.",
+          "Hola, me enamore de la cabana. Quiero confirmar si cuentan con estudio acustico.",
         timestamp: "2025-10-27T16:10:00Z",
       },
       {
         id: "m2",
         sender: "host",
         content:
-          "Hola Lucía, sí contamos con un espacio adaptado. ¿Planeas sesiones nocturnas?",
+          "Hola Lucia, si contamos con un espacio adaptado. Planeas sesiones nocturnas?",
         timestamp: "2025-10-27T16:13:00Z",
       },
       {
         id: "m3",
         sender: "guest",
         content:
-          "Un par de sesiones nocturnas. También quisiera confirmar si aceptan mascotas pequeñas.",
+          "Un par de sesiones nocturnas. Tambien quisiera confirmar si aceptan mascotas pequenas.",
         timestamp: "2025-10-27T16:15:00Z",
       },
     ],
@@ -318,15 +318,15 @@ export default function HostMessagesPage() {
         <header className="flex flex-col gap-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-light-50 px-3 py-1 text-xs font-semibold text-blue-light-700">
             <Sparkles className="h-4 w-4" />
-            Chat habilitado solo para huéspedes interesados
+            Chat habilitado solo para huespedes interesados
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">
             Conversaciones sobre reservas
           </h1>
           <p className="text-gray-600 max-w-3xl">
-            Gestiona las dudas de huéspedes interesados antes de confirmar su
-            reserva. Cada chat se activa automáticamente cuando reciben tu
-            espacio y manifiestan su interés en reservar.
+            Gestiona las dudas de huespedes interesados antes de confirmar su
+            reserva. Cada chat se activa automaticamente cuando reciben tu
+            espacio y manifiestan su interes en reservar.
           </p>
         </header>
 
@@ -337,14 +337,14 @@ export default function HostMessagesPage() {
                 <Search className="h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar huésped o solicitud"
+                  placeholder="Buscar huesped o solicitud"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
                 />
               </div>
               <p className="text-xs text-gray-500">
-                Solo aparecen huéspedes que han expresado interés en reservar
+                Solo aparecen huespedes que han expresado interes en reservar
                 uno de tus espacios.
               </p>
             </div>
@@ -385,7 +385,7 @@ export default function HostMessagesPage() {
                     </p>
                     {lastMessage && (
                       <p className="text-xs text-gray-400 truncate">
-                        {lastMessage.sender === "host" ? "Tú:" : "Huésped:"} {lastMessage.content}
+                        {lastMessage.sender === "host" ? "Tu:" : "Huesped:"} {lastMessage.content}
                       </p>
                     )}
                   </button>
@@ -406,7 +406,7 @@ export default function HostMessagesPage() {
                 <div className="border-b border-gray-100 p-5 flex flex-col gap-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm text-gray-500">Huésped interesado</p>
+                      <p className="text-sm text-gray-500">Huesped interesado</p>
                       <h2 className="text-xl font-semibold text-gray-900">
                         {activeConversation.guestName}
                       </h2>
@@ -425,7 +425,7 @@ export default function HostMessagesPage() {
                   <div className="grid gap-3 sm:grid-cols-3 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-500" />
-                      {formatDate(activeConversation.checkIn)} –{" "}
+                      {formatDate(activeConversation.checkIn)} {" "}
                       {formatDate(activeConversation.checkOut)}
                     </div>
                     <div className="flex items-center gap-2">
@@ -435,7 +435,7 @@ export default function HostMessagesPage() {
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-500" />
                       {activeConversation.guests}{" "}
-                      {activeConversation.guests === 1 ? "huésped" : "huéspedes"}
+                      {activeConversation.guests === 1 ? "huesped" : "huespedes"}
                     </div>
                   </div>
 
@@ -485,8 +485,8 @@ export default function HostMessagesPage() {
                     <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
                       <div className="text-xs text-gray-500 flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        Responde rápido para aumentar la probabilidad de
-                        confirmación.
+                        Responde rapido para aumentar la probabilidad de
+                        confirmacion.
                       </div>
                       <Button
                         onClick={handleSendMessage}
@@ -507,11 +507,11 @@ export default function HostMessagesPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-xl font-semibold text-gray-900">
-                    Selecciona una conversación
+                    Selecciona una conversacion
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Aquí aparecerán los huéspedes interesados en tus espacios. El
-                    chat se habilita automáticamente cuando envían una solicitud
+                    Aqui apareceran los huespedes interesados en tus espacios. El
+                    chat se habilita automaticamente cuando envian una solicitud
                     de reserva.
                   </p>
                 </div>

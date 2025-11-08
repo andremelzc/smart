@@ -37,7 +37,7 @@ const reservationsMock: HostReservation[] = [
     id: "SOL-1048",
     guestName: "Natalia Gamarra",
     propertyName: "Estudio creativo en Barranco",
-    location: "Lima, Perú",
+    location: "Lima, Peru",
     checkIn: "2025-10-25T15:00:00Z",
     checkOut: "2025-10-27T12:00:00Z",
     guests: 2,
@@ -45,7 +45,7 @@ const reservationsMock: HostReservation[] = [
     total: "S/. 540",
     roomId: "ROOM-08C",
     requestDescription:
-      "Natalia produce un workshop de fotografía y necesita un ambiente iluminado con acceso a proyector.",
+      "Natalia produce un workshop de fotografia y necesita un ambiente iluminado con acceso a proyector.",
     contactEmail: "natalia.gamarra@example.com",
     contactPhone: "+51 987 111 222",
   },
@@ -53,7 +53,7 @@ const reservationsMock: HostReservation[] = [
     id: "RES-2051",
     guestName: "Sergio Paredes",
     propertyName: "Casa familiar con terraza",
-    location: "Arequipa, Perú",
+    location: "Arequipa, Peru",
     checkIn: "2025-11-05T14:00:00Z",
     checkOut: "2025-11-09T11:00:00Z",
     guests: 4,
@@ -61,15 +61,15 @@ const reservationsMock: HostReservation[] = [
     total: "S/. 1,350",
     roomId: "ROOM-10B",
     requestDescription:
-      "Reserva confirmada para un viaje familiar. Solicitan recomendaciones gastronómicas cercanas.",
+      "Reserva confirmada para un viaje familiar. Solicitan recomendaciones gastronomicas cercanas.",
     contactEmail: "sergio.paredes@example.com",
     contactPhone: "+51 944 555 111",
   },
   {
     id: "RES-2022",
-    guestName: "Camila Huamán",
+    guestName: "Camila Huaman",
     propertyName: "Loft urbano minimalista",
-    location: "Cusco, Perú",
+    location: "Cusco, Peru",
     checkIn: "2025-09-18T15:00:00Z",
     checkOut: "2025-09-22T11:00:00Z",
     guests: 1,
@@ -77,15 +77,15 @@ const reservationsMock: HostReservation[] = [
     total: "S/. 720",
     roomId: "ROOM-04A",
     requestDescription:
-      "Solicitud aceptada. Camila participará en un congreso y pidió silla ergonómica para teletrabajo.",
+      "Solicitud aceptada. Camila participara en un congreso y pidio silla ergonomica para teletrabajo.",
     contactEmail: "camila.huaman@example.com",
     contactPhone: "+51 913 222 654",
   },
   {
     id: "RES-1980",
     guestName: "Daniel Vega",
-    propertyName: "Cabaña ecológica",
-    location: "Oxapampa, Perú",
+    propertyName: "Cabana ecologica",
+    location: "Oxapampa, Peru",
     checkIn: "2025-08-01T13:00:00Z",
     checkOut: "2025-08-04T12:00:00Z",
     guests: 3,
@@ -93,7 +93,7 @@ const reservationsMock: HostReservation[] = [
     total: "S/. 890",
     roomId: "ROOM-02F",
     requestDescription:
-      "Reserva cancelada por el huésped. Se aplicó política flexible con reembolso del 80%.",
+      "Reserva cancelada por el huesped. Se aplico politica flexible con reembolso del 80%.",
     contactEmail: "daniel.vega@example.com",
     contactPhone: "+51 955 888 300",
   },
@@ -133,7 +133,7 @@ const statusSegments: Array<
 
 const timeSegments: Array<{ key: TimeFilter; label: string }> = [
   { key: "present", label: "Presentes" },
-  { key: "upcoming", label: "Próximas" },
+  { key: "upcoming", label: "Proximas" },
   { key: "past", label: "Pasadas" },
   { key: "all", label: "Todas" },
 ];
@@ -176,10 +176,10 @@ export default function HostReservationsPage() {
   );
 
   const upcomingExampleText = sampleUpcomingReservation
-    ? `Ejemplo: usa el filtro "Próximas" para ver reservas como "${sampleUpcomingReservation.propertyName}" con check-in el ${formatDay(
+    ? `Ejemplo: usa el filtro "Proximas" para ver reservas como "${sampleUpcomingReservation.propertyName}" con check-in el ${formatDay(
         sampleUpcomingReservation.checkIn,
       )}.`
-    : 'Ejemplo: usa el filtro "Próximas" para mostrar reservas con check-in posterior a hoy.';
+    : 'Ejemplo: usa el filtro "Proximas" para mostrar reservas con check-in posterior a hoy.';
 
   const filteredReservations = useMemo(() => {
     return reservationsMock.filter((reservation) => {
@@ -229,8 +229,8 @@ export default function HostReservationsPage() {
             Reservas de mis espacios
           </h1>
           <p className="text-gray-600 max-w-3xl">
-            Revisa el estado de tus reservas actuales, identifica las próximas
-            llegadas y navega rápidamente al detalle para aceptar o rechazar
+            Revisa el estado de tus reservas actuales, identifica las proximas
+            llegadas y navega rapidamente al detalle para aceptar o rechazar
             solicitudes pendientes.
           </p>
         </header>
@@ -347,7 +347,7 @@ export default function HostReservationsPage() {
                         <span className="inline-flex items-center gap-2">
                           <Users className="h-4 w-4 text-gray-500" />
                           {reservation.guests}{" "}
-                          {reservation.guests === 1 ? "huésped" : "huéspedes"}
+                          {reservation.guests === 1 ? "huesped" : "huespedes"}
                         </span>
                         <span className="inline-flex items-center gap-2">
                           <Clock className="h-4 w-4 text-gray-500" />
