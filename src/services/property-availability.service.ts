@@ -18,7 +18,7 @@ export interface AvailabilitySummary {
 /**
  * Service para gestionar la disponibilidad de propiedades
  * 
- * Utiliza el package Oracle PKG_PROPERTY_AVAILABILITY con stored procedures
+ * Utiliza el package Oracle CALENDAR_AVAILABILITY_PKG con stored procedures
  * Sigue el mismo patrón que PROPERTY_PKG y BOOKING_PKG (OUT cursors)
  * 
  * LÓGICA DE DISPONIBILIDAD (implementada en Oracle):
@@ -38,7 +38,7 @@ export interface AvailabilitySummary {
 export class PropertyAvailabilityService {
   /**
    * Obtiene la disponibilidad de una propiedad para un rango de fechas
-   * Utiliza el stored procedure PKG_PROPERTY_AVAILABILITY.SP_GET_PROPERTY_AVAILABILITY
+   * Utiliza el stored procedure CALENDAR_AVAILABILITY_PKG.SP_GET_PROPERTY_AVAILABILITY
    */
   static async getPropertyAvailability(
     propertyId: number,
@@ -62,7 +62,7 @@ export class PropertyAvailabilityService {
       // Ejecutar el stored procedure
       const result = await connection.execute(
         `BEGIN
-           PKG_PROPERTY_AVAILABILITY.SP_GET_PROPERTY_AVAILABILITY(
+           CALENDAR_AVAILABILITY_PKG.SP_GET_PROPERTY_AVAILABILITY(
              P_PROPERTY_ID => :p_property_id,
              P_START_DATE => :p_start_date,
              P_END_DATE => :p_end_date,
@@ -122,7 +122,7 @@ export class PropertyAvailabilityService {
 
   /**
    * Verifica si un rango de fechas está completamente disponible
-   * Utiliza el stored procedure PKG_PROPERTY_AVAILABILITY.SP_CHECK_RANGE_AVAILABILITY
+   * Utiliza el stored procedure CALENDAR_AVAILABILITY_PKG.SP_CHECK_RANGE_AVAILABILITY
    */
   static async isRangeAvailable(
     propertyId: number,
@@ -146,7 +146,7 @@ export class PropertyAvailabilityService {
       // Ejecutar el stored procedure
       const result = await connection.execute(
         `BEGIN
-           PKG_PROPERTY_AVAILABILITY.SP_CHECK_RANGE_AVAILABILITY(
+           CALENDAR_AVAILABILITY_PKG.SP_CHECK_RANGE_AVAILABILITY(
              P_PROPERTY_ID => :p_property_id,
              P_CHECKIN_DATE => :p_checkin_date,
              P_CHECKOUT_DATE => :p_checkout_date,
@@ -230,7 +230,7 @@ export class PropertyAvailabilityService {
 
   /**
    * Obtiene los próximos N días disponibles
-   * Utiliza el stored procedure PKG_PROPERTY_AVAILABILITY.SP_GET_NEXT_AVAILABLE_DATES
+   * Utiliza el stored procedure CALENDAR_AVAILABILITY_PKG.SP_GET_NEXT_AVAILABLE_DATES
    */
   static async getNextAvailableDates(
     propertyId: number,
@@ -252,7 +252,7 @@ export class PropertyAvailabilityService {
       // Ejecutar el stored procedure
       const result = await connection.execute(
         `BEGIN
-           PKG_PROPERTY_AVAILABILITY.SP_GET_NEXT_AVAILABLE_DATES(
+           CALENDAR_AVAILABILITY_PKG.SP_GET_NEXT_AVAILABLE_DATES(
              P_PROPERTY_ID => :p_property_id,
              P_COUNT => :p_count,
              OUT_DATES_CURSOR => :out_dates_cursor,

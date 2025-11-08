@@ -39,7 +39,7 @@ KIND            VARCHAR2(30)  -- 'BLOCKED', 'MAINTENANCE'
 
 ---
 
-## 🔧 Oracle Package: PKG_PROPERTY_AVAILABILITY
+## 🔧 Oracle Package: CALENDAR_AVAILABILITY_PKG
 
 ### Ubicación
 `docs/oracle_package_availability.sql`
@@ -74,7 +74,7 @@ DECLARE
   v_available NUMBER;
   v_reason VARCHAR2(20);
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_GET_PROPERTY_AVAILABILITY(
+  CALENDAR_AVAILABILITY_PKG.SP_GET_PROPERTY_AVAILABILITY(
     P_PROPERTY_ID => 28,
     P_START_DATE => '2025-11-01',
     P_END_DATE => '2025-11-30',
@@ -113,7 +113,7 @@ DECLARE
   v_available NUMBER;
   v_error VARCHAR2(4000);
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_CHECK_RANGE_AVAILABILITY(
+  CALENDAR_AVAILABILITY_PKG.SP_CHECK_RANGE_AVAILABILITY(
     P_PROPERTY_ID => 28,
     P_CHECKIN_DATE => '2025-11-10',
     P_CHECKOUT_DATE => '2025-11-15',
@@ -148,7 +148,7 @@ DECLARE
   v_error VARCHAR2(4000);
   v_date VARCHAR2(10);
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_GET_NEXT_AVAILABLE_DATES(
+  CALENDAR_AVAILABILITY_PKG.SP_GET_NEXT_AVAILABLE_DATES(
     P_PROPERTY_ID => 28,
     P_COUNT => 10,
     OUT_DATES_CURSOR => v_cursor,
@@ -199,7 +199,7 @@ static async getPropertyAvailability(
 
 // Llamada interna:
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_GET_PROPERTY_AVAILABILITY(
+  CALENDAR_AVAILABILITY_PKG.SP_GET_PROPERTY_AVAILABILITY(
     P_PROPERTY_ID => :p_property_id,
     P_START_DATE => :p_start_date,
     P_END_DATE => :p_end_date,
@@ -217,7 +217,7 @@ static async isRangeAvailable(
 
 // Llamada interna:
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_CHECK_RANGE_AVAILABILITY(
+  CALENDAR_AVAILABILITY_PKG.SP_CHECK_RANGE_AVAILABILITY(
     P_PROPERTY_ID => :p_property_id,
     P_CHECKIN_DATE => :p_checkin_date,
     P_CHECKOUT_DATE => :p_checkout_date,
@@ -234,7 +234,7 @@ static async getNextAvailableDates(
 
 // Llamada interna:
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_GET_NEXT_AVAILABLE_DATES(
+  CALENDAR_AVAILABILITY_PKG.SP_GET_NEXT_AVAILABLE_DATES(
     P_PROPERTY_ID => :p_property_id,
     P_COUNT => :p_count,
     OUT_DATES_CURSOR => :out_dates_cursor,
@@ -358,7 +358,7 @@ sqlplus usuario/password@database
 ### 2. Otorgar permisos (ajustar según tu usuario de app)
 
 ```sql
-GRANT EXECUTE ON PKG_PROPERTY_AVAILABILITY TO tu_usuario_app;
+GRANT EXECUTE ON CALENDAR_AVAILABILITY_PKG TO tu_usuario_app;
 ```
 
 ### 3. Verificar instalación
@@ -367,11 +367,11 @@ GRANT EXECUTE ON PKG_PROPERTY_AVAILABILITY TO tu_usuario_app;
 -- Ver compilación del package
 SELECT object_name, object_type, status 
 FROM user_objects 
-WHERE object_name = 'PKG_PROPERTY_AVAILABILITY';
+WHERE object_name = 'CALENDAR_AVAILABILITY_PKG';
 
 -- Debe mostrar:
--- PKG_PROPERTY_AVAILABILITY | PACKAGE      | VALID
--- PKG_PROPERTY_AVAILABILITY | PACKAGE BODY | VALID
+-- CALENDAR_AVAILABILITY_PKG | PACKAGE      | VALID
+-- CALENDAR_AVAILABILITY_PKG | PACKAGE BODY | VALID
 ```
 
 ### 4. Probar el package
@@ -385,7 +385,7 @@ DECLARE
   v_available NUMBER;
   v_reason VARCHAR2(20);
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_GET_PROPERTY_AVAILABILITY(
+  CALENDAR_AVAILABILITY_PKG.SP_GET_PROPERTY_AVAILABILITY(
     P_PROPERTY_ID => 28,
     P_START_DATE => '2025-11-01',
     P_END_DATE => '2025-11-30',
@@ -438,7 +438,7 @@ DECLARE
   v_available NUMBER;
   v_reason VARCHAR2(20);
 BEGIN
-  PKG_PROPERTY_AVAILABILITY.SP_GET_PROPERTY_AVAILABILITY(
+  CALENDAR_AVAILABILITY_PKG.SP_GET_PROPERTY_AVAILABILITY(
     28, '2025-11-01', '2025-11-30', v_cursor, v_error
   );
   
@@ -455,7 +455,7 @@ END;
 ### Errores comunes
 
 1. **"Package not found"**
-   - Verificar que el package esté compilado: `SELECT status FROM user_objects WHERE object_name = 'PKG_PROPERTY_AVAILABILITY'`
+   - Verificar que el package esté compilado: `SELECT status FROM user_objects WHERE object_name = 'CALENDAR_AVAILABILITY_PKG'`
    - Verificar permisos de EXECUTE
 
 2. **"OUT_ERROR_CODE not null"**
