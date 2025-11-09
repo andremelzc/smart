@@ -1,63 +1,97 @@
-'use client';
-
-import Image from 'next/image';
-import { GoogleButton } from '@/src/components/features/auth/GoogleButton';
-import { useAuth } from '@/src/hooks/useAuth';
-import { signOut } from 'next-auth/react';
-
-export default function Home() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <section className="flex min-h-screen flex-col items-center justify-center py-32">
-        <div className="animate-pulse text-2xl">Cargando...</div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="flex min-h-screen flex-col items-center justify-center gap-8 py-32">
-      <h1 className="text-5xl font-bold">
-        Welcome to <a href="https://nextjs.org" className="text-blue-light-500 hover:underline">Next.js!</a>
-      </h1>
-      
-      {isAuthenticated ? (
-        <div className="mt-8 flex flex-col items-center gap-6 rounded-lg border border-gray-200 bg-white p-8 shadow-lg">
-          <div className="text-center">
-            {user?.image && (
-              <Image 
-                src={user.image} 
-                alt={user.name || 'User'} 
-                width={80}
-                height={80}
-                className="mx-auto mb-4 h-20 w-20 rounded-full object-cover"
-              />
-            )}
-            <h2 className="text-2xl font-semibold">Hola, {user?.name}! </h2>
-            <p className="mt-2 text-gray-600">{user?.email}</p>
-            <p className="mt-1 text-sm text-gray-400">ID: {user?.id}</p>
-          </div>
-          
-          <button
-            onClick={() => signOut()}
-            className="rounded-md bg-red-500 px-6 py-2 text-white transition-colors hover:bg-red-600"
-          >
-            Cerrar Sesion
-          </button>
-        </div>
-      ) : (
-        <div className="mt-8 flex flex-col items-center gap-4 w-full px-4">
-          <p className="text-lg text-gray-600 text-center break-words w-full">
-            Inicia sesion para continuar con el prototipo
-          </p>
-          <GoogleButton size="lg" />
-        </div>
-      )}
-
-      <p className="mt-8 text-sm text-gray-500">
-        Get started by editing <code className="font-mono bg-gray-100 px-2 py-1 rounded">src/app/page.tsx</code>
-      </p>
-    </section>
-  );
-}
+import Link from 'next/link';
+import { HomeHighlightsService } from '@/src/services/home-highlights.service';
+import type { CityHighlight } from '@/src/services/home-highlights.service';
+import { CityCarousel } from '@/src/components/features/properties/CityCarousel';
+
+const HERO_CARDS = [
+  {
+    title: 'Escapadas urbanas',
+    description: 'Descubre panoramicas y cultura en las ciudades mas vibrantes.',
+    className: 'from-blue-vivid-500 via-blue-light-400 to-blue-light-200',
+  },
+  {
+    title: 'Refugios costeros',
+    description: 'Relajate frente al mar con opciones para todos los gustos.',
+    className: 'from-orange-500 via-rose-400 to-rose-200',
+  },
+  {
+    title: 'Experiencias unicas',
+    description: 'Hospedajes con encanto para viajes inolvidables.',
+    className: 'from-purple-500 via-indigo-400 to-indigo-200',
+  },
+];
+
+export default async function HomePage() {
+  let highlights: CityHighlight[] = [];
+
+  try {
+    highlights = await HomeHighlightsService.getCityHighlights();
+  } catch (error) {
+    console.error('No se pudieron cargar los destacados de inicio:', error);
+  }
+
+  return (
+    <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
+      {/* <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+        <div className="space-y-6">
+          <span className="inline-flex items-center rounded-full border border-blue-light-200 bg-blue-light-50 px-4 py-1 text-sm font-semibold text-blue-light-600">
+            Encuentra tu proximo destino
+          </span>
+          <h1 className="text-4xl font-bold text-gray-dark-900 sm:text-5xl">
+            Propiedades seleccionadas para tu siguiente viaje
+          </h1>
+          <p className="max-w-xl text-lg text-gray-dark-500">
+            Descubre alojamientos destacados en las ciudades con mayor demanda. Explora, compara y reserva con confianza.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/search"
+              className="inline-flex items-center justify-center rounded-full bg-blue-vivid-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-blue-vivid-600"
+            >
+              Buscar propiedades
+            </Link>
+            <Link
+              href="/host"
+              className="inline-flex items-center justify-center rounded-full border border-blue-light-200 px-6 py-3 text-sm font-semibold text-gray-dark-700 transition-colors hover:border-blue-light-300"
+            >
+              Conviertete en anfitrion
+            </Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {HERO_CARDS.map((card, index) => (
+            <div
+              key={card.title}
+              className={`flex h-40 w-full flex-col justify-end overflow-hidden rounded-3xl bg-gradient-to-br p-6 text-white shadow-xl ${card.className} ${index === 1 ? 'translate-y-6' : ''}`}
+            >
+              <h3 className="text-lg font-semibold">{card.title}</h3>
+              <p className="text-sm text-white/80">{card.description}</p>
+            </div>
+          ))}
+        </div>
+      </section> */}
+
+      <section className="space-y-6">
+        {/* <header className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold text-gray-dark-900">Destinos populares</h2>
+          <p className="text-sm text-gray-dark-500">
+            Inspirate con estos destinos que los viajeros aman.
+          </p>
+        </header> */}
+
+        <div className="space-y-12">
+          {highlights.length === 0 ? (
+            <div className="rounded-3xl border border-blue-light-100 bg-blue-light-50 px-6 py-8 text-center text-gray-dark-500">
+              Aun no hay propiedades destacadas disponibles. Vuelve pronto para descubrir nuevos alojamientos.
+            </div>
+          ) : (
+            highlights.map((group) => (
+              <CityCarousel key={group.city} {...group} />
+            ))
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
+
