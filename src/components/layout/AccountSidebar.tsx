@@ -46,8 +46,7 @@ const sidebarItems = [
     name: "Notificaciones",
     href: "/account/notifications",
     icon: Bell,
-    description: "Configuracion de alertas",
-    disabled: true,
+    description: "Seguimiento de estados y avisos",
   },
   {
     name: "Privacidad y seguridad",

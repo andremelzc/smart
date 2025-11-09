@@ -377,4 +377,61 @@ export const bookingService = {
 
     return counts;
   },
+
+  /**
+   * Host aprueba una reserva pendiente
+   */
+  acceptBooking: async (bookingId: number, hostNote?: string) => {
+    const response = await fetch(`/api/bookings/host/${bookingId}/accept`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostNote }),
+    });
+
+    const data: ApiResponse = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "No se pudo aprobar la reserva");
+    }
+    return data;
+  },
+
+  /**
+   * Host rechaza una reserva pendiente
+   */
+  declineBooking: async (bookingId: number, hostNote?: string) => {
+    const response = await fetch(`/api/bookings/host/${bookingId}/decline`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostNote }),
+    });
+
+    const data: ApiResponse = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "No se pudo rechazar la reserva");
+    }
+    return data;
+  },
+
+  /**
+   * Huésped cancela una reserva aceptada
+   */
+  cancelBookingAsTenant: async (bookingId: number, tenantNote?: string) => {
+    const response = await fetch(`/api/bookings/tenant/${bookingId}/cancel`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tenantNote }),
+    });
+
+    const data: ApiResponse = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "No se pudo cancelar la reserva");
+    }
+    return data;
+  },
 };
