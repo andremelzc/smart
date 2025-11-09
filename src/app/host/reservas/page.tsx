@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import {
   HostReservationCard,
@@ -175,7 +175,7 @@ export default function HostReservationsPage() {
   }, [filteredReservations]);
 
   // Función para cargar detalles de reserva cuando se selecciona una
-  const loadReservationDetails = async (reservationId: string) => {
+  const loadReservationDetails = useCallback(async (reservationId: string) => {
     try {
       setLoadingDetail(true);
       
@@ -230,7 +230,7 @@ export default function HostReservationsPage() {
     } finally {
       setLoadingDetail(false);
     }
-  };
+  }, [bookings, formattedReservations]);
 
   // Effect para cargar detalles cuando se selecciona una reserva
   useEffect(() => {
@@ -239,7 +239,7 @@ export default function HostReservationsPage() {
     } else {
       setSelectedReservation(null);
     }
-  }, [selectedReservationId]);
+  }, [loadReservationDetails, selectedReservationId]);
 
   // Funciones de callback para las acciones del modal
   const handleAcceptReservation = (requestId: string) => {

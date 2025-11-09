@@ -12,11 +12,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   Send,
-  User,
   Calendar,
   MapPin,
   Users,
-  ChevronLeft,
   MessageCircle,
 } from "lucide-react";
 
@@ -170,8 +168,6 @@ function AccountMessagesContent() {
     } finally {
       setIsLoading(false);
     }
-    // El array vacío [router, searchParams] es intencional para que solo se ejecute al cambiar la ruta base
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, searchParams]);
 
   // Encontrar la conversación activa

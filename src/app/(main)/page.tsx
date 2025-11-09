@@ -1,25 +1,6 @@
-import Link from 'next/link';
 import { HomeHighlightsService } from '@/src/services/home-highlights.service';
 import type { CityHighlight } from '@/src/services/home-highlights.service';
 import { CityCarousel } from '@/src/components/features/properties/CityCarousel';
-
-const HERO_CARDS = [
-  {
-    title: 'Escapadas urbanas',
-    description: 'Descubre panoramicas y cultura en las ciudades mas vibrantes.',
-    className: 'from-blue-vivid-500 via-blue-light-400 to-blue-light-200',
-  },
-  {
-    title: 'Refugios costeros',
-    description: 'Relajate frente al mar con opciones para todos los gustos.',
-    className: 'from-orange-500 via-rose-400 to-rose-200',
-  },
-  {
-    title: 'Experiencias unicas',
-    description: 'Hospedajes con encanto para viajes inolvidables.',
-    className: 'from-purple-500 via-indigo-400 to-indigo-200',
-  },
-];
 
 export default async function HomePage() {
   let highlights: CityHighlight[] = [];

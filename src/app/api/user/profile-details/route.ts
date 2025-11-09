@@ -10,7 +10,7 @@ interface OracleClob {
 }
 
 // GET - Obtener perfil público del usuario
-export async function GET(_: NextRequest) {
+export async function GET() {
   let connection: oracledb.Connection | null = null;
 
   try {
@@ -94,7 +94,7 @@ export async function GET(_: NextRequest) {
           try {
             const descBuffer = await (row[3] as OracleClob).getData();
             description = descBuffer.toString();
-          } catch (_) {
+          } catch {
             description = "Error reading description";
           }
         } else {

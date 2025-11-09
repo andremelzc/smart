@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, AlertCircle, MessageCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useTenantBookings } from "@/src/hooks/useTenantBookings";
 import { bookingService } from "@/src/services/booking.service";
 import type { TenantBooking } from "@/src/services/booking.service";

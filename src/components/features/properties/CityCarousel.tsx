@@ -37,10 +37,6 @@ export function CityCarousel({ city, country, properties }: CityHighlight) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const intervalRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [total]);
-
   const goToNext = useCallback(() => {
     setCurrentIndex((previous) => {
       if (total <= 0) {
@@ -92,8 +88,10 @@ export function CityCarousel({ city, country, properties }: CityHighlight) {
       return properties.map((property, index) => ({ property, sourceIndex: index }));
     }
 
+    const normalizedIndex = ((currentIndex % total) + total) % total;
+
     return Array.from({ length: visibleCount }, (_, offset) => {
-      const sourceIndex = (currentIndex + offset) % total;
+      const sourceIndex = (normalizedIndex + offset) % total;
       const property = properties[sourceIndex];
       return { property, sourceIndex };
     });

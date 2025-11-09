@@ -6,16 +6,13 @@ import {
   Calendar, 
   User, 
   Hash, 
-  FileText, 
   Mail, 
   Phone, 
   MapPin,
-  DollarSign,
   MessageSquare,
   Check,
   XCircle,
   Star,
-  Clock,
   AlertTriangle,
   Edit3
 } from "lucide-react";
