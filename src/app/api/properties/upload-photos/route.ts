@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
 import { uploadFileToStorage } from "@/src/lib/storage";
 import { PropertyService } from "@/src/services/property.service";
-import { is } from "zod/locales";
 
 export const config = {
     api: {

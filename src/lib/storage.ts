@@ -1,6 +1,5 @@
 import { Storage } from '@google-cloud/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { mime } from 'zod';
 
 const base64Key = process.env.GCS_SERVICE_KEY_BASE64;
 
