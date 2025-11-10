@@ -593,4 +593,40 @@ export class PropertyService {
       }
     }
   }
+
+  static async persistPhotoUrl(propertyId: number, photoUrl: string, caption: string, sortOrder: number): Promise<void> {
+    const sql = `
+      INSERT INTO PROPERTY_IMAGES (PROPERTY_ID, URL, CAPTION, SORT_ORDER)
+      VALUES (:propertyId, :photoUrl, :caption, :sortOrder)
+    `;
+
+    const binds = {
+      propertyId: propertyId,
+      photoUrl: photoUrl,
+      caption: caption,
+      sortOrder: sortOrder
+    };
+
+    let connection;
+    try {
+      connection = await getConnection();
+      const result = await connection.execute(sql, binds, { autoCommit: true });
+
+      if (result.rowsAffected !== 1) {
+        console.log('Se esperaba insertar 1 fila, pero se insertaron:', result.rowsAffected);
+        throw new Error('No se pudo guardar la imagen de la propiedad.');
+      }
+    } catch (error) {
+      console.log("ERROR en property.service.ts: Fallo al persistir la URL en Oracle:", error);
+      throw new Error('Error al guardar la imagen de la propiedad: ' + (error as Error).message);
+    } finally {
+      if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.error("Error al cerrar la conexión a Oracle:", err);
+            }
+        }
+    }
+  }
 }
