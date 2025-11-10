@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { uploadFileToStorage } from "@/src/lib/storage";
 import { PropertyService } from "@/src/services/property.service";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../auth/[...nextauth]/route";
 
 export const config = {
     api: {
@@ -9,10 +11,10 @@ export const config = {
 };
 
 export async function POST(req: Request) {
-    // const session = await getServerSession(authOptions);
-    // if (!session || !session.user || session.user.role !== 'host') {
-    //     return NextResponse.json({ message: 'No autorizado' }, { status: 403 });
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        return NextResponse.json({ message: 'No autorizado' }, { status: 403 });
+    }
 
     try {
         const formData = await req.formData();
