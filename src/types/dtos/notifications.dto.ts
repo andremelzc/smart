@@ -7,6 +7,8 @@ export type NotificationStatus =
   | "CANCELLED"
   | "COMPLETED";
 
+export type NotificationReminderType = "CHECKIN_24H";
+
 export interface NotificationItem {
   bookingId: number;
   propertyTitle: string;
@@ -22,4 +24,5 @@ export interface NotificationItem {
   tenantName: string | null;
   hostNote?: string | null;
   tenantNote?: string | null;
+  reminderType?: NotificationReminderType | null;
 }

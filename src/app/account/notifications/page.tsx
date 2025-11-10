@@ -15,7 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useNotifications } from '@/src/hooks/useNotifications';
-import type { NotificationItem, NotificationRole, NotificationStatus } from '@/src/types/dtos/notifications.dto';
+import type { NotificationItem, NotificationStatus } from '@/src/types/dtos/notifications.dto';
 import { bookingService } from '@/src/services/booking.service';
 
 const STATUS_LABELS: Record<NotificationStatus, string> = {
@@ -32,11 +32,6 @@ const STATUS_STYLES: Record<NotificationStatus, string> = {
   DECLINED: 'bg-red-100 text-red-700 border-red-200',
   CANCELLED: 'bg-rose-100 text-rose-700 border-rose-200',
   COMPLETED: 'bg-blue-100 text-blue-700 border-blue-200',
-};
-
-const ROLE_LABELS: Record<NotificationRole, string> = {
-  host: 'Anfitrión',
-  tenant: 'Huésped',
 };
 
 const STATUS_FILTERS: Array<{ value: 'all' | NotificationStatus; label: string }> = [
@@ -76,9 +71,19 @@ const formatCurrency = (amount: number, currency: string) => {
   }
 };
 
-const NotificationBadge = ({ status }: { status: NotificationStatus }) => (
+const NotificationBadge = ({
+  status,
+  isCheckinReminder = false,
+}: {
+  status: NotificationStatus;
+  isCheckinReminder?: boolean;
+}) => (
   <span
-    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_STYLES[status]}`}
+    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+      isCheckinReminder
+        ? 'border-rose-200 bg-rose-50 text-rose-600'
+        : STATUS_STYLES[status]
+    }`}
   >
     {STATUS_LABELS[status]}
   </span>
@@ -124,8 +129,7 @@ const NotificationTimeline = ({
 type DraftNotes = Record<number, string>;
 
 export default function NotificationsPage() {
-  const { notifications, loading, error, refresh, updateNotification, availableRoles } = useNotifications();
-  const [selectedRole, setSelectedRole] = useState<NotificationRole | 'all'>('host');
+  const { notifications, loading, error, refresh, updateNotification } = useNotifications({ role: 'tenant' });
   const [statusFilter, setStatusFilter] = useState<'all' | NotificationStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeBooking, setActiveBooking] = useState<number | null>(null);
@@ -134,22 +138,8 @@ export default function NotificationsPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const roleOptions = useMemo<NotificationRole[]>(
-    () => (availableRoles.length > 0 ? availableRoles : ['host', 'tenant']),
-    [availableRoles]
-  );
-
-  useEffect(() => {
-    if (selectedRole === 'all' || !roleOptions.includes(selectedRole)) {
-      setSelectedRole(roleOptions[0]);
-    }
-  }, [roleOptions, selectedRole]);
-
   const filteredNotifications = useMemo(() => {
     return notifications.filter((notification) => {
-      if (selectedRole !== 'all' && notification.role !== selectedRole) {
-        return false;
-      }
       if (statusFilter !== 'all' && notification.status !== statusFilter) {
         return false;
       }
@@ -160,7 +150,7 @@ export default function NotificationsPage() {
       }
       return true;
     });
-  }, [notifications, selectedRole, statusFilter, searchTerm]);
+    }, [notifications, statusFilter, searchTerm]);
 
   useEffect(() => {
     if (filteredNotifications.length === 0) {
@@ -186,7 +176,7 @@ export default function NotificationsPage() {
     setDraftNotes((prev) => ({ ...prev, [activeBooking]: value }));
   };
 
-  const runAction = async (action: 'accept' | 'decline' | 'cancel') => {
+  const runAction = async () => {
     if (!activeNotification) {
       return;
     }
@@ -196,31 +186,13 @@ export default function NotificationsPage() {
     setActionLoading(true);
 
     try {
-      if (action === 'accept') {
-        await bookingService.acceptBooking(activeNotification.bookingId, currentDraftNote);
-        updateNotification(activeNotification.bookingId, {
-          status: 'ACCEPTED',
-          hostNote: currentDraftNote || activeNotification.hostNote,
-          eventAt: new Date().toISOString(),
-        });
-        setActionMessage('Reserva aprobada correctamente.');
-      } else if (action === 'decline') {
-        await bookingService.declineBooking(activeNotification.bookingId, currentDraftNote);
-        updateNotification(activeNotification.bookingId, {
-          status: 'DECLINED',
-          hostNote: currentDraftNote || activeNotification.hostNote,
-          eventAt: new Date().toISOString(),
-        });
-        setActionMessage('Reserva rechazada.');
-      } else {
-        await bookingService.cancelBookingAsTenant(activeNotification.bookingId, currentDraftNote);
-        updateNotification(activeNotification.bookingId, {
-          status: 'CANCELLED',
-          tenantNote: currentDraftNote || activeNotification.tenantNote,
-          eventAt: new Date().toISOString(),
-        });
-        setActionMessage('Reserva cancelada con exito.');
-      }
+      await bookingService.cancelBookingAsTenant(activeNotification.bookingId, currentDraftNote);
+      updateNotification(activeNotification.bookingId, {
+        status: 'CANCELLED',
+        tenantNote: currentDraftNote || activeNotification.tenantNote,
+        eventAt: new Date().toISOString(),
+      });
+      setActionMessage('Reserva cancelada con exito.');
       await refresh();
     } catch (err) {
       console.error('Error al ejecutar accion de notificacion:', err);
@@ -231,8 +203,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const canAcceptOrDecline = activeNotification?.role === 'host' && activeNotification.status === 'PENDING';
-  const canCancel = activeNotification?.role === 'tenant' && activeNotification.status === 'ACCEPTED';
+  const canCancel = activeNotification?.status === 'ACCEPTED';
 
   return (
     <div className="space-y-6">
@@ -253,22 +224,7 @@ export default function NotificationsPage() {
 
       <section className="border border-blue-light-150 bg-white rounded-3xl p-4 sm:p-6">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            {roleOptions.map((role) => (
-              <button
-                key={role}
-                onClick={() => setSelectedRole(role)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  selectedRole === role
-                    ? 'border-blue-vivid-500 bg-blue-vivid-50 text-blue-vivid-700'
-                    : 'border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300'
-                }`}
-                type="button"
-              >
-                {ROLE_LABELS[role]}
-              </button>
-            ))}
-          </div>
+          <div className="text-sm font-semibold text-gray-dark-600">Vista de huésped</div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <input
@@ -312,7 +268,9 @@ export default function NotificationsPage() {
                   No hay notificaciones para los filtros seleccionados.
                 </p>
               ) : (
-                filteredNotifications.map((notification) => (
+                filteredNotifications.map((notification) => {
+                  const hasCheckinReminder = notification.reminderType === 'CHECKIN_24H';
+                  return (
                   <button
                     key={`${notification.bookingId}-${notification.role}`}
                     type="button"
@@ -325,7 +283,17 @@ export default function NotificationsPage() {
                   >
                     <div className="flex items-center justify-between text-xs text-gray-dark-500">
                       <span className="font-semibold text-gray-dark-700">#{notification.bookingId}</span>
-                      <NotificationBadge status={notification.status} />
+                      <div className="flex items-center gap-2">
+                        {hasCheckinReminder && (
+                          <span className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-600">
+                            Recordatorio 24h
+                          </span>
+                        )}
+                        <NotificationBadge
+                          status={notification.status}
+                          isCheckinReminder={hasCheckinReminder}
+                        />
+                      </div>
                     </div>
                     <p className="mt-1 text-sm font-semibold text-gray-dark-800 line-clamp-2">
                       {notification.propertyTitle}
@@ -339,7 +307,8 @@ export default function NotificationsPage() {
                       Creada {formatDateTime(notification.createdAt)}
                     </p>
                   </button>
-                ))
+                );
+              })
               )}
             </div>
           </aside>
@@ -369,12 +338,10 @@ export default function NotificationsPage() {
             ) : (
               <div className="space-y-6">
                 <header className="flex flex-col gap-2 border-b border-blue-light-100 pb-4">
-                  <div className="flex items-center gap-3">
-                    <NotificationBadge status={activeNotification.status} />
-                    <span className="rounded-full bg-blue-light-50 px-3 py-1 text-xs font-semibold text-blue-light-600">
-                      Rol: {ROLE_LABELS[activeNotification.role]}
-                    </span>
-                  </div>
+                  <NotificationBadge
+                    status={activeNotification.status}
+                    isCheckinReminder={activeNotification.reminderType === 'CHECKIN_24H'}
+                  />
                   <h2 className="text-2xl font-semibold text-gray-dark-900">
                     {activeNotification.propertyTitle}
                   </h2>
@@ -413,6 +380,25 @@ export default function NotificationsPage() {
                   </div>
                 </div>
 
+                {activeNotification.reminderType === 'CHECKIN_24H' && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <Clock className="mt-1 h-5 w-5 text-rose-500" />
+                      <div className="space-y-1 text-sm text-gray-dark-700">
+                        <p className="font-semibold text-rose-600">T#u check-in está a menos de 24 horas</p>
+                        <p>
+                          Revisa tu plan de llegada y mantén tus datos de contacto actualizados. El check-in está programado para
+                          {' '}
+                          <span className="font-semibold">
+                            {formatDateTime(activeNotification.checkinDate)}
+                          </span>
+                          .
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="rounded-2xl border border-blue-light-100 bg-blue-light-50 p-4">
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-dark-700">
                     <Clock className="h-4 w-4 text-blue-light-500" />
@@ -431,49 +417,27 @@ export default function NotificationsPage() {
                     </p>
                   )}
 
-                  {(canAcceptOrDecline || canCancel) && (
+                  {canCancel && (
                     <div className="space-y-3">
                       <label className="block text-sm font-medium text-gray-dark-700">
-                        {canAcceptOrDecline ? 'Comentario para el huésped (opcional)' : 'Motivo de la cancelación (opcional)'}
+                        Motivo de la cancelación (opcional)
                         <textarea
                           value={currentDraftNote}
                           onChange={(event) => handleDraftChange(event.target.value)}
                           className="mt-2 w-full rounded-2xl border border-blue-light-200 bg-white px-4 py-3 text-sm text-gray-dark-700 focus:border-blue-light-400 focus:outline-none focus:ring-2 focus:ring-blue-light-200"
                           rows={3}
-                          placeholder={canAcceptOrDecline ? 'Ej: Confirma tu llegada a las 2 p.m.' : 'Explica por qué necesitas cancelar'}
+                          placeholder="Explica por qué necesitas cancelar"
                         />
                       </label>
                       <div className="flex flex-wrap items-center gap-3">
-                        {canAcceptOrDecline && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => runAction('accept')}
-                              disabled={actionLoading}
-                              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              <CheckCircle2 className="h-4 w-4" /> Aprobar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => runAction('decline')}
-                              disabled={actionLoading}
-                              className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              <XCircle className="h-4 w-4" /> Rechazar
-                            </button>
-                          </>
-                        )}
-                        {canCancel && (
-                          <button
-                            type="button"
-                            onClick={() => runAction('cancel')}
-                            disabled={actionLoading}
-                            className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            <XCircle className="h-4 w-4" /> Cancelar reserva
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={runAction}
+                          disabled={actionLoading}
+                          className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          <XCircle className="h-4 w-4" /> Cancelar reserva
+                        </button>
                         {actionLoading && <Loader2 className="h-4 w-4 animate-spin text-blue-light-500" />}
                       </div>
                       {actionMessage && (

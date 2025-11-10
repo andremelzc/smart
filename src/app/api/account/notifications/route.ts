@@ -124,6 +124,35 @@ const mapRowToNotification = async (row: RawNotificationRow): Promise<Notificati
   };
 };
 
+const CHECKIN_REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+const applyReminderMetadata = (notification: NotificationItem): NotificationItem => {
+  if (notification.status !== "ACCEPTED") {
+    return notification;
+  }
+
+  if (!notification.checkinDate) {
+    return notification;
+  }
+
+  const checkinTime = new Date(notification.checkinDate).getTime();
+  if (!Number.isFinite(checkinTime)) {
+    return notification;
+  }
+
+  const now = Date.now();
+  const diffMs = checkinTime - now;
+
+  if (diffMs <= 0 || diffMs > CHECKIN_REMINDER_WINDOW_MS) {
+    return notification;
+  }
+
+  return {
+    ...notification,
+    reminderType: "CHECKIN_24H",
+  };
+};
+
 const orderNotifications = (items: NotificationItem[]) =>
   [...items].sort((a, b) => {
     const statusDelta = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
@@ -228,7 +257,7 @@ export async function GET(request: NextRequest) {
         for (const row of rows) {
           const enriched: RawNotificationRow = { ...row, ROLE_TAG: query.role } as RawNotificationRow;
           const notification = await mapRowToNotification(enriched);
-          notificationResults.push(notification);
+          notificationResults.push(applyReminderMetadata(notification));
         }
       }
     }
