@@ -24,6 +24,25 @@ type HostAccessResult = {
   EXISTS: number; 
 };
 
+/**
+ * Helper: Mapea el status de Oracle al reason esperado por el frontend
+ */
+function mapStatusToReason(status: string): 'available' | 'booked' | 'blocked' | 'maintenance' | 'special' {
+  switch (status.toLowerCase()) {
+    case 'reserved':
+      return 'booked';
+    case 'blocked':
+      return 'blocked';
+    case 'maintenance':
+      return 'maintenance';
+    case 'special':
+      return 'special';
+    case 'default':
+    default:
+      return 'available';
+  }
+}
+
 
 /**
  * Helper de seguridad: Verifica si el anfitrión autenticado es el dueño de la propiedad.
@@ -94,11 +113,17 @@ export async function GET(
         month: parseInt(month, 10),
         year: parseInt(year, 10)
       }
-    // ✅ CASTING: Le decimos a TS la forma de 'rows'
-    ) as oracledb.Result<CalendarDay[]>; 
+    ) as oracledb.Result<CalendarDay>; 
 
-    // Ahora TS sabe que 'calendarData.rows' es 'CalendarDay[] | undefined'
-    return NextResponse.json(calendarData.rows || []);
+    // Transformar los datos de Oracle al formato esperado por el frontend
+    const transformedData = (calendarData.rows || []).map((day) => ({
+      date: day.date,
+      available: Boolean(day.isAvailable), // Convertir 0/1 a boolean
+      reason: mapStatusToReason(day.status), // Mapear status de Oracle a reason del frontend
+      price: day.price,
+    }));
+
+    return NextResponse.json(transformedData);
 
   } catch (err) {
     console.error('Error en GET /api/host/properties/[id]/availability:', err);
@@ -170,17 +195,126 @@ export async function POST(
     // Ahora TS sabe que 'result.outBinds' es 'SetAvailabilityResult | undefined'
     const errorCode = result.outBinds?.errorCode;
 
+    // Manejo de códigos de error del SP
     if (errorCode === 1) {
-      return NextResponse.json({ message: 'Conflicto: Ya existe una reserva confirmada en esas fechas.' }, { status: 409 });
+      return NextResponse.json({ 
+        success: false,
+        message: 'Conflicto: Ya existe una reserva confirmada en esas fechas. No puedes bloquear o poner en mantenimiento.' 
+      }, { status: 409 });
     }
+    
+    if (errorCode === 2) {
+      return NextResponse.json({ 
+        success: false,
+        message: 'Conflicto: Ya existe otro ajuste de disponibilidad en ese rango de fechas. Por favor, elimina el ajuste existente primero.' 
+      }, { status: 409 });
+    }
+    
     if (errorCode !== 0) {
-      return NextResponse.json({ message: 'Error desconocido al guardar en la base de datos' }, { status: 500 });
+      return NextResponse.json({ 
+        success: false,
+        message: 'Error al guardar en la base de datos. Por favor, intenta nuevamente.' 
+      }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'Calendario actualizado' });
+    return NextResponse.json({ success: true, message: 'Disponibilidad actualizada correctamente' });
 
   } catch (err) {
     console.error('Error en POST /api/host/properties/[id]/availability:', err);
     return NextResponse.json({ message: 'Error interno del servidor al guardar la disponibilidad' }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/host/properties/[propertyId]/availability
+ * Elimina un ajuste de disponibilidad específico
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ propertyId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+
+  // Solo requiere estar autenticado
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: 'No autorizado. Debes iniciar sesión.' }, { status: 401 });
+  }
+
+  const resolvedParams = await params;
+  const propertyIdNum = parseInt(resolvedParams.propertyId, 10);
+  const userId = parseInt(session.user.id);
+  
+  if (isNaN(propertyIdNum)) {
+     return NextResponse.json({ message: 'ID de propiedad inválido' }, { status: 400 });
+  }
+
+  try {
+    const body = await request.json();
+    const { startDate, endDate } = body;
+
+    if (!startDate || !endDate) {
+      return NextResponse.json({ message: 'Faltan parámetros (startDate, endDate)' }, { status: 400 });
+    }
+
+    // Verificar que el usuario sea dueño de la propiedad
+    const hasAccess = await validateHostAccess(userId, propertyIdNum);
+    if (!hasAccess) {
+      return NextResponse.json({ message: 'Acceso denegado. No eres el dueño de esta propiedad.' }, { status: 403 });
+    }
+
+    // Llamar al SP que elimina todos los ajustes que se superpongan con el rango
+    const result = await executeQuery(
+      `BEGIN
+        PROPERTY_PKG.SP_REMOVE_AVAILABILITY(
+          P_PROPERTY_ID => :propertyId,
+          P_START_DATE => TO_DATE(:startDate, 'YYYY-MM-DD'),
+          P_END_DATE => TO_DATE(:endDate, 'YYYY-MM-DD'),
+          P_ROWS_DELETED => :rowsDeleted,
+          P_ERROR_CODE => :errorCode
+        );
+      END;`,
+      {
+        propertyId: propertyIdNum,
+        startDate: startDate,
+        endDate: endDate,
+        rowsDeleted: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+        errorCode: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+      }
+    ) as oracledb.Result<{ errorCode: number; rowsDeleted: number }>; 
+
+    const errorCode = result.outBinds?.errorCode;
+    const rowsDeleted = result.outBinds?.rowsDeleted || 0;
+
+    // Manejo de códigos de error del SP
+    if (errorCode === 1) {
+      return NextResponse.json({ 
+        success: false,
+        message: 'Propiedad no encontrada.' 
+      }, { status: 404 });
+    }
+
+    if (errorCode === 2) {
+      return NextResponse.json({ 
+        success: false,
+        message: 'No se encontraron ajustes para eliminar en el rango seleccionado.' 
+      }, { status: 404 });
+    }
+    
+    if (errorCode === 99 || errorCode !== 0) {
+      return NextResponse.json({ 
+        success: false,
+        message: 'Error al eliminar los ajustes en la base de datos. Por favor, intenta nuevamente.' 
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `${rowsDeleted} ajuste(s) eliminado(s) correctamente`,
+      rowsDeleted 
+    });
+
+  } catch (err) {
+    console.error('Error en DELETE /api/host/properties/[id]/availability:', err);
+    return NextResponse.json({ message: 'Error interno del servidor al eliminar el ajuste' }, { status: 500 });
   }
 }

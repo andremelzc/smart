@@ -91,6 +91,33 @@ export function AvailabilityCalendar({ propertyId }: Props) {
     }
   });
 
+  // --- MUTATION (DELETE) ---
+  // Elimina un ajuste de disponibilidad
+  const { mutate: removeAvailability, isPending: isRemoving } = useMutation<
+    SetAvailabilityResponse,
+    Error,
+    { startDate: string; endDate: string }
+  >({
+    mutationFn: async ({ startDate, endDate }) => {
+      return await hostAvailabilityService.removeAvailability(propertyId, startDate, endDate);
+    },
+
+    onSuccess: (data: SetAvailabilityResponse) => {
+      if (data.success) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['hostCalendar', propertyId] 
+        });
+        setSelectedRange(undefined);
+        alert('¡Ajuste eliminado correctamente!');
+      } else {
+        throw new Error('Error desconocido al eliminar');
+      }
+    },
+    onError: (error: Error) => {
+      alert(`Error al eliminar: ${error.message}`);
+    }
+  });
+
   // --- Estilos para los días según su estado ---
   const modifiers = {
     booked: (day: Date): boolean => {
@@ -142,7 +169,25 @@ export function AvailabilityCalendar({ propertyId }: Props) {
     });
   };
 
-  const isLoading = isLoadingCalendar || isSaving;
+  // Manejador para eliminar ajuste de disponibilidad
+  const handleRemove = () => {
+    if (!selectedRange || !selectedRange.from || !selectedRange.to) {
+      alert('Por favor selecciona un rango de fechas');
+      return;
+    }
+
+    if (!confirm('¿Estás seguro de que quieres eliminar este ajuste de disponibilidad?')) {
+      return;
+    }
+
+    // Ejecutar la mutación
+    removeAvailability({
+      startDate: toISODate(selectedRange.from),
+      endDate: toISODate(selectedRange.to),
+    });
+  };
+
+  const isLoading = isLoadingCalendar || isSaving || isRemoving;
 
   return (
     <div className="space-y-6">
@@ -235,6 +280,14 @@ export function AvailabilityCalendar({ propertyId }: Props) {
               variant="ghost"
             >
               Mantenimiento
+            </Button>
+            <Button 
+              onClick={handleRemove} 
+              disabled={isLoading} 
+              variant="ghost"
+              className="text-red-600 hover:bg-red-50"
+            >
+              Eliminar Ajuste
             </Button>
             <Button 
               onClick={() => setSelectedRange(undefined)} 

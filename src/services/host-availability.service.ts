@@ -78,13 +78,12 @@ export const hostAvailabilityService = {
   },
 
   /**
-   * Desbloquea fechas previamente bloqueadas o en mantenimiento
+   * Elimina un ajuste de disponibilidad (bloqueo, mantenimiento o precio especial)
    */
-  unblockDates: async (
+  removeAvailability: async (
     propertyId: string | number,
     startDate: string,
-    endDate: string,
-    kind: "blocked" | "maintenance"
+    endDate: string
   ): Promise<SetAvailabilityResponse> => {
     const apiUrl = `/api/host/properties/${propertyId}/availability`;
 
@@ -92,18 +91,18 @@ export const hostAvailabilityService = {
       const response = await fetch(apiUrl, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startDate, endDate, kind }),
+        body: JSON.stringify({ startDate, endDate }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al desbloquear fechas");
+        throw new Error(data.message || "Error al eliminar el ajuste de disponibilidad");
       }
 
       return data;
     } catch (error: unknown) {
-      console.error("❌ Error en hostAvailabilityService.unblockDates:", error);
+      console.error("❌ Error en hostAvailabilityService.removeAvailability:", error);
       throw error instanceof Error ? error : new Error("Error de conexión");
     }
   },
