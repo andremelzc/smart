@@ -3,15 +3,15 @@ import { PropertyService } from '@/src/services/property.service';
 
 // GET /api/host/:hostId/properties
 // Devuelve listado de propiedades del host usando FN_GET_PROPERTIES_BY_HOST
-export async function GET(_req: NextRequest, context: { params: { hostId?: string } }) {
+export async function GET(_req: NextRequest, context: { params: Promise<{ hostId: string }> }) {
 	try {
-		const hostIdParam = context.params?.hostId;
+		const { hostId } = await context.params;
 
-		if (!hostIdParam) {
+		if (!hostId) {
 			return NextResponse.json({ error: 'Falta parámetro hostId' }, { status: 400 });
 		}
 
-		const hostIdNum = Number(hostIdParam);
+		const hostIdNum = Number(hostId);
 		if (Number.isNaN(hostIdNum) || hostIdNum <= 0) {
 			return NextResponse.json({ error: 'hostId inválido' }, { status: 400 });
 		}
