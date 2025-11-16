@@ -11,6 +11,7 @@ import {
 } from "@/src/components/features/reservations";
 import GuestRequestModal, { type DetailedReservation } from "@/src/components/features/host/GuestRequestModal";
 import DeclineReasonModal from "@/src/components/features/host/DeclineReasonModal";
+import AcceptReasonModal from "@/src/components/features/host/AcceptReasonModal";
 import { useHostBookings } from "@/src/hooks/useHostBookings";
 import { bookingService } from "@/src/services/booking.service";
 
@@ -84,6 +85,8 @@ export default function HostReservationsPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [pendingDeclineId, setPendingDeclineId] = useState<string | null>(null);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { bookings, loading, error, refreshBookings } = useHostBookings();
@@ -247,9 +250,41 @@ export default function HostReservationsPage() {
 
   // Funciones de callback para las acciones del modal
   const handleAcceptReservation = (requestId: string) => {
-    console.log('Aceptar reserva:', requestId);
-    // TODO: Implementar lógica de aceptar reserva
-    setSelectedReservationId(null);
+    setPendingAcceptId(requestId);
+    setShowAcceptModal(true);
+  };
+
+  const handleConfirmAccept = async (note: string) => {
+    if (!pendingAcceptId) return;
+
+    // Extraer el bookingId numérico del requestId (formato: RES-123)
+    const bookingId = parseInt(pendingAcceptId.replace('RES-', ''), 10);
+    
+    if (isNaN(bookingId)) {
+      console.error('ID de reserva inválido:', pendingAcceptId);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await bookingService.acceptBooking(bookingId, note || undefined);
+      
+      // Cerrar modales y limpiar estado
+      setShowAcceptModal(false);
+      setSelectedReservationId(null);
+      setPendingAcceptId(null);
+      
+      // Refrescar la lista de reservas
+      await refreshBookings();
+      
+      console.log('✅ Reserva aceptada exitosamente');
+    } catch (error) {
+      console.error('❌ Error al aceptar reserva:', error);
+      alert(error instanceof Error ? error.message : 'Error al aceptar la reserva');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeclineReservation = (requestId: string) => {
@@ -433,6 +468,22 @@ export default function HostReservationsPage() {
         }}
         onConfirm={handleConfirmDecline}
         guestName={selectedReservation?.guestName}
+        isLoading={isSubmitting}
+      />
+
+      {/* Modal de Confirmación de Aceptación */}
+      <AcceptReasonModal
+        open={showAcceptModal}
+        onClose={() => {
+          setShowAcceptModal(false);
+          setPendingAcceptId(null);
+        }}
+        onConfirm={handleConfirmAccept}
+        guestName={selectedReservation?.guestName}
+        propertyName={selectedReservation?.propertyName}
+        checkIn={selectedReservation?.checkIn}
+        checkOut={selectedReservation?.checkOut}
+        totalAmount={selectedReservation?.totalAmount}
         isLoading={isSubmitting}
       />
 
