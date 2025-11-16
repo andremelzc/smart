@@ -10,6 +10,7 @@ interface OracleLob {
 }
 
 interface OraclePropertyRow {
+  PROPERTY_ID?: number;
   HOST_ID?: number;
   TITLE?: string;
   PROPERTY_TYPE?: string;
@@ -33,6 +34,9 @@ interface OraclePropertyRow {
   HOST_LAST_NAME?: string;
   HOST_JOINED_AT?: string | Date;
   HOST_IS_VERIFIED?: number;
+  // Campos adicionales devueltos por la función FN_GET_PROPERTIES_BY_HOST
+  MAIN_IMAGE_URL?: string;
+  AVERAGE_RATING?: number;
 }
 
 interface OracleImageRow {
@@ -94,7 +98,7 @@ export class PropertyService {
       const isOracleLob = (obj: unknown): obj is OracleLob => {
         return typeof obj === 'object' && obj !== null && 'getData' in obj && typeof (obj as OracleLob).getData === 'function';
       };
-      
+
       // Verificar si es un LOB (CLOB/BLOB) de Oracle
       if (isOracleLob(data)) {
         try {
@@ -132,23 +136,23 @@ export class PropertyService {
 
       // Procesar objeto normal
       const result: Record<string, unknown> = {};
-      
+
       // Type guard para objeto indexable
       const isIndexableObject = (obj: unknown): obj is Record<string, unknown> => {
         return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
       };
-      
+
       if (isIndexableObject(data)) {
         // Solo copiar propiedades propias del objeto
         for (const key in data) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
             const value = data[key];
-          
+
             // Evitar propiedades que pueden causar referencias circulares
-            if (key.startsWith('_') || 
-                key === 'constructor' || 
-                key === 'prototype' ||
-                typeof value === 'function') {
+            if (key.startsWith('_') ||
+              key === 'constructor' ||
+              key === 'prototype' ||
+              typeof value === 'function') {
               continue;
             }
 
@@ -156,7 +160,7 @@ export class PropertyService {
           }
         }
       }
-      
+
       return result;
     }
 
@@ -174,7 +178,7 @@ export class PropertyService {
       firstRowType: typeof result?.rows?.[0],
       isFirstRowArray: Array.isArray(result?.rows?.[0])
     });
-    
+
     if (!result.rows || result.rows.length === 0) {
       console.log('mapOracleResults: No rows found, returning empty array');
       return [];
@@ -185,20 +189,20 @@ export class PropertyService {
       // Los datos vienen como arrays, mapear usando metaData
       const metaData = result.metaData as oracledb.Metadata<unknown>[];
       const mapped = [];
-      
+
       for (const row of result.rows) {
         // Type guard para array
         if (!Array.isArray(row)) continue;
-        
+
         const obj: Record<string, unknown> = {};
-        
+
         for (let i = 0; i < metaData.length; i++) {
           const columnName = metaData[i].name;
           let value = row[i];
-          
+
           // Si es un LOB, leerlo
-          if (value && typeof value === 'object' && value._type && 
-              (value._type.toString().includes('CLOB') || value._type.toString().includes('BLOB'))) {
+          if (value && typeof value === 'object' && value._type &&
+            (value._type.toString().includes('CLOB') || value._type.toString().includes('BLOB'))) {
             try {
               console.log(`Reading LOB for column ${columnName}`);
               value = await value.getData();
@@ -207,12 +211,12 @@ export class PropertyService {
               value = null;
             }
           }
-          
+
           obj[columnName] = value;
           // También agregar versión lowercase para compatibilidad
           obj[columnName.toLowerCase()] = value;
         }
-        
+
         console.log('Mapped object keys:', Object.keys(obj));
         console.log('Sample mapped object properties:', {
           PROPERTY_ID: obj.PROPERTY_ID,
@@ -221,7 +225,7 @@ export class PropertyService {
         });
         mapped.push(obj);
       }
-      
+
       console.log('mapOracleResults: Mapped array format, result length:', mapped.length);
       return mapped;
     } else {
@@ -237,25 +241,25 @@ export class PropertyService {
    * @returns Promise con los datos de la propiedad o lanza un error
    */
   static async getPropertyById(propertyId: number): Promise<PropertyDetail> {
-      let connection: oracledb.Connection | undefined;
+    let connection: oracledb.Connection | undefined;
 
-      try {
-          connection = await getConnection();
+    try {
+      connection = await getConnection();
 
-          // Parámetros para el stored procedure
-          const bindParams: oracledb.BindParameters = {
-            p_property_id: { val: propertyId, dir: oracledb.BIND_IN },
-            out_details_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-            out_images_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-            out_amenities_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-            out_reviews_summary_cur: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-            out_reviews_list_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-            out_error_code: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
-          };
+      // Parámetros para el stored procedure
+      const bindParams: oracledb.BindParameters = {
+        p_property_id: { val: propertyId, dir: oracledb.BIND_IN },
+        out_details_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
+        out_images_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
+        out_amenities_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
+        out_reviews_summary_cur: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
+        out_reviews_list_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
+        out_error_code: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+      };
 
-          // Ejecutar el stored procedure
-          const result = await connection.execute(
-            `
+      // Ejecutar el stored procedure
+      const result = await connection.execute(
+        `
             BEGIN
                 PROPERTY_PKG.SP_GET_PROPERTY_PAGE_DETAILS(
                     P_PROPERTY_ID => :p_property_id,
@@ -267,164 +271,164 @@ export class PropertyService {
                     OUT_ERROR_CODE => :out_error_code
                 );
             END;`,
-            bindParams,
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
-          );
+        bindParams,
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
 
-          // Verificar si hubo un error
-          const outBinds = result.outBinds as {
-            out_details_cursor?: oracledb.ResultSet<unknown>;
-            out_images_cursor?: oracledb.ResultSet<unknown>;
-            out_amenities_cursor?: oracledb.ResultSet<unknown>;
-            out_reviews_summary_cur?: oracledb.ResultSet<unknown>;
-            out_reviews_list_cursor?: oracledb.ResultSet<unknown>;
-            out_error_code?: string;
-          };
+      // Verificar si hubo un error
+      const outBinds = result.outBinds as {
+        out_details_cursor?: oracledb.ResultSet<unknown>;
+        out_images_cursor?: oracledb.ResultSet<unknown>;
+        out_amenities_cursor?: oracledb.ResultSet<unknown>;
+        out_reviews_summary_cur?: oracledb.ResultSet<unknown>;
+        out_reviews_list_cursor?: oracledb.ResultSet<unknown>;
+        out_error_code?: string;
+      };
 
-          if (outBinds?.out_error_code) {
-            throw new Error(outBinds.out_error_code);
-          }
-
-          // Procesar cursor de detalles
-          const detailsCursor = outBinds?.out_details_cursor;
-          let detailsRow: OraclePropertyRow | null = null;
-          if (detailsCursor) {
-            const rawRow = await detailsCursor.getRow();
-            const processedRow = rawRow ? await this.processOracleData(rawRow) : null;
-            detailsRow = processedRow as OraclePropertyRow;
-            await detailsCursor.close();
-          }
-
-          if (!detailsRow) {
-            throw new Error('Propiedad no encontrada');
-          }
-
-          // Procesar cursor de imágenes
-          const imagesCursor = outBinds?.out_images_cursor;
-          const images: PropertyImage[] = [];
-          if (imagesCursor) {
-            let imageRow;
-            let imageIndex = 0;
-            while ((imageRow = await imagesCursor.getRow())) {
-              const processedImageRow = await this.processOracleData(imageRow) as OracleImageRow;
-              images.push({
-                id: imageIndex++,
-                url: processedImageRow.URL || '',
-                alt: processedImageRow.CAPTION || '',
-                isPrimary: imageIndex === 1
-              });
-            }
-            await imagesCursor.close();
-          }
-
-          // Procesar cursor de amenities
-          const amenitiesCursor = outBinds?.out_amenities_cursor;
-          const amenities: PropertyAmenity[] = [];
-          if (amenitiesCursor) {
-            let amenityRow;
-            while ((amenityRow = await amenitiesCursor.getRow())) {
-              const processedAmenityRow = await this.processOracleData(amenityRow) as OracleAmenityRow;
-              amenities.push({
-                name: processedAmenityRow.NAME || '',
-                icon: processedAmenityRow.CODE || '',
-                description: processedAmenityRow.DESCRIPTION || ''
-              });
-            }
-            await amenitiesCursor.close();
-          }
-
-          // Procesar cursor de resumen de reviews
-          const reviewsSummaryCursor = outBinds?.out_reviews_summary_cur;
-          let reviewsSummary: OracleReviewsSummary = { TOTAL_COUNT: 0, AVERAGE_RATING: 0 };
-          if (reviewsSummaryCursor) {
-            const rawSummaryRow = await reviewsSummaryCursor.getRow();
-            if (rawSummaryRow) {
-              reviewsSummary = await this.processOracleData(rawSummaryRow) as OracleReviewsSummary;
-            }
-            await reviewsSummaryCursor.close();
-          }
-
-          // Procesar cursor de lista de reviews
-          const reviewsListCursor = outBinds?.out_reviews_list_cursor;
-          const reviewsList: PropertyReview[] = [];
-          if (reviewsListCursor) {
-            let reviewRow;
-            while ((reviewRow = await reviewsListCursor.getRow())) {
-              const processedReviewRow = await this.processOracleData(reviewRow) as OracleReviewRow;
-              reviewsList.push({
-                rating: processedReviewRow.RATING || 0,
-                comment: processedReviewRow.comment || '',
-                createdAt: typeof processedReviewRow.CREATED_AT === 'string' 
-                  ? processedReviewRow.CREATED_AT 
-                  : (processedReviewRow.CREATED_AT instanceof Date 
-                    ? processedReviewRow.CREATED_AT.toISOString() 
-                    : ''),
-                authorName: `${processedReviewRow.AUTHOR_FIRST_NAME || ''} ${processedReviewRow.AUTHOR_LAST_NAME || ''}`.trim()
-              });
-            }
-            await reviewsListCursor.close();
-          }
-
-          // Construir el objeto PropertyDetail
-          const propertyDetail: PropertyDetail = {
-            propertyId: propertyId,
-            hostId: detailsRow.HOST_ID || 0,
-            title: detailsRow.TITLE || '',
-            propertyType: detailsRow.PROPERTY_TYPE || '',
-            basePriceNight: detailsRow.BASE_PRICE_NIGHT || 0,
-            currencyCode: detailsRow.CURRENCY_CODE || 'USD',
-            addressText: detailsRow.FORMATTED_ADDRESS || '',
-            city: detailsRow.CITY || '',
-            stateRegion: detailsRow.STATE_REGION || '',
-            country: detailsRow.COUNTRY || '',
-            postalCode: '',
-            latitude: detailsRow.LATITUDE || 0,
-            longitude: detailsRow.LONGITUDE || 0,
-            isActive: true,
-            descriptionLong: detailsRow.DESCRIPTION_LONG || '',
-            houseRules: detailsRow.HOUSE_RULES || '',
-            checkinTime: detailsRow.CHECKIN_TIME || '',
-            checkoutTime: detailsRow.CHECKOUT_TIME || '',
-            capacity: detailsRow.CAPACITY || 0,
-            bedrooms: detailsRow.BEDROOMS || 0,
-            bathrooms: detailsRow.BATHROOMS || 0,
-            beds: detailsRow.BEDS || 0,
-            host: {
-              id: detailsRow.HOST_ID || 0,
-              name: `${detailsRow.HOST_FIRST_NAME || ''} ${detailsRow.HOST_LAST_NAME || ''}`.trim(),
-              memberSince: typeof detailsRow.HOST_JOINED_AT === 'string' 
-                ? detailsRow.HOST_JOINED_AT 
-                : (detailsRow.HOST_JOINED_AT instanceof Date 
-                  ? detailsRow.HOST_JOINED_AT.toISOString() 
-                  : ''),
-              isVerified: detailsRow.HOST_IS_VERIFIED === 1
-            },
-            amenities,
-            images,
-            reviews: {
-              totalCount: reviewsSummary.TOTAL_COUNT || 0,
-              averageRating: reviewsSummary.AVERAGE_RATING || 0,
-              reviewsList
-            }
-          };
-
-          return propertyDetail;
-
-      } catch (err) {
-          console.error('Error al obtener la propiedad:', err);
-          if (err instanceof Error && err.message.includes('Propiedad no encontrada')) {
-              throw err;
-          }
-          throw new Error('No se pudo cargar el detalle de la propiedad.');
-      } finally {
-          if (connection) {
-              try {
-                  await connection.close();
-              } catch (err) {
-                  console.error('Error al cerrar la conexión:', err);
-              }
-          }
+      if (outBinds?.out_error_code) {
+        throw new Error(outBinds.out_error_code);
       }
+
+      // Procesar cursor de detalles
+      const detailsCursor = outBinds?.out_details_cursor;
+      let detailsRow: OraclePropertyRow | null = null;
+      if (detailsCursor) {
+        const rawRow = await detailsCursor.getRow();
+        const processedRow = rawRow ? await this.processOracleData(rawRow) : null;
+        detailsRow = processedRow as OraclePropertyRow;
+        await detailsCursor.close();
+      }
+
+      if (!detailsRow) {
+        throw new Error('Propiedad no encontrada');
+      }
+
+      // Procesar cursor de imágenes
+      const imagesCursor = outBinds?.out_images_cursor;
+      const images: PropertyImage[] = [];
+      if (imagesCursor) {
+        let imageRow;
+        let imageIndex = 0;
+        while ((imageRow = await imagesCursor.getRow())) {
+          const processedImageRow = await this.processOracleData(imageRow) as OracleImageRow;
+          images.push({
+            id: imageIndex++,
+            url: processedImageRow.URL || '',
+            alt: processedImageRow.CAPTION || '',
+            isPrimary: imageIndex === 1
+          });
+        }
+        await imagesCursor.close();
+      }
+
+      // Procesar cursor de amenities
+      const amenitiesCursor = outBinds?.out_amenities_cursor;
+      const amenities: PropertyAmenity[] = [];
+      if (amenitiesCursor) {
+        let amenityRow;
+        while ((amenityRow = await amenitiesCursor.getRow())) {
+          const processedAmenityRow = await this.processOracleData(amenityRow) as OracleAmenityRow;
+          amenities.push({
+            name: processedAmenityRow.NAME || '',
+            icon: processedAmenityRow.CODE || '',
+            description: processedAmenityRow.DESCRIPTION || ''
+          });
+        }
+        await amenitiesCursor.close();
+      }
+
+      // Procesar cursor de resumen de reviews
+      const reviewsSummaryCursor = outBinds?.out_reviews_summary_cur;
+      let reviewsSummary: OracleReviewsSummary = { TOTAL_COUNT: 0, AVERAGE_RATING: 0 };
+      if (reviewsSummaryCursor) {
+        const rawSummaryRow = await reviewsSummaryCursor.getRow();
+        if (rawSummaryRow) {
+          reviewsSummary = await this.processOracleData(rawSummaryRow) as OracleReviewsSummary;
+        }
+        await reviewsSummaryCursor.close();
+      }
+
+      // Procesar cursor de lista de reviews
+      const reviewsListCursor = outBinds?.out_reviews_list_cursor;
+      const reviewsList: PropertyReview[] = [];
+      if (reviewsListCursor) {
+        let reviewRow;
+        while ((reviewRow = await reviewsListCursor.getRow())) {
+          const processedReviewRow = await this.processOracleData(reviewRow) as OracleReviewRow;
+          reviewsList.push({
+            rating: processedReviewRow.RATING || 0,
+            comment: processedReviewRow.comment || '',
+            createdAt: typeof processedReviewRow.CREATED_AT === 'string'
+              ? processedReviewRow.CREATED_AT
+              : (processedReviewRow.CREATED_AT instanceof Date
+                ? processedReviewRow.CREATED_AT.toISOString()
+                : ''),
+            authorName: `${processedReviewRow.AUTHOR_FIRST_NAME || ''} ${processedReviewRow.AUTHOR_LAST_NAME || ''}`.trim()
+          });
+        }
+        await reviewsListCursor.close();
+      }
+
+      // Construir el objeto PropertyDetail
+      const propertyDetail: PropertyDetail = {
+        propertyId: propertyId,
+        hostId: detailsRow.HOST_ID || 0,
+        title: detailsRow.TITLE || '',
+        propertyType: detailsRow.PROPERTY_TYPE || '',
+        basePriceNight: detailsRow.BASE_PRICE_NIGHT || 0,
+        currencyCode: detailsRow.CURRENCY_CODE || 'USD',
+        addressText: detailsRow.FORMATTED_ADDRESS || '',
+        city: detailsRow.CITY || '',
+        stateRegion: detailsRow.STATE_REGION || '',
+        country: detailsRow.COUNTRY || '',
+        postalCode: '',
+        latitude: detailsRow.LATITUDE || 0,
+        longitude: detailsRow.LONGITUDE || 0,
+        isActive: true,
+        descriptionLong: detailsRow.DESCRIPTION_LONG || '',
+        houseRules: detailsRow.HOUSE_RULES || '',
+        checkinTime: detailsRow.CHECKIN_TIME || '',
+        checkoutTime: detailsRow.CHECKOUT_TIME || '',
+        capacity: detailsRow.CAPACITY || 0,
+        bedrooms: detailsRow.BEDROOMS || 0,
+        bathrooms: detailsRow.BATHROOMS || 0,
+        beds: detailsRow.BEDS || 0,
+        host: {
+          id: detailsRow.HOST_ID || 0,
+          name: `${detailsRow.HOST_FIRST_NAME || ''} ${detailsRow.HOST_LAST_NAME || ''}`.trim(),
+          memberSince: typeof detailsRow.HOST_JOINED_AT === 'string'
+            ? detailsRow.HOST_JOINED_AT
+            : (detailsRow.HOST_JOINED_AT instanceof Date
+              ? detailsRow.HOST_JOINED_AT.toISOString()
+              : ''),
+          isVerified: detailsRow.HOST_IS_VERIFIED === 1
+        },
+        amenities,
+        images,
+        reviews: {
+          totalCount: reviewsSummary.TOTAL_COUNT || 0,
+          averageRating: reviewsSummary.AVERAGE_RATING || 0,
+          reviewsList
+        }
+      };
+
+      return propertyDetail;
+
+    } catch (err) {
+      console.error('Error al obtener la propiedad:', err);
+      if (err instanceof Error && err.message.includes('Propiedad no encontrada')) {
+        throw err;
+      }
+      throw new Error('No se pudo cargar el detalle de la propiedad.');
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error('Error al cerrar la conexión:', err);
+        }
+      }
+    }
   }
   /**
    * Actualiza una propiedad usando el stored procedure SP_UPDATE_PROPERTY
@@ -621,12 +625,122 @@ export class PropertyService {
       throw new Error('Error al guardar la imagen de la propiedad: ' + (error as Error).message);
     } finally {
       if (connection) {
-            try {
-                await connection.close();
-            } catch (err) {
-                console.error("Error al cerrar la conexión a Oracle:", err);
-            }
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error("Error al cerrar la conexión a Oracle:", err);
         }
+      }
+    }
+  }
+
+  static async getPropertyByHost(hostId: number): Promise<PropertyDetail[]> {
+    let connection: oracledb.Connection | undefined;
+    try {
+      connection = await getConnection();
+
+      const plsql = `
+        BEGIN
+          :out_properties_cursor := PROPERTY_PKG.FN_GET_PROPERTIES_BY_HOST(:p_host_id);
+        END;
+      `;
+
+      const bindParams: oracledb.BindParameters = {
+        p_host_id: { val: hostId, dir: oracledb.BIND_IN, type: oracledb.NUMBER },
+        out_properties_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+      };
+
+      const result = await connection.execute(
+        plsql,
+        bindParams,
+        {
+          outFormat: oracledb.OUT_FORMAT_OBJECT,
+          fetchArraySize: 100
+        }
+      );
+
+      const outBinds = result.outBinds as {
+        out_properties_cursor?: oracledb.ResultSet<unknown>;
+      };
+
+      const propertiesCursor = outBinds?.out_properties_cursor;
+      const properties: PropertyDetail[] = [];
+
+      if (propertiesCursor) {
+        // Leer en batches para evitar usar demasiada memoria en listas grandes
+        let rows: unknown[] = [];
+        do {
+          rows = await propertiesCursor.getRows(100); // máximo 100 por lectura
+
+          for (const rawRow of rows) {
+            const processedRow = await this.processOracleData(rawRow) as OraclePropertyRow;
+
+            const propertySummary: PropertyDetail = {
+              propertyId: processedRow.PROPERTY_ID || 0,
+              hostId: processedRow.HOST_ID || 0,
+              title: processedRow.TITLE || '',
+              propertyType: processedRow.PROPERTY_TYPE || '',
+              basePriceNight: processedRow.BASE_PRICE_NIGHT || 0,
+              currencyCode: processedRow.CURRENCY_CODE || 'USD',
+              addressText: processedRow.FORMATTED_ADDRESS || '',
+              city: processedRow.CITY || '',
+              stateRegion: processedRow.STATE_REGION || '',
+              country: processedRow.COUNTRY || '',
+              postalCode: '',
+              latitude: processedRow.LATITUDE || 0,
+              longitude: processedRow.LONGITUDE || 0,
+              createdAt: '',
+              updatedAt: '',
+              isActive: true,
+              descriptionLong: processedRow.DESCRIPTION_LONG || '',
+              houseRules: processedRow.HOUSE_RULES || '',
+              checkinTime: processedRow.CHECKIN_TIME || '',
+              checkoutTime: processedRow.CHECKOUT_TIME || '',
+              capacity: processedRow.CAPACITY || 0,
+              bedrooms: processedRow.BEDROOMS || 0,
+              bathrooms: processedRow.BATHROOMS || 0,
+              beds: processedRow.BEDS || 0,
+              host: {
+                id: processedRow.HOST_ID || 0,
+                name: `${processedRow.HOST_FIRST_NAME || ''} ${processedRow.HOST_LAST_NAME || ''}`.trim(),
+                memberSince: typeof processedRow.HOST_JOINED_AT === 'string'
+                  ? processedRow.HOST_JOINED_AT
+                  : (processedRow.HOST_JOINED_AT instanceof Date ? processedRow.HOST_JOINED_AT.toISOString() : ''),
+                isVerified: processedRow.HOST_IS_VERIFIED === 1
+              },
+              amenities: [],
+              images: processedRow.MAIN_IMAGE_URL ? [{ id: 0, url: processedRow.MAIN_IMAGE_URL, alt: '', isPrimary: true }] : [],
+              reviews: {
+                totalCount: 0,
+                averageRating: processedRow.AVERAGE_RATING || 0,
+                reviewsList: []
+              }
+            } as PropertyDetail;
+
+            properties.push(propertySummary);
+          }
+
+        } while (rows && rows.length > 0);
+
+        try {
+          await propertiesCursor.close();
+        } catch (err) {
+          console.warn('No se pudo cerrar propertiesCursor:', err);
+        }
+      }
+
+      return properties;
+    } catch (error) {
+      console.log("ERROR en property.service.ts: Fallo al obtener las propiedades del host desde Oracle:", error);
+      throw new Error('Error al obtener las propiedades del host: ' + (error as Error).message);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error("Error al cerrar la conexión a Oracle:", err);
+        }
+      }
     }
   }
 }
