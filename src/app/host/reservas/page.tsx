@@ -10,6 +10,7 @@ import {
   type FilterSegment,
 } from "@/src/components/features/reservations";
 import GuestRequestModal, { type DetailedReservation } from "@/src/components/features/host/GuestRequestModal";
+import DeclineReasonModal from "@/src/components/features/host/DeclineReasonModal";
 import { useHostBookings } from "@/src/hooks/useHostBookings";
 import { bookingService } from "@/src/services/booking.service";
 
@@ -81,6 +82,9 @@ export default function HostReservationsPage() {
   >(null);
   const [selectedReservation, setSelectedReservation] = useState<DetailedReservation | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [pendingDeclineId, setPendingDeclineId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { bookings, loading, error, refreshBookings } = useHostBookings();
 
@@ -249,9 +253,41 @@ export default function HostReservationsPage() {
   };
 
   const handleDeclineReservation = (requestId: string) => {
-    console.log('Rechazar reserva:', requestId);
-    // TODO: Implementar lógica de rechazar reserva
-    setSelectedReservationId(null);
+    setPendingDeclineId(requestId);
+    setShowDeclineModal(true);
+  };
+
+  const handleConfirmDecline = async (reason: string) => {
+    if (!pendingDeclineId) return;
+
+    // Extraer el bookingId numérico del requestId (formato: RES-123)
+    const bookingId = parseInt(pendingDeclineId.replace('RES-', ''), 10);
+    
+    if (isNaN(bookingId)) {
+      console.error('ID de reserva inválido:', pendingDeclineId);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await bookingService.declineBooking(bookingId, reason || undefined);
+      
+      // Cerrar modales y limpiar estado
+      setShowDeclineModal(false);
+      setSelectedReservationId(null);
+      setPendingDeclineId(null);
+      
+      // Refrescar la lista de reservas
+      await refreshBookings();
+      
+      console.log('✅ Reserva rechazada exitosamente');
+    } catch (error) {
+      console.error('❌ Error al rechazar reserva:', error);
+      alert(error instanceof Error ? error.message : 'Error al rechazar la reserva');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancelReservation = (requestId: string) => {
@@ -386,6 +422,18 @@ export default function HostReservationsPage() {
         onViewReviews={handleViewReviews}
         onViewMessages={handleViewMessages}
         onModifyReservation={handleModifyReservation}
+      />
+
+      {/* Modal de Confirmación de Rechazo */}
+      <DeclineReasonModal
+        open={showDeclineModal}
+        onClose={() => {
+          setShowDeclineModal(false);
+          setPendingDeclineId(null);
+        }}
+        onConfirm={handleConfirmDecline}
+        guestName={selectedReservation?.guestName}
+        isLoading={isSubmitting}
       />
 
       {/* Modal de carga para detalles */}

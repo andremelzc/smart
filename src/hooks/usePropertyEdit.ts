@@ -1,121 +1,114 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { UpdatePropertyBody } from '@/src/types/dtos/properties.dto';
 
 interface UsePropertyEditReturn {
-  propertyData: Partial<UpdatePropertyBody> | null;
-  isLoading: boolean;
-  error: string | null;
-  updateProperty: (data: Partial<UpdatePropertyBody>) => Promise<boolean>;
-  isUpdating: boolean;
-  updateError: string | null;
-  updateSuccess: boolean;
-  resetUpdateState: () => void;
+    propertyData: Partial<UpdatePropertyBody> | null;
+    isLoading: boolean;
+    error: string | null;
+    updateProperty: (data: Partial<UpdatePropertyBody>) => Promise<boolean>;
+    isUpdating: boolean;
+    updateError: string | null;
+    updateSuccess: boolean;
+    resetUpdateState: () => void;
 }
 
 export const usePropertyEdit = (propertyId: number): UsePropertyEditReturn => {
-  const [propertyData, setPropertyData] = useState<Partial<UpdatePropertyBody> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateError, setUpdateError] = useState<string | null>(null);
-  const [updateSuccess, setUpdateSuccess] = useState(false);
+    const [propertyData, setPropertyData] = useState<Partial<UpdatePropertyBody> | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateError, setUpdateError] = useState<string | null>(null);
+    const [updateSuccess, setUpdateSuccess] = useState(false);
 
-  // Mock function to fetch property data - replace with actual API call
-  const fetchPropertyData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // TODO: Replace with actual API call to get property data
-      // For now, we'll use mock data or leave it empty to be filled by the form
-      const mockData: Partial<UpdatePropertyBody> = {
-        title: '',
-        basePriceNight: 0,
-        addressText: '',
-        city: '',
-        stateRegion: '',
-        country: '',
-        postalCode: '',
-        latitude: 0,
-        longitude: 0,
-        descriptionLong: '',
-        houseRules: '',
-        checkinTime: '',
-        checkoutTime: '',
-        capacity: 1,
-        bedrooms: 1,
-        bathrooms: 1,
-        beds: 1,
-      };
+    //Memorizar la función para que no cambie en cada render
+    const fetchPropertyData = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
 
-      setPropertyData(mockData);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar la propiedad';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+            const response = await fetch(`/api/properties/${propertyId}/edit`);
 
-  const updateProperty = async (data: Partial<UpdatePropertyBody>): Promise<boolean> => {
-    try {
-      setIsUpdating(true);
-      setUpdateError(null);
-      setUpdateSuccess(false);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al cargar la propiedad');
+            }
 
-      const response = await fetch(`/api/properties/${propertyId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+            const result = await response.json();
 
-      const result = await response.json();
+            if (result.success && result.data) {
+                setPropertyData(result.data);
+            } else {
+                throw new Error('Formato de respuesta inválido');
+            }
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Error al cargar la propiedad';
+            setError(errorMessage);
+            console.error('Error fetching property data:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [propertyId]); // 👈 Se vuelve a crear solo si cambia el ID
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Error al actualizar la propiedad');
-      }
+    const updateProperty = useCallback(async (data: Partial<UpdatePropertyBody>): Promise<boolean> => {
+        try {
+            setIsUpdating(true);
+            setUpdateError(null);
+            setUpdateSuccess(false);
 
-      setUpdateSuccess(true);
-      
-      // Update local property data with the new values
-      setPropertyData(prev => ({
-        ...prev,
-        ...data
-      }));
+            const response = await fetch(`/api/properties/${propertyId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
 
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error inesperado al actualizar';
-      setUpdateError(errorMessage);
-      return false;
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+            const result = await response.json();
 
-  const resetUpdateState = () => {
-    setUpdateError(null);
-    setUpdateSuccess(false);
-  };
+            if (!response.ok) {
+                throw new Error(result.error || 'Error al actualizar la propiedad');
+            }
 
-  useEffect(() => {
-    if (propertyId) {
-      fetchPropertyData();
-    }
-  }, [propertyId]);
+            setUpdateSuccess(true);
 
-  return {
-    propertyData,
-    isLoading,
-    error,
-    updateProperty,
-    isUpdating,
-    updateError,
-    updateSuccess,
-    resetUpdateState,
-  };
+            // Actualiza los datos locales
+            setPropertyData(prev => ({
+                ...prev,
+                ...data
+            }));
+
+            return true;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Error inesperado al actualizar';
+            setUpdateError(errorMessage);
+            return false;
+        } finally {
+            setIsUpdating(false);
+        }
+    }, [propertyId]); // 👈 También depende del ID
+
+    const resetUpdateState = useCallback(() => {
+        setUpdateError(null);
+        setUpdateSuccess(false);
+    }, []);
+
+    // ✅ Ahora sí: sin warnings
+    useEffect(() => {
+        if (propertyId) {
+            fetchPropertyData();
+        }
+    }, [propertyId, fetchPropertyData]);
+
+    return {
+        propertyData,
+        isLoading,
+        error,
+        updateProperty,
+        isUpdating,
+        updateError,
+        updateSuccess,
+        resetUpdateState,
+    };
 };

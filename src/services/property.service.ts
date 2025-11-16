@@ -102,7 +102,6 @@ export class PropertyService {
       // Verificar si es un LOB (CLOB/BLOB) de Oracle
       if (isOracleLob(data)) {
         try {
-          console.log('Reading LOB data...');
           const lobData = await data.getData();
           return typeof lobData === 'string' ? lobData : String(lobData || '');
         } catch (error) {
@@ -204,7 +203,6 @@ export class PropertyService {
           if (value && typeof value === 'object' && value._type &&
             (value._type.toString().includes('CLOB') || value._type.toString().includes('BLOB'))) {
             try {
-              console.log(`Reading LOB for column ${columnName}`);
               value = await value.getData();
             } catch (error) {
               console.warn(`Error reading LOB for column ${columnName}:`, error);
@@ -213,7 +211,7 @@ export class PropertyService {
           }
 
           obj[columnName] = value;
-          // También agregar versión lowercase para compatibilidad
+          // También agregar versión lowercase s compatibilidad
           obj[columnName.toLowerCase()] = value;
         }
 
@@ -587,6 +585,97 @@ export class PropertyService {
         throw new Error(errorCode);
       }
 
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error('Error al cerrar la conexión:', err);
+        }
+      }
+    }
+  }
+
+  /**
+   * Obtiene los datos de una propiedad para el formulario de edición
+   * @param propertyId - ID de la propiedad a obtener
+   * @returns Promise con los datos de la propiedad para edición
+   */
+  static async getPropertyForEdit(propertyId: number): Promise<UpdatePropertyBody> {
+    let connection: oracledb.Connection | undefined;
+
+    try {
+      connection = await getConnection();
+
+      // Consulta SQL para obtener los datos de la propiedad
+      const query = `
+        SELECT 
+          p.TITLE,
+          p.BASE_PRICE_NIGHT,
+          p.ADDRESS_TEXT,
+          p.CITY,
+          p.STATE_REGION,
+          p.COUNTRY,
+          p.POSTAL_CODE,
+          p.LATITUDE,
+          p.LONGITUDE,
+          pd.DESCRIPTION_LONG,
+          pd.HOUSE_RULES,
+          pd.CHECKIN_TIME,
+          pd.CHECKOUT_TIME,
+          pd.CAPACITY,
+          pd.BEDROOMS,
+          pd.BATHROOMS,
+          pd.BEDS
+        FROM PROPERTIES p
+        LEFT JOIN PROPERTY_DETAILS pd ON p.PROPERTY_ID = pd.PROPERTY_ID
+        WHERE p.PROPERTY_ID = :propertyId
+      `;
+
+      const result = await connection.execute<Record<string, unknown>>(
+        query,
+        { propertyId },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      if (!result.rows || result.rows.length === 0) {
+        throw new Error('Propiedad no encontrada');
+      }
+
+      const row = result.rows[0];
+
+      // Procesar CLOBs si es necesario
+      const processedRow = await this.processOracleData(row) as Record<string, unknown>;
+
+      // Mapear los datos al formato UpdatePropertyBody
+      const propertyData: UpdatePropertyBody = {
+        title: (processedRow.TITLE as string) || '',
+        basePriceNight: Number(processedRow.BASE_PRICE_NIGHT) || 0,
+        addressText: (processedRow.ADDRESS_TEXT as string) || '',
+        city: (processedRow.CITY as string) || '',
+        stateRegion: (processedRow.STATE_REGION as string) || '',
+        country: (processedRow.COUNTRY as string) || '',
+        postalCode: (processedRow.POSTAL_CODE as string) || '',
+        latitude: Number(processedRow.LATITUDE) || 0,
+        longitude: Number(processedRow.LONGITUDE) || 0,
+        descriptionLong: (processedRow.DESCRIPTION_LONG as string) || '',
+        houseRules: (processedRow.HOUSE_RULES as string) || '',
+        checkinTime: (processedRow.CHECKIN_TIME as string) || '',
+        checkoutTime: (processedRow.CHECKOUT_TIME as string) || '',
+        capacity: Number(processedRow.CAPACITY) || 1,
+        bedrooms: Number(processedRow.BEDROOMS) || 1,
+        bathrooms: Number(processedRow.BATHROOMS) || 1,
+        beds: Number(processedRow.BEDS) || 1,
+      };
+
+      return propertyData;
+
+    } catch (err) {
+      console.error('Error al obtener la propiedad para edición:', err);
+      if (err instanceof Error && err.message.includes('Propiedad no encontrada')) {
+        throw err;
+      }
+      throw new Error('No se pudo cargar los datos de la propiedad.');
     } finally {
       if (connection) {
         try {
