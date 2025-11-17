@@ -208,13 +208,19 @@ export default function PaginaCrearRecinto() {
 
     if (step === currentStep + 1 || step === currentStep - 1) {
 
-      setCurrentStep(step);
+       setCurrentStep(step);
+    
+    }
 
+    else if (step < currentStep) {
+        
+        setCurrentStep(step);
+    
     }
 
     else if (currentStep === 9 && step < 9) {
-
-       setCurrentStep(step);
+      
+        setCurrentStep(step);
 
     }
 
@@ -344,7 +350,7 @@ export default function PaginaCrearRecinto() {
 
         onStepClick={goToStep}
 
-        isClickable={currentStep === 9}
+        isClickable={true}
 
       />
 
