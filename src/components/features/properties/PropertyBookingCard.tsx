@@ -1,28 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import * as React from 'react';
-import { Star, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { Button } from '@/src/components/ui/Button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { usePropertyAvailability } from '@/src/hooks/usePropertyAvailability';
-
-
+import { useState, useMemo, useCallback } from "react";
+import * as React from "react";
+import { Star, Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Button } from "@/src/components/ui/Button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { usePropertyAvailability } from "@/src/hooks/usePropertyAvailability";
 
 interface BookingDates {
-
   checkIn: string;
 
   checkOut: string;
 
   guests: number;
-
 }
-
-
 
 interface PropertyBookingCardProps {
   propertyId: number;
@@ -37,8 +35,6 @@ interface PropertyBookingCardProps {
   className?: string;
 }
 
-
-
 export function PropertyBookingCard({
   propertyId,
   basePriceNight,
@@ -49,18 +45,21 @@ export function PropertyBookingCard({
   selectedDates,
   onDatesChange,
   onReserve,
-  className = ''
+  className = "",
 }: PropertyBookingCardProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
     from: undefined,
     to: undefined,
   });
-  
+
   const today = new Date();
   const threeMonthsLater = new Date();
   threeMonthsLater.setDate(threeMonthsLater.getDate() + 90);
-  
+
   const { availability } = usePropertyAvailability(
     propertyId,
     today,
@@ -70,14 +69,14 @@ export function PropertyBookingCard({
   // Función para convertir Date a string YYYY-MM-DD sin problemas de zona horaria
   const dateToString = useCallback((date: Date): string => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }, []);
 
   // Función para convertir string YYYY-MM-DD a Date (sin zona horaria)
   const stringToDate = useCallback((dateStr: string): Date => {
-    const [year, month, day] = dateStr.split('-').map(Number);
+    const [year, month, day] = dateStr.split("-").map(Number);
     return new Date(year, month - 1, day);
   }, []);
 
@@ -101,12 +100,9 @@ export function PropertyBookingCard({
   // Funciones de calculo
 
   const getNightCount = () => {
-
     const { checkIn, checkOut } = selectedDates;
 
     if (!checkIn || !checkOut) return 0;
-
-
 
     const start = new Date(checkIn);
 
@@ -114,39 +110,30 @@ export function PropertyBookingCard({
 
     const diff = end.getTime() - start.getTime();
 
-
-
     if (!Number.isFinite(diff) || diff <= 0) {
-
       return 0;
-
     }
 
-
-
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
-
   };
 
-
-
   const calculateTotalPrice = () => {
-
     const nights = getNightCount();
 
     return nights > 0 ? nights * basePriceNight : 0;
-
   };
-
-
 
   // Formateo de moneda
 
-  const formatCurrency = currencyCode === 'PEN' ? 'S/' : currencyCode === 'USD' ? '$' : `${currencyCode} `;
+  const formatCurrency =
+    currencyCode === "PEN"
+      ? "S/"
+      : currencyCode === "USD"
+      ? "$"
+      : `${currencyCode} `;
 
-  const formatCurrencyValue = (value: number) => `${formatCurrency}${value.toLocaleString('es-PE')}`;
-
-
+  const formatCurrencyValue = (value: number) =>
+    `${formatCurrency}${value.toLocaleString("es-PE")}`;
 
   // Calculos de precios
 
@@ -158,136 +145,115 @@ export function PropertyBookingCard({
 
   const grandTotal = totalPrice + serviceFee;
 
-
-
   // Validacion de huespedes
 
   const guestsCount = Math.min(selectedDates.guests, maxGuests);
 
-
-
   const handleGuestsChange = (newGuests: number) => {
-
     const validGuests = Math.min(newGuests, maxGuests);
 
     onDatesChange({ ...selectedDates, guests: validGuests });
-
   };
 
-
-
-  const canReserve = selectedDates.checkIn && selectedDates.checkOut && nightsCount > 0;
+  const canReserve =
+    selectedDates.checkIn && selectedDates.checkOut && nightsCount > 0;
 
   // Crear un Set de fechas disponibles para búsqueda O(1)
   const availableDatesSet = useMemo(() => {
-    return new Set(
-      availability
-        .filter(d => d.available)
-        .map(d => d.date)
-    );
+    return new Set(availability.filter((d) => d.available).map((d) => d.date));
   }, [availability]);
 
   // Función para verificar si una fecha está disponible (optimizada)
-  const isDateAvailable = useCallback((date: Date) => {
-    const dateStr = dateToString(date);
-    return availableDatesSet.has(dateStr);
-  }, [availableDatesSet, dateToString]);
+  const isDateAvailable = useCallback(
+    (date: Date) => {
+      const dateStr = dateToString(date);
+      return availableDatesSet.has(dateStr);
+    },
+    [availableDatesSet, dateToString]
+  );
 
   // Función para deshabilitar fechas no disponibles (memoizada)
-  const disabledDays = useCallback((date: Date) => {
-    return !isDateAvailable(date);
-  }, [isDateAvailable]);
+  const disabledDays = useCallback(
+    (date: Date) => {
+      return !isDateAvailable(date);
+    },
+    [isDateAvailable]
+  );
 
   // Memoizar el handler de selección para evitar re-renders
-  const handleRangeSelect = useCallback((range: { from?: Date; to?: Date } | undefined) => {
-    if (range?.from) {
-      const checkIn = dateToString(range.from);
-      
-      // Verificar si from y to son la misma fecha
-      if (range.to) {
-        const checkOut = dateToString(range.to);
-        
-        // Si from y to son iguales, solo es la primera selección
-        if (checkIn === checkOut) {
-          onDatesChange({
-            ...selectedDates,
-            checkIn,
-            checkOut: '',
-          });
+  const handleRangeSelect = useCallback(
+    (range: { from?: Date; to?: Date } | undefined) => {
+      if (range?.from) {
+        const checkIn = dateToString(range.from);
+
+        // Verificar si from y to son la misma fecha
+        if (range.to) {
+          const checkOut = dateToString(range.to);
+
+          // Si from y to son iguales, solo es la primera selección
+          if (checkIn === checkOut) {
+            onDatesChange({
+              ...selectedDates,
+              checkIn,
+              checkOut: "",
+            });
+          } else {
+            // Fechas diferentes - rango completo
+            onDatesChange({
+              ...selectedDates,
+              checkIn,
+              checkOut,
+            });
+            setCalendarOpen(false);
+          }
         } else {
-          // Fechas diferentes - rango completo
+          // Solo from, sin to
           onDatesChange({
             ...selectedDates,
             checkIn,
-            checkOut,
+            checkOut: "",
           });
-          setCalendarOpen(false);
         }
       } else {
-        // Solo from, sin to
+        // Si se deselecciona todo, limpiar
         onDatesChange({
           ...selectedDates,
-          checkIn,
-          checkOut: '',
+          checkIn: "",
+          checkOut: "",
         });
       }
-    } else {
-      // Si se deselecciona todo, limpiar
-      onDatesChange({
-        ...selectedDates,
-        checkIn: '',
-        checkOut: '',
-      });
-    }
-  }, [selectedDates, onDatesChange, dateToString]);
-
-
+    },
+    [selectedDates, onDatesChange, dateToString]
+  );
 
   return (
-
     <div className={`sticky top-24 ${className}`}>
-
       <div className="border border-gray-300 rounded-xl p-6 shadow-lg bg-white">
-
         {/* Precio y rating */}
 
         <div className="mb-6">
-
           <div className="flex items-baseline gap-1 mb-2">
-
             <span className="text-2xl font-bold">
-
               {formatCurrencyValue(basePriceNight)}
-
             </span>
 
             <span className="text-gray-600">/ noche</span>
-
           </div>
 
-          
-
           <div className="flex items-center gap-1 text-sm">
-
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
 
             <span className="font-medium">
-
-              {typeof averageRating === 'number' ? averageRating.toFixed(1) : '0.0'}
-
+              {typeof averageRating === "number"
+                ? averageRating.toFixed(1)
+                : "0.0"}
             </span>
 
             <span className="text-gray-600">
-
-              ({typeof totalReviews === 'number' ? totalReviews : 0} resenas)
-
+              ({typeof totalReviews === "number" ? totalReviews : 0} resenas)
             </span>
-
           </div>
-
         </div>
-
-
 
         {/* Formulario de fechas */}
         <div className="space-y-4 mb-6">
@@ -303,8 +269,12 @@ export function PropertyBookingCard({
                     <div className="flex items-center justify-center gap-2 text-sm cursor-pointer">
                       <CalendarIcon className="h-4 w-4" />
                       {selectedDates.checkIn
-                        ? format(stringToDate(selectedDates.checkIn), 'dd/MM/yyyy', { locale: es })
-                        : 'Agregar fecha'}
+                        ? format(
+                            stringToDate(selectedDates.checkIn),
+                            "dd/MM/yyyy",
+                            { locale: es }
+                          )
+                        : "Agregar fecha"}
                     </div>
                   </div>
                   <div className="p-3">
@@ -314,14 +284,23 @@ export function PropertyBookingCard({
                     <div className="flex items-center justify-center gap-2 text-sm cursor-pointer">
                       <CalendarIcon className="h-4 w-4" />
                       {selectedDates.checkOut
-                        ? format(stringToDate(selectedDates.checkOut), 'dd/MM/yyyy', { locale: es })
-                        : 'Agregar fecha'}
+                        ? format(
+                            stringToDate(selectedDates.checkOut),
+                            "dd/MM/yyyy",
+                            { locale: es }
+                          )
+                        : "Agregar fecha"}
                     </div>
                   </div>
                 </div>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 [&_button]:cursor-pointer" align="center" side="bottom" sideOffset={4}>
+            <PopoverContent
+              className="w-auto p-0 [&_button]:cursor-pointer"
+              align="center"
+              side="bottom"
+              sideOffset={4}
+            >
               <div>
                 <Calendar
                   mode="range"
@@ -339,8 +318,8 @@ export function PropertyBookingCard({
                       onClick={() => {
                         onDatesChange({
                           ...selectedDates,
-                          checkIn: '',
-                          checkOut: '',
+                          checkIn: "",
+                          checkOut: "",
                         });
                       }}
                       className="w-full text-sm text-gray-600 hover:text-gray-900 underline cursor-pointer"
@@ -353,114 +332,87 @@ export function PropertyBookingCard({
             </PopoverContent>
           </Popover>
 
-
-
           <div className="border border-gray-300 rounded-lg p-3">
-
             <label className="block text-xs font-medium text-gray-700 mb-1">
-
               HUESPEDES
-
             </label>
 
             <select
-
               value={guestsCount}
-
-              onChange={(e) => handleGuestsChange(parseInt(e.target.value, 10) || 1)}
-
+              onChange={(e) =>
+                handleGuestsChange(parseInt(e.target.value, 10) || 1)
+              }
               className="w-full text-sm border-none outline-none bg-transparent"
-
             >
-
-              {Array.from({ length: maxGuests }, (_, index) => index + 1).map((value) => (
-
-                <option key={value} value={value}>
-
-                  {value} huesped{value !== 1 ? 'es' : ''}
-
-                </option>
-
-              ))}
-
+              {Array.from({ length: maxGuests }, (_, index) => index + 1).map(
+                (value) => (
+                  <option key={value} value={value}>
+                    {value} huesped{value !== 1 ? "es" : ""}
+                  </option>
+                )
+              )}
             </select>
-
           </div>
-
+          {(selectedDates.checkIn || selectedDates.checkOut) && (
+            <div className="p-3 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  onDatesChange({
+                    ...selectedDates,
+                    checkIn: "",
+                    checkOut: "",
+                  });
+                }}
+                className="w-full text-sm text-gray-600 hover:text-gray-900 underline cursor-pointer"
+              >
+                Limpiar fechas
+              </button>
+            </div>
+          )}
         </div>
-
-
 
         {/* Boton de reserva */}
 
         <Button
-
           className="w-full mb-4"
-
           size="lg"
-
           disabled={!canReserve}
-
           onClick={onReserve}
-
         >
-
-          {canReserve ? 'Reservar' : 'Selecciona fechas'}
-
+          {canReserve ? "Reservar" : "Selecciona fechas"}
         </Button>
 
-
-
         <p className="text-center text-sm text-gray-600 mb-4">
-
           No se realizara ningun cargo todavia
-
         </p>
-
-
 
         {/* Desglose de precios */}
 
         {canReserve && (
-
           <div className="space-y-3 pt-4 border-t border-gray-200">
-
             <div className="flex justify-between">
-
               <span className="text-gray-600">
-
-                {formatCurrencyValue(basePriceNight)} x {nightsCount} noche{nightsCount > 1 ? 's' : ''}
-
+                {formatCurrencyValue(basePriceNight)} x {nightsCount} noche
+                {nightsCount > 1 ? "s" : ""}
               </span>
 
               <span>{formatCurrencyValue(totalPrice)}</span>
-
             </div>
 
             <div className="flex justify-between">
-
               <span className="text-gray-600">Tarifa de servicio</span>
 
               <span>{formatCurrencyValue(serviceFee)}</span>
-
             </div>
 
             <div className="flex justify-between font-medium pt-3 border-t border-gray-200">
-
               <span>Total</span>
 
               <span>{formatCurrencyValue(grandTotal)}</span>
-
             </div>
-
           </div>
-
         )}
-
       </div>
-
     </div>
-
   );
-
 }
