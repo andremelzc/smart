@@ -260,25 +260,17 @@ export default function PropertyPage({ params }: PropertyPageProps) {
         onPay={handlePay}
         property={{
           title: property.title || "Propiedad",
-
           city: property.city,
-
           stateRegion: property.stateRegion,
-
           country: property.country,
-
           images: property.images,
-
           reviews: property.reviews,
         }}
         selectedDates={selectedDates}
         pricing={{
           nightsCount,
-
           totalPrice,
-
           serviceFee,
-
           grandTotal,
         }}
         currencyFormatter={formatCurrencyValue}
