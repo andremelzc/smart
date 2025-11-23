@@ -10,148 +10,59 @@ import {
   useState,
   startTransition,
 } from "react";
-
+import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
-
-import { usePropertySearch } from "@/src/hooks/usePropertySearch";
-
-import type { PropertyFilterDto } from "@/src/types/dtos/properties.dto";
-
 import { useSearchParams } from "next/navigation";
 
-import { PropertySearchCard } from "@/src/components/features/properties/PropertySearchCard";
-
-import dynamic from "next/dynamic";
-
+import { FilterModal } from "@/src/components/search/FilterModal";
+import {
+  type MapRenderer,
+  SearchResults,
+} from "@/src/components/search/SearchResults";
+import type {
+  AmenityCategory,
+  AmenityOption,
+  FilterFormState,
+  OrderByValue,
+  QuantityFieldKey,
+} from "@/src/components/search/types";
 import type { MapBounds } from "@/src/components/features/properties/PropertySearchMap";
-
-// Importacion dinamica del mapa para evitar problemas de SSR
+import { usePropertySearch } from "@/src/hooks/usePropertySearch";
+import type { PropertyFilterDto } from "@/src/types/dtos/properties.dto";
 
 const PropertySearchMap = dynamic(
   () =>
     import("@/src/components/features/properties/PropertySearchMap").then(
       (mod) => mod.PropertySearchMap
     ),
-
   {
     ssr: false,
-
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+      <div className="flex h-96 items-center justify-center rounded-lg bg-gray-100">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
       </div>
     ),
   }
-);
-
-type QuantityFieldKey = "rooms" | "beds" | "baths";
-type OrderByValue = "" | "price" | "rating";
-
-type AmenityOption = {
-  id: number;
-
-  label: string;
-};
+) as MapRenderer;
 
 type AmenityApiItem = {
   id?: unknown;
-
   label?: unknown;
 };
 
-type AmenityApiResponse = {
-  data?: AmenityApiItem[];
+type AmenityCategoryApiItem = {
+  id?: unknown;
+  name?: unknown;
+  categoria?: unknown;
+  amenities?: unknown;
+};
 
+type AmenityApiResponse = {
+  data?: AmenityCategoryApiItem[];
   message?: string;
 };
 
-const FALLBACK_AMENITIES: AmenityOption[] = [
-  { id: 53, label: "Wi-Fi" },
-  { id: 54, label: "Estacionamiento" },
-  { id: 55, label: "Piscina" },
-  { id: 56, label: "Desayuno" },
-  { id: 57, label: "Aire acondicionado" },
-];
-
 const BOUNDS_TOLERANCE = 1e-5;
-
-const AMENITY_GROUPS = [
-  {
-    title: "Servicios Básicos",
-    // Pon aquí los nombres EXACTOS tal cual vienen de tu DB
-    keywords: [
-      "Wifi",
-      "TV",
-      "Cocina",
-      "Lavadora",
-      "Área de trabajo",
-      "Secadora",
-    ],
-  },
-  {
-    title: "Climatización",
-    keywords: ["Aire acondicionado", "Calefacción", "Chimenea interior"],
-  },
-  {
-    title: "Instalaciones y Relax",
-    keywords: ["Piscina", "Gimnasio", "Jacuzzi", "Estacionamiento", "Ascensor"],
-  },
-  {
-    title: "Exterior",
-    keywords: ["Barbacoa", "Patio o balcón", "Jardín"],
-  },
-];
-
-const QUANTITY_FIELDS: Array<{
-  key: QuantityFieldKey;
-  label: string;
-  description: string;
-}> = [
-  {
-    key: "rooms",
-    label: "Habitaciones",
-    description: "Numero de habitaciones disponibles",
-  },
-  {
-    key: "beds",
-    label: "Camas",
-    description: "Total de camas para los huespedes",
-  },
-  { key: "baths", label: "Banos", description: "Cantidad de banos completos" },
-];
-
-const ORDER_OPTIONS: Array<{
-  value: Exclude<OrderByValue, "">;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "price",
-    label: "Precio",
-    description: "Ordena por tarifa base de menor a mayor.",
-  },
-  {
-    value: "rating",
-    label: "Calificacion",
-    description: "Destaca primero las mejores reseñas.",
-  },
-];
-
-type FilterFormState = {
-  city: string;
-  startDate: string;
-  endDate: string;
-  minPrice: string;
-  maxPrice: string;
-  rooms: string;
-  beds: string;
-  baths: string;
-  adults: string;
-  children: string;
-  babies: string;
-  pets: string;
-  orderBy: OrderByValue;
-};
 
 const EMPTY_FORM: FilterFormState = {
   city: "",
@@ -175,7 +86,6 @@ const parseNumericString = (
   if (!value) return undefined;
 
   const parsed = Number(value);
-
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
@@ -183,7 +93,6 @@ const parsePositiveInteger = (
   value: string | null | undefined
 ): number | undefined => {
   const parsed = parseNumericString(value);
-
   return typeof parsed === "number" && parsed > 0 ? parsed : undefined;
 };
 
@@ -236,53 +145,36 @@ const areBoundsEqual = (a: MapBounds | null, b: MapBounds | null) => {
   );
 };
 
-// Componente separado que usa useSearchParams
-
 function PropertySearchContent() {
   const { search, results, loading } = usePropertySearch();
-
   const searchParams = useSearchParams();
 
   const [formValues, setFormValues] = useState<FilterFormState>({
     ...EMPTY_FORM,
   });
-
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
-
-  const [amenityOptions, setAmenityOptions] =
-    useState<AmenityOption[]>(FALLBACK_AMENITIES);
-
+  const [amenityCategories, setAmenityCategories] = useState<AmenityCategory[]>(
+    []
+  );
   const [amenitiesLoading, setAmenitiesLoading] = useState(true);
-
   const [amenitiesError, setAmenitiesError] = useState<string | null>(null);
-
   const [appliedFilters, setAppliedFilters] =
     useState<PropertyFilterDto | null>(null);
-
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
-
   const [showFilters, setShowFilters] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
 
   const searchParamsKey = searchParams.toString();
 
   useEffect(() => {
     if (!searchParamsKey) {
-      // Use startTransition to batch state updates and prevent cascading renders
-
       startTransition(() => {
         setFormValues({ ...EMPTY_FORM });
-
         setSelectedAmenities([]);
-
         setMapBounds(null);
-
         setAppliedFilters(null);
-
         setError(null);
       });
-
       return;
     }
 
@@ -302,59 +194,37 @@ function PropertySearchContent() {
 
     const nextForm: FilterFormState = {
       ...EMPTY_FORM,
-
       city: params.get("city") ?? "",
-
       startDate: params.get("startDate") ?? "",
-
       endDate: params.get("endDate") ?? "",
-
       minPrice: params.get("minPrice") ?? "",
-
       maxPrice: params.get("maxPrice") ?? "",
-
       rooms: params.get("rooms") ?? "",
-
       beds: params.get("beds") ?? "",
-
       baths: params.get("baths") ?? "",
-
       adults: params.get("adults") ?? "0",
-
       children: params.get("children") ?? "0",
-
       babies: params.get("babies") ?? "0",
-
       pets: params.get("pets") ?? "0",
-
       orderBy: orderByValue,
     };
 
     const amenityValues = params.getAll("amenities");
-
     const amenityTokens =
       amenityValues.length > 0
         ? amenityValues
         : (params.get("amenities") ?? "")
-
             .split(",")
-
             .map((token) => token.trim())
-
             .filter(Boolean);
 
     const parsedAmenityIds = amenityTokens
-
       .map((value) => Number(value))
-
       .filter((value) => Number.isInteger(value) && value > 0);
 
     const latMin = parseNumericString(params.get("latMin"));
-
     const latMax = parseNumericString(params.get("latMax"));
-
     const lngMin = parseNumericString(params.get("lngMin"));
-
     const lngMax = parseNumericString(params.get("lngMax"));
 
     const initialBounds =
@@ -365,15 +235,10 @@ function PropertySearchContent() {
         ? { latMin, latMax, lngMin, lngMax }
         : null;
 
-    // Batch all state updates to prevent cascading renders
-
     startTransition(() => {
       setFormValues(nextForm);
-
       setSelectedAmenities(parsedAmenityIds);
-
       setMapBounds(initialBounds);
-
       setError(null);
     });
 
@@ -387,15 +252,12 @@ function PropertySearchContent() {
       .then(() => {
         setAppliedFilters({
           ...initialFilters,
-
           amenities: initialFilters.amenities
             ? [...initialFilters.amenities]
             : undefined,
-
           orderBy: initialFilters.orderBy,
         });
       })
-
       .catch((err) => {
         if (err instanceof Error) {
           setError(err.message);
@@ -409,7 +271,6 @@ function PropertySearchContent() {
     const handleOpenFilters = () => setShowFilters(true);
 
     window.addEventListener("toggle-search-filters", handleOpenFilters);
-
     return () => {
       window.removeEventListener("toggle-search-filters", handleOpenFilters);
     };
@@ -429,12 +290,10 @@ function PropertySearchContent() {
     window.addEventListener("keydown", handleKeyDown);
 
     const originalOverflow = document.body.style.overflow;
-
     document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-
       document.body.style.overflow = originalOverflow;
     };
   }, [showFilters]);
@@ -444,14 +303,13 @@ function PropertySearchContent() {
 
     setFormValues((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? (checked ? "1" : "0") : value,
     }));
   };
 
   const adjustQuantityField = (field: QuantityFieldKey, delta: number) => {
     setFormValues((prev) => {
       const current = Number(prev[field]) || 0;
-
       const nextValue = Math.max(0, current + delta);
 
       return { ...prev, [field]: String(nextValue) };
@@ -461,7 +319,6 @@ function PropertySearchContent() {
   const handleOrderBySelect = (value: "price" | "rating") => {
     setFormValues((prev) => ({
       ...prev,
-
       orderBy: prev.orderBy === value ? "" : value,
     }));
   };
@@ -480,11 +337,9 @@ function PropertySearchContent() {
     const fetchAmenities = async () => {
       try {
         setAmenitiesLoading(true);
-
         setAmenitiesError(null);
 
         const response = await fetch("/api/amenities");
-
         const payload = (await response
           .json()
           .catch(() => ({}))) as AmenityApiResponse;
@@ -492,24 +347,21 @@ function PropertySearchContent() {
         if (!response.ok) {
           const message =
             payload.message ?? "No se pudo obtener la lista de amenities.";
-
           throw new Error(message);
         }
 
-        const rawItems = Array.isArray(payload.data) ? payload.data : [];
+        const rawCategories = Array.isArray(payload.data) ? payload.data : [];
 
         const toAmenityOption = (
           item: AmenityApiItem
         ): AmenityOption | null => {
           const idValue = item.id;
-
           const labelValue = item.label;
 
           const id =
             typeof idValue === "number" || typeof idValue === "string"
               ? Number(idValue)
               : NaN;
-
           const label = typeof labelValue === "string" ? labelValue.trim() : "";
 
           if (!Number.isInteger(id) || id <= 0 || label.length === 0) {
@@ -519,31 +371,57 @@ function PropertySearchContent() {
           return { id, label };
         };
 
-        const nextOptions = rawItems
+        const toAmenityCategory = (
+          item: AmenityCategoryApiItem
+        ): AmenityCategory | null => {
+          const idValue =
+            (item?.id as unknown) ?? (item as { id_categoria?: unknown })?.id_categoria;
+          const nameValue =
+            (item?.name as unknown) ??
+            (item as { categoria?: unknown })?.categoria;
 
-          .map(toAmenityOption)
+          const id =
+            typeof idValue === "number" || typeof idValue === "string"
+              ? Number(idValue)
+              : NaN;
+          const name =
+            typeof nameValue === "string" ? nameValue.trim() : "";
 
-          .filter((item): item is AmenityOption => item !== null);
+          if (!Number.isInteger(id) || id <= 0 || name.length === 0) {
+            return null;
+          }
+
+          const rawAmenities = Array.isArray(item?.amenities)
+            ? (item.amenities as AmenityApiItem[])
+            : [];
+
+          const amenities = rawAmenities
+            .map(toAmenityOption)
+            .filter((amenity): amenity is AmenityOption => amenity !== null);
+
+          if (amenities.length === 0) {
+            return null;
+          }
+
+          return { id, name, amenities };
+        };
+
+        const nextCategories = rawCategories
+          .map(toAmenityCategory)
+          .filter((category): category is AmenityCategory => category !== null);
 
         if (!cancelled) {
-          setAmenityOptions(
-            nextOptions.length > 0 ? nextOptions : FALLBACK_AMENITIES
-          );
+          setAmenityCategories(nextCategories);
         }
       } catch (err: unknown) {
         if (cancelled) {
           return;
         }
 
-        setAmenityOptions((prev) =>
-          prev.length > 0 ? prev : FALLBACK_AMENITIES
-        );
-
         const message =
           err instanceof Error
             ? err.message
             : "No se pudo obtener la lista de amenities.";
-
         setAmenitiesError(message);
       } finally {
         if (!cancelled) {
@@ -565,7 +443,6 @@ function PropertySearchContent() {
     }
 
     const start = new Date(appliedFilters.startDate);
-
     const end = new Date(appliedFilters.endDate);
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
@@ -573,7 +450,6 @@ function PropertySearchContent() {
     }
 
     const diffMs = end.getTime() - start.getTime();
-
     const nights = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
     return nights > 0 ? nights : null;
@@ -588,7 +464,6 @@ function PropertySearchContent() {
       }
 
       setMapBounds(nextBounds);
-
       setError(null);
 
       const nextFilters = buildFilters(
@@ -599,14 +474,11 @@ function PropertySearchContent() {
 
       try {
         await search(nextFilters);
-
         setAppliedFilters({
           ...nextFilters,
-
           amenities: nextFilters.amenities
             ? [...nextFilters.amenities]
             : undefined,
-
           orderBy: nextFilters.orderBy,
         });
       } catch (err) {
@@ -617,7 +489,6 @@ function PropertySearchContent() {
         }
       }
     },
-
     [formValues, mapBounds, search, selectedAmenities]
   );
 
@@ -634,17 +505,13 @@ function PropertySearchContent() {
 
     try {
       await search(requestFilters);
-
       setAppliedFilters({
         ...requestFilters,
-
         amenities: requestFilters.amenities
           ? [...requestFilters.amenities]
           : undefined,
-
         orderBy: requestFilters.orderBy,
       });
-
       closeFilters();
     } catch (err) {
       if (err instanceof Error) {
@@ -657,13 +524,9 @@ function PropertySearchContent() {
 
   const handleReset = () => {
     setFormValues({ ...EMPTY_FORM });
-
     setSelectedAmenities([]);
-
     setMapBounds(null);
-
     setAppliedFilters(null);
-
     setError(null);
   };
 
@@ -680,383 +543,44 @@ function PropertySearchContent() {
         </p>
       </header>
 
-      {showFilters && (
-        <div className="fixed inset-0 z-40 flex items-start justify-center px-4 pt-32 pb-10">
-          <div
-            className="absolute inset-0 bg-gray-dark-900/40 backdrop-blur-sm"
-            onClick={closeFilters}
-          />
+      <FilterModal
+        open={showFilters}
+        formValues={formValues}
+        selectedAmenities={selectedAmenities}
+        amenityCategories={amenityCategories}
+        amenitiesLoading={amenitiesLoading}
+        amenitiesError={amenitiesError}
+        submitError={error}
+        loadingResults={loading}
+        onClose={closeFilters}
+        onInputChange={handleInputChange}
+        onQuantityAdjust={adjustQuantityField}
+        onOrderBySelect={handleOrderBySelect}
+        onAmenityToggle={handleAmenityToggle}
+        onReset={handleReset}
+        onSubmit={handleSubmit}
+      />
 
-          <form
-            onSubmit={handleSubmit}
-            className="relative z-50 flex w-full max-w-3xl flex-col gap-6 rounded-3xl bg-white p-6 shadow-2xl"
-          >
-            <header className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-dark-800">
-                  Filtros
-                </h2>
-
-                <p className="text-sm text-gray-dark-500">
-                  Personaliza tu busqueda con criterios avanzados.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeFilters}
-                className="h-10 w-10 rounded-full border border-blue-light-200 text-gray-dark-500 transition-all hover:border-blue-light-300 hover:text-gray-dark-700"
-                aria-label="Cerrar filtros"
-              ></button>
-            </header>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Ciudad
-                <input
-                  name="city"
-                  value={formValues.city}
-                  onChange={handleInputChange}
-                  placeholder="A donde quieres ir?"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Precio minimo
-                <input
-                  name="minPrice"
-                  value={formValues.minPrice}
-                  onChange={handleInputChange}
-                  placeholder="S/"
-                  inputMode="decimal"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
-                Precio maximo
-                <input
-                  name="maxPrice"
-                  value={formValues.maxPrice}
-                  onChange={handleInputChange}
-                  placeholder="S/"
-                  inputMode="decimal"
-                  className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
-                />
-              </label>
-            </div>
-
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-gray-dark-600">
-                Espacios disponibles
-              </h2>
-
-              <div className="flex flex-col gap-3">
-                {QUANTITY_FIELDS.map(({ key, label, description }) => {
-                  const value = Number(formValues[key]) || 0;
-
-                  return (
-                    <div
-                      key={key}
-                      className="mx-auto flex w-full max-w-[520px] items-center justify-between rounded-2xl border border-blue-light-150 bg-blue-light-50 px-6 py-4"
-                    >
-                      <div className="flex-1 pr-6">
-                        <p className="text-sm font-semibold text-gray-dark-700">
-                          {label}
-                        </p>
-
-                        <p className="text-xs text-gray-dark-500">
-                          {description}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => adjustQuantityField(key, -1)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-light-200 text-blue-light-600 transition-colors hover:border-blue-light-300 disabled:cursor-not-allowed disabled:border-blue-light-100 disabled:text-blue-light-200"
-                          aria-label={`Disminuir ${label}`}
-                          disabled={value === 0}
-                        >
-                          -
-                        </button>
-
-                        <span className="w-6 text-center text-sm font-semibold text-gray-dark-700">
-                          {value}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() => adjustQuantityField(key, 1)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-light-200 text-blue-light-600 transition-colors hover:border-blue-light-300"
-                          aria-label={`Incrementar ${label}`}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-gray-dark-600">
-                Ordenar por
-              </h2>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
-                {ORDER_OPTIONS.map(({ value, label, description }) => {
-                  const isActive = formValues.orderBy === value;
-
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => handleOrderBySelect(value)}
-                      className={`flex flex-1 items-start gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
-                        isActive
-                          ? "border-blue-vivid-500 bg-blue-vivid-50 text-blue-vivid-700 shadow-sm"
-                          : "border-blue-light-150 bg-blue-light-50 text-gray-dark-600 hover:border-blue-light-300"
-                      }`}
-                      aria-pressed={isActive}
-                    >
-                      <span
-                        className={`mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border ${
-                          isActive
-                            ? "border-blue-vivid-500 bg-blue-vivid-500"
-                            : "border-blue-light-300 bg-white"
-                        }`}
-                        aria-hidden="true"
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            isActive ? "bg-white" : "bg-transparent"
-                          }`}
-                        />
-                      </span>
-
-                      <span className="flex-1">
-                        <p className="text-sm font-semibold text-gray-dark-700">
-                          {label}
-                        </p>
-
-                        <p className="text-xs text-gray-dark-500">
-                          {description}
-                        </p>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="space-y-5">
-              <h2 className="text-sm font-semibold text-gray-dark-600">
-                Amenities
-              </h2>
-
-              {amenitiesError && (
-                <p className="text-sm text-red-500">{amenitiesError}</p>
-              )}
-
-              {amenitiesLoading ? (
-                <span className="flex items-center gap-2 text-sm text-gray-dark-500">
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-light-500" />
-                  Cargando amenities...
-                </span>
-              ) : amenityOptions.length === 0 ? (
-                <span className="text-sm text-gray-dark-500">
-                  No hay amenities disponibles.
-                </span>
-              ) : (
-                <div className="space-y-4">
-                  {/* Renderizamos los grupos definidos */}
-                  {AMENITY_GROUPS.map((group) => {
-                    // Filtramos los amenities que pertenecen a este grupo
-                    const groupAmenities = amenityOptions.filter((opt) =>
-                      group.keywords.includes(opt.label)
-                    );
-
-                    // Si no hay amenities de este grupo disponibles, no renderizamos nada
-                    if (groupAmenities.length === 0) return null;
-
-                    return (
-                      <div key={group.title} className="space-y-2">
-                        {/* Subtítulo de Categoría (Solución Heurística #8) */}
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                          {group.title}
-                        </h3>
-
-                        <div className="flex w-full flex-wrap gap-2">
-                          {groupAmenities.map((amenity) => {
-                            const isSelected = selectedAmenities.includes(
-                              amenity.id
-                            );
-                            return (
-                              <button
-                                type="button"
-                                key={amenity.id}
-                                title={amenity.label}
-                                onClick={() => handleAmenityToggle(amenity.id)}
-                                className={`flex flex-1 basis-32 items-center justify-center rounded-full px-3 py-2 text-center text-sm font-medium transition-all ${
-                                  isSelected
-                                    ? "bg-blue-vivid-500 text-white shadow-md"
-                                    : "border border-blue-light-200 bg-blue-light-50 text-blue-light-700 hover:border-blue-light-300"
-                                }`}
-                              >
-                                <span className="max-w-full truncate whitespace-nowrap">
-                                  {amenity.label}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Renderizamos los "Otros" (Amenities que no cayeron en ningún grupo) */}
-                  {(() => {
-                    const allKeywords = AMENITY_GROUPS.flatMap(
-                      (g) => g.keywords
-                    );
-                    const otherAmenities = amenityOptions.filter(
-                      (opt) => !allKeywords.includes(opt.label)
-                    );
-
-                    if (otherAmenities.length === 0) return null;
-
-                    return (
-                      <div className="space-y-2">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                          Otros Servicios
-                        </h3>
-                        <div className="flex w-full flex-wrap gap-2">
-                          {otherAmenities.map((amenity) => {
-                            const isSelected = selectedAmenities.includes(
-                              amenity.id
-                            );
-                            return (
-                              <button
-                                type="button"
-                                key={amenity.id}
-                                onClick={() => handleAmenityToggle(amenity.id)}
-                                className={`flex flex-1 basis-32 items-center justify-center rounded-full px-3 py-2 text-center text-sm font-medium transition-all ${
-                                  isSelected
-                                    ? "bg-blue-vivid-500 text-white shadow-md"
-                                    : "border border-blue-light-200 bg-blue-light-50 text-blue-light-700 hover:border-blue-light-300"
-                                }`}
-                              >
-                                <span className="max-w-full truncate whitespace-nowrap">
-                                  {amenity.label}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </section>
-
-            <footer className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-col gap-2">
-                {error && <span className="text-sm text-red-500">{error}</span>}
-
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="text-sm font-semibold text-blue-light-600 underline-offset-4 hover:underline"
-                >
-                  Limpiar filtros
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <button
-                  type="button"
-                  onClick={closeFilters}
-                  className="rounded-2xl border border-blue-light-200 px-5 py-3 text-sm font-semibold text-gray-dark-600 transition-all hover:border-blue-light-300"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-vivid-500 to-blue-vivid-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:from-blue-vivid-600 hover:to-blue-vivid-700 focus:ring-2 focus:ring-blue-light-200"
-                >
-                  {loading ? "Buscando..." : "Mostrar resultados"}
-                </button>
-              </div>
-            </footer>
-          </form>
-        </div>
-      )}
-
-      <section className="space-y-4">
-        <header className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-dark-700">
-            Resultados
-          </h2>
-
-          {loading && (
-            <Loader2 className="h-5 w-5 animate-spin text-blue-light-500" />
-          )}
-        </header>
-
-        {error && !showFilters && (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </p>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)] lg:items-start">
-          <div className="space-y-4">
-            {!loading && results.length === 0 && !error ? (
-              <p className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-6 text-center text-gray-dark-500">
-                Usa los filtros para iniciar una busqueda.
-              </p>
-            ) : (
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {results.map((item, index) => (
-                  <PropertySearchCard
-                    key={index}
-                    data={item}
-                    index={index}
-                    startDate={appliedFilters?.startDate}
-                    endDate={appliedFilters?.endDate}
-                    nights={nightsCount ?? undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="h-[320px] w-full lg:sticky lg:top-28 lg:h-[70vh]">
-            <PropertySearchMap
-              items={results}
-              bounds={mapBounds}
-              loading={loading}
-              onBoundsChange={handleMapBoundsChange}
-            />
-          </div>
-        </div>
-      </section>
+      <SearchResults
+        results={results}
+        loading={loading}
+        error={error}
+        showFilters={showFilters}
+        mapBounds={mapBounds}
+        onBoundsChange={handleMapBoundsChange}
+        appliedFilters={appliedFilters}
+        nightsCount={nightsCount}
+        MapComponent={PropertySearchMap}
+      />
     </div>
   );
 }
-
-// Componente principal con Suspense boundary
 
 export default function PropertySearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       }
