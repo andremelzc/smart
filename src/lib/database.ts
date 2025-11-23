@@ -29,10 +29,11 @@ async function getPool(): Promise<oracledb.Pool> {
     } catch (err) {
       console.error("❌ Error al crear el pool de Oracle:", err);
       if (err instanceof Error) {
+        const oracleErr = err as Error & { code?: string };
         console.error("Detalles del error:", {
-          message: err.message,
-          code: (err as any).code,
-          stack: err.stack
+          message: oracleErr.message,
+          code: oracleErr.code,
+          stack: oracleErr.stack
         });
       }
       throw new Error("No se pudo inicializar la conexión a la base de datos.");

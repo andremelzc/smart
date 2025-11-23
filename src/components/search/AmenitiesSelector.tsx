@@ -19,22 +19,21 @@ export function AmenitiesSelector({
   error,
   onToggle,
 }: AmenitiesSelectorProps) {
-  const [openMap, setOpenMap] = useState<Record<string | number, boolean>>({});
+  const initialOpenMap = useMemo(() => {
+    if (categories.length === 0) return {};
+    
+    const map: Record<number, boolean> = {};
+    categories.forEach((category, index) => {
+      map[category.id] = index === 0;
+    });
+    return map;
+  }, [categories]);
+
+  const [openMap, setOpenMap] = useState<Record<string | number, boolean>>(initialOpenMap);
 
   useEffect(() => {
-    if (categories.length === 0) {
-      setOpenMap({});
-      return;
-    }
-
-    setOpenMap((prev) => {
-      const next: Record<number, boolean> = {};
-      categories.forEach((category, index) => {
-        next[category.id] = prev[category.id] ?? index === 0;
-      });
-      return next;
-    });
-  }, [categories]);
+    setOpenMap(initialOpenMap);
+  }, [initialOpenMap]);
 
   const sortedCategories = useMemo(() => {
     return categories
