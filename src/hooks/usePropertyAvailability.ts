@@ -51,9 +51,9 @@ export function usePropertyAvailability(
   const [error, setError] = useState<string | null>(null);
   const [isCheckingRange, setIsCheckingRange] = useState(false);
 
-  // Fechas por defecto
-  const start = startDate || new Date();
-  const end = endDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  // Convertir fechas a strings para dependencias estables
+  const startDateStr = startDate?.toISOString() ?? '';
+  const endDateStr = endDate?.toISOString() ?? '';
 
   /**
    * Formatear fecha a YYYY-MM-DD
@@ -72,6 +72,10 @@ export function usePropertyAvailability(
     setError(null);
 
     try {
+      // Usar las fechas pasadas o crear defaults
+      const start = startDate || new Date();
+      const end = endDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
       const params = new URLSearchParams({
         startDate: formatDate(start),
         endDate: formatDate(end),
@@ -155,7 +159,7 @@ export function usePropertyAvailability(
   useEffect(() => {
     fetchAvailability();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propertyId, start.getTime(), end.getTime()]);
+  }, [propertyId, startDateStr, endDateStr]);
 
   return {
     availability,

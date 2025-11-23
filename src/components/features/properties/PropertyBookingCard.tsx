@@ -56,9 +56,19 @@ export function PropertyBookingCard({
     to: undefined,
   });
 
-  const today = new Date();
-  const threeMonthsLater = new Date();
-  threeMonthsLater.setDate(threeMonthsLater.getDate() + 90);
+  // Memoizar fechas para evitar recrearlas en cada render
+  const today = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0); // Normalizar a medianoche
+    return date;
+  }, []);
+
+  const threeMonthsLater = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0); // Normalizar a medianoche
+    date.setDate(date.getDate() + 90);
+    return date;
+  }, []);
 
   const { availability } = usePropertyAvailability(
     propertyId,
@@ -129,8 +139,8 @@ export function PropertyBookingCard({
     currencyCode === "PEN"
       ? "S/"
       : currencyCode === "USD"
-      ? "$"
-      : `${currencyCode} `;
+        ? "$"
+        : `${currencyCode} `;
 
   const formatCurrencyValue = (value: number) =>
     `${formatCurrency}${value.toLocaleString("es-PE")}`;
@@ -270,10 +280,10 @@ export function PropertyBookingCard({
                       <CalendarIcon className="h-4 w-4" />
                       {selectedDates.checkIn
                         ? format(
-                            stringToDate(selectedDates.checkIn),
-                            "dd/MM/yyyy",
-                            { locale: es }
-                          )
+                          stringToDate(selectedDates.checkIn),
+                          "dd/MM/yyyy",
+                          { locale: es }
+                        )
                         : "Agregar fecha"}
                     </div>
                   </div>
@@ -285,10 +295,10 @@ export function PropertyBookingCard({
                       <CalendarIcon className="h-4 w-4" />
                       {selectedDates.checkOut
                         ? format(
-                            stringToDate(selectedDates.checkOut),
-                            "dd/MM/yyyy",
-                            { locale: es }
-                          )
+                          stringToDate(selectedDates.checkOut),
+                          "dd/MM/yyyy",
+                          { locale: es }
+                        )
                         : "Agregar fecha"}
                     </div>
                   </div>
