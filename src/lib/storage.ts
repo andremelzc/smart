@@ -1,26 +1,39 @@
 import { Storage } from '@google-cloud/storage';
 import { v4 as uuidv4 } from 'uuid';
 
-const base64Key = process.env.GCS_SERVICE_KEY_BASE64;
-
-if (!base64Key) {
-    throw new Error("Falta la variable de entorno GCS_SERVICE_KEY_BASE64.");
-}
-
-// Decodificar cadena
-const rawCredentials = Buffer.from(base64Key, 'base64').toString('utf-8');
-const credentials = JSON.parse(rawCredentials);
-
-// Configuración cliente GCS
-const storage = new Storage ({
-    credentials: credentials
-});
 const BUCKET_NAME = process.env.GCS_BUCKET_NAME;
+
+let storageInstance: Storage | null = null;
+
+function getStorageInstance(): Storage {
+    if (storageInstance) {
+        return storageInstance;
+    }
+
+    const base64Key = process.env.GCS_SERVICE_KEY_BASE64;
+
+    if (!base64Key) {
+        throw new Error("Falta la variable de entorno GCS_SERVICE_KEY_BASE64.");
+    }
+
+    // Decodificar cadena
+    const rawCredentials = Buffer.from(base64Key, 'base64').toString('utf-8');
+    const credentials = JSON.parse(rawCredentials);
+
+    // Configuración cliente GCS
+    storageInstance = new Storage({
+        credentials: credentials
+    });
+
+    return storageInstance;
+}
 
 export async function uploadFileToStorage (fileBuffer: Buffer, mimeType:string) : Promise<string> {
     if (!BUCKET_NAME) {
         throw new Error("Falta la variable de entorno GCS_BUCKET_NAME.");
     }
+
+    const storage = getStorageInstance();
 
     // generar nombre
     const fileExtension = mimeType.split('/')[1] || 'jpg';
