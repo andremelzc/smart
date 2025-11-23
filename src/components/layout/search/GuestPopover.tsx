@@ -8,6 +8,7 @@ export interface GuestCounts {
 interface GuestPopoverProps {
   counts: GuestCounts;
   onChange: (next: GuestCounts) => void;
+  onClear?: () => void;
 }
 
 export const GUEST_FIELDS: Array<{
@@ -21,14 +22,27 @@ export const GUEST_FIELDS: Array<{
   { key: 'pets', label: 'Mascotas', description: 'Incluye mascotas o animales de servicio' },
 ];
 
-export function GuestPopover({ counts, onChange }: GuestPopoverProps) {
+export function GuestPopover({ counts, onChange, onClear }: GuestPopoverProps) {
   const update = (key: keyof GuestCounts, delta: number) => {
     const nextValue = Math.max(0, counts[key] + delta);
     onChange({ ...counts, [key]: nextValue });
   };
 
+  const hasGuests = counts.adults > 0 || counts.children > 0 || counts.babies > 0 || counts.pets > 0;
+
   return (
     <div className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[320px] rounded-3xl border border-blue-light-200 bg-white p-4 shadow-xl">
+      {hasGuests && onClear && (
+        <div className="flex justify-end pb-3 border-b border-blue-light-100 mb-3">
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+          >
+            Limpiar todo
+          </button>
+        </div>
+      )}
       <div className="flex flex-col divide-y divide-blue-light-100">
         {GUEST_FIELDS.map(({ key, label, description }) => (
           <div key={key} className="flex items-center justify-between gap-4 py-3">

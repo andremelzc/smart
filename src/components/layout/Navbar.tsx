@@ -63,6 +63,94 @@ export default function Navbar() {
     pets: 0,
   });
 
+  // Clear handlers for each popover
+  const clearLocation = () => {
+    setSelectedLocation(null);
+    setActiveSearchPanel(null);
+  };
+
+  const clearDates = () => {
+    setCheckInDate(undefined);
+    setCheckOutDate(undefined);
+  };
+
+  const clearGuests = () => {
+    setGuestCounts({
+      adults: 0,
+      children: 0,
+      babies: 0,
+      pets: 0,
+    });
+  };
+
+  const formatDate = useCallback((dateString: string) => {
+    try {
+      const [year, month, day] = dateString.split("-");
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+      const months = [
+        "ene",
+        "feb",
+        "mar",
+        "abr",
+        "may",
+        "jun",
+        "jul",
+        "ago",
+        "sep",
+        "oct",
+        "nov",
+        "dic",
+      ];
+
+      return `${parseInt(day)} ${months[date.getMonth()]}`;
+    } catch {
+      return dateString;
+    }
+  }, []);
+
+  // Calcular total de huéspedes
+  const totalGuests = useMemo(
+    () =>
+      guestCounts.adults +
+      guestCounts.children +
+      guestCounts.babies +
+      guestCounts.pets,
+    [guestCounts]
+  );
+
+  // Función para obtener resumen de huéspedes
+  const getGuestSummary = () => {
+    const parts: string[] = [];
+
+    if (guestCounts.adults > 0) {
+      parts.push(
+        `${guestCounts.adults} ${
+          guestCounts.adults === 1 ? "adulto" : "adultos"
+        }`
+      );
+    }
+    if (guestCounts.children > 0) {
+      parts.push(
+        `${guestCounts.children} ${
+          guestCounts.children === 1 ? "niño" : "niños"
+        }`
+      );
+    }
+    if (guestCounts.babies > 0) {
+      parts.push(
+        `${guestCounts.babies} ${guestCounts.babies === 1 ? "bebé" : "bebés"}`
+      );
+    }
+    if (guestCounts.pets > 0) {
+      parts.push(
+        `${guestCounts.pets} ${guestCounts.pets === 1 ? "mascota" : "mascotas"}`
+      );
+    }
+
+    return parts.slice(0, 2).join(", "); // Mostrar máximo 2 categorías
+  };
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -364,6 +452,15 @@ export default function Navbar() {
                     <span className="block text-md font-semibold tracking-wide text-gray-dark-600">
                       Dónde
                     </span>
+                    <span
+                      className={`block text-sm font-semibold truncate ${
+                        selectedLocation
+                          ? "text-gray-dark-400"
+                          : "text-gray-dark-400"
+                      }`}
+                    >
+                      {selectedLocation?.title || "Agregar ubicación"}
+                    </span>
                   </button>
 
                   {activeSearchPanel === "location" && (
@@ -373,6 +470,8 @@ export default function Navbar() {
 
                         setActiveSearchPanel(null);
                       }}
+                      onClear={clearLocation}
+                      hasSelection={selectedLocation !== null}
                     />
                   )}
                 </div>
@@ -396,6 +495,19 @@ export default function Navbar() {
                     <span className="block text-md font-semibold tracking-wide text-gray-dark-600">
                       Fechas
                     </span>
+                    <span
+                      className={`block text-sm font-semibold truncate ${
+                        checkInDate && checkOutDate
+                          ? "text-gray-dark-400"
+                          : "text-gray-dark-400"
+                      }`}
+                    >
+                      {checkInDate && checkOutDate
+                        ? `${formatDate(checkInDate)} - ${formatDate(
+                            checkOutDate
+                          )}`
+                        : "Agregar fechas"}
+                    </span>
                   </button>
                 </div>
 
@@ -418,11 +530,23 @@ export default function Navbar() {
                     <span className="block text-md font-semibold tracking-wide text-gray-dark-600">
                       Quién
                     </span>
+                    <span
+                      className={`block text-sm font-semibold truncate ${
+                        totalGuests > 0
+                          ? "text-gray-dark-400"
+                          : "text-gray-dark-400"
+                      }`}
+                    >
+                      {totalGuests > 0
+                        ? getGuestSummary()
+                        : "Agregar huéspedes"}
+                    </span>
                   </button>
                   {activeSearchPanel === "guests" && (
                     <GuestPopover
                       counts={guestCounts}
                       onChange={(next) => setGuestCounts(next)}
+                      onClear={clearGuests}
                     />
                   )}
 
@@ -447,6 +571,7 @@ export default function Navbar() {
 
                     setCheckOutDate(checkOut ?? undefined);
                   }}
+                  onClear={clearDates}
                 />
               )}
             </div>
@@ -665,9 +790,20 @@ export default function Navbar() {
             {/* Donde */}
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide mb-2">
-                Donde
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide">
+                  Donde
+                </label>
+                {selectedLocation && (
+                  <button
+                    type="button"
+                    onClick={clearLocation}
+                    className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
 
               <div className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-blue-light-500 flex-shrink-0" />
@@ -697,9 +833,20 @@ export default function Navbar() {
             {/* Fechas */}
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide mb-2">
-                Fechas
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide">
+                  Fechas
+                </label>
+                {(checkInDate || checkOutDate) && (
+                  <button
+                    type="button"
+                    onClick={clearDates}
+                    className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex items-center gap-3">
@@ -733,9 +880,20 @@ export default function Navbar() {
             {/* Quien */}
 
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-dark-400 mb-2">
-                Quien
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-gray-dark-400">
+                  Quien
+                </p>
+                {totalGuests > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearGuests}
+                    className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+                  >
+                    Limpiar todo
+                  </button>
+                )}
+              </div>
 
               <div className="space-y-3">
                 {GUEST_FIELDS.map(({ key, label, description }) => (
