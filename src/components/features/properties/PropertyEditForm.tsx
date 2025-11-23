@@ -164,7 +164,7 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({
 
     if (formData.bathrooms && formData.bathrooms < 1) {
 
-      errors.bathrooms = 'Debe haber al menos 1 bano';
+      errors.bathrooms = 'Debe haber al menos 1 baño';
 
     }
 
