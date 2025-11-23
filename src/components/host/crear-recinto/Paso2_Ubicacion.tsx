@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Search, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -107,7 +107,7 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
   ];
 
   // Función auxiliar para encontrar distrito en el texto
-  const findDistrictInText = (text: string): string | null => {
+  const findDistrictInText = useCallback((text: string): string | null => {
     const normalized = text.toLowerCase();
     for (const district of LIMA_DISTRICTS) {
       if (normalized.includes(district.toLowerCase())) {
@@ -115,7 +115,7 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
       }
     }
     return null;
-  };
+  }, []);
 
   // Geocodificación inversa (coordenadas → dirección)
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
@@ -202,7 +202,7 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
     } finally {
       setIsGeocoding(false);
     }
-  }, [updateData]);
+  }, [updateData, findDistrictInText]);
 
   // Geocodificación directa (dirección → coordenadas)
   const handleSearch = async () => {
@@ -226,11 +226,11 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
       
       if (results && results.length > 0) {
         // Preferir resultados en Lima
-        let result = results.find((r: any) => {
+        const result = results.find((r: {address?: {state?: string; city?: string}; display_name?: string}) => {
           const addr = r.address || {};
           return addr.state?.toLowerCase().includes('lima') || 
                  addr.city?.toLowerCase().includes('lima') ||
-                 findDistrictInText(r.display_name);
+                 findDistrictInText(r.display_name || '');
         }) || results[0];
         
         const lat = parseFloat(result.lat);
@@ -443,6 +443,11 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
             )}
           </div>
         )}
+      </div>
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+        <strong>Nota:</strong> La geocodificación usa el servicio gratuito de OpenStreetMap (Nominatim). 
+        Para producción, considera usar un servicio más robusto como Google Maps Geocoding API.
       </div>
     </div>
   );

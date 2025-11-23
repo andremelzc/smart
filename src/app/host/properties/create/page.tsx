@@ -5,9 +5,8 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, X } from "lucide-react";
+import { CheckCircle, X, Loader2 } from "lucide-react";
 import { Paso1_TipoRecinto } from "@/src/components/host/crear-recinto/Paso1_TipoRecinto";
-import { Paso2_Ubicacion } from "@/src/components/host/crear-recinto/Paso2_Ubicacion";
 import { Paso3_Detalles } from "@/src/components/host/crear-recinto/Paso3_Detalles";
 import { Paso4_Servicios } from "@/src/components/host/crear-recinto/Paso4_Servicios";
 import { Paso5_Fotos } from "@/src/components/host/crear-recinto/Paso5_Fotos";
@@ -17,6 +16,23 @@ import { Paso8_Reglas } from "@/src/components/host/crear-recinto/Paso8_Reglas";
 import { Paso9_Resumen } from "@/src/components/host/crear-recinto/Paso9_Resumen";
 import { ProgressBar } from "@/src/components/host/crear-recinto/ProgressBar";
 import { CircleChevronLeft, CircleChevronRight } from "lucide-react";
+import dynamic from "next/dynamic";
+
+// Cargar Paso2_Ubicacion dinámicamente solo en el cliente
+const Paso2_Ubicacion = dynamic(
+  () => import("@/src/components/host/crear-recinto/Paso2_Ubicacion").then(
+    (mod) => ({ default: mod.Paso2_Ubicacion })
+  ),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-col items-center justify-center p-8 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-light-600" />
+        <span className="text-sm text-gray-600">Cargando mapa...</span>
+      </div>
+    )
+  }
+);
 
 const stepLabels = [
   "Tipo",
