@@ -1,4 +1,7 @@
 import oracledb from "oracledb";
+interface OracleError extends Error {
+  code?: string;
+}
 
 const testConnection = async () => {
   console.log("🔍 Probando conexión a Oracle DB...\n");
@@ -47,9 +50,10 @@ const testConnection = async () => {
     if (err instanceof Error) {
       console.error("\n📝 Detalles del error:");
       console.error(`   Mensaje: ${err.message}`);
-      console.error(`   Código: ${(err as any).code || "N/A"}`);
+      const oracleError = err as OracleError;
+      console.error(`   Código: ${oracleError.code || "N/A"}`);
 
-      if ((err as any).code === "NJS-510") {
+      if (oracleError.code === "NJS-510") {
         console.error("\n💡 Posibles causas:");
         console.error("   1. El servidor de base de datos no está accesible");
         console.error("   2. Firewall bloqueando la conexión");

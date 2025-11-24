@@ -3,16 +3,28 @@ import { Globe } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 mt-20">
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+    <footer className="mt-20 border-t border-gray-200 bg-gray-50">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Columna 1: Asistencia */}
           <div className="space-y-4">
             <h3 className="font-bold text-gray-900">Asistencia</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/help-center" className="hover:underline">Centro de ayuda</Link></li>
-              <li><Link href="/accessibility" className="hover:underline">Apoyo a personas con discapacidad</Link></li>
-              <li><Link href="/cancellation-options" className="hover:underline">Opciones de cancelación</Link></li>
+              <li>
+                <Link href="/help-center" className="hover:underline">
+                  Centro de ayuda
+                </Link>
+              </li>
+              <li>
+                <Link href="/accessibility" className="hover:underline">
+                  Apoyo a personas con discapacidad
+                </Link>
+              </li>
+              <li>
+                <Link href="/cancellation-options" className="hover:underline">
+                  Opciones de cancelación
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -20,8 +32,16 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-bold text-gray-900">Modo Anfitrión</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/host" className="hover:underline">Pon tu espacio en Smart</Link></li>
-              <li><Link href="/host-resources" className="hover:underline">Recursos para anfitriones</Link></li>
+              <li>
+                <Link href="/host" className="hover:underline">
+                  Pon tu espacio en Smart
+                </Link>
+              </li>
+              <li>
+                <Link href="/host-resources" className="hover:underline">
+                  Recursos para anfitriones
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -29,43 +49,71 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-bold text-gray-900">Smart</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/press" className="hover:underline">Sala de prensa</Link></li>
-              <li><Link href="/new-features" className="hover:underline">Funciones nuevas</Link></li>
+              <li>
+                <Link href="/press" className="hover:underline">
+                  Sala de prensa
+                </Link>
+              </li>
+              <li>
+                <Link href="/new-features" className="hover:underline">
+                  Funciones nuevas
+                </Link>
+              </li>
             </ul>
           </div>
-          
-           {/* Columna 4: Políticas */}
-           <div className="space-y-4">
+
+          {/* Columna 4: Políticas */}
+          <div className="space-y-4">
             <h3 className="font-bold text-gray-900">Políticas</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/commission-policy" className="hover:underline">Política de comisiones (10%)</Link></li>
-              <li><Link href="/terms" className="hover:underline">Términos y condiciones</Link></li>
-              <li><Link href="/privacy" className="hover:underline">Privacidad</Link></li>
-              <li><Link href="/trust-safety" className="hover:underline">Confianza y seguridad</Link></li>
+              <li>
+                <Link href="/commission-policy" className="hover:underline">
+                  Política de comisiones (10%)
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:underline">
+                  Términos y condiciones
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:underline">
+                  Privacidad
+                </Link>
+              </li>
+              <li>
+                <Link href="/trust-safety" className="hover:underline">
+                  Confianza y seguridad
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Barra inferior */}
-        <div className="border-t border-gray-200 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-6 text-sm text-gray-600 md:flex-row">
           <div className="flex flex-wrap gap-2">
             <span>© 2024 Smart, Inc.</span>
             <span className="hidden md:inline">·</span>
-            <Link href="/privacy" className="hover:underline">Privacidad</Link>
+            <Link href="/privacy" className="hover:underline">
+              Privacidad
+            </Link>
             <span className="hidden md:inline">·</span>
-            <Link href="/terms" className="hover:underline">Términos</Link>
+            <Link href="/terms" className="hover:underline">
+              Términos
+            </Link>
             <span className="hidden md:inline">·</span>
-            <Link href="/help-center" className="hover:underline">Mapa del sitio</Link>
+            <Link href="/help-center" className="hover:underline">
+              Mapa del sitio
+            </Link>
           </div>
-          
+
           <div className="flex items-center gap-4 font-semibold text-gray-900">
             <button className="flex items-center gap-2 hover:underline">
-              <Globe className="w-4 h-4" />
+              <Globe className="h-4 w-4" />
               Español (PE)
             </button>
-            <button className="hover:underline">
-              PEN S/
-            </button>
+            <button className="hover:underline">PEN S/</button>
           </div>
         </div>
       </div>

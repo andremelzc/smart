@@ -410,7 +410,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-blue-light-50 border-blue-light-100 sticky top-0 z-50 w-full border-b">
+    <nav className="border-blue-light-100 to-blue-light-50/90 sticky top-0 z-50 w-full border-b bg-gradient-to-b from-white/90 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Main Navbar */}
 
@@ -434,34 +434,37 @@ export default function Navbar() {
 
           <div className="mx-10 hidden max-w-3xl flex-1 items-center gap-4 lg:flex">
             <div ref={searchBarRef} className="relative flex-1">
-              <div className="border-blue-light-200 hover:border-blue-light-300 flex w-full items-stretch rounded-full border bg-white shadow-sm transition-colors hover:shadow-md">
+              <div
+                className={`relative flex w-full items-center rounded-full border transition-all duration-300 ${
+                  activeSearchPanel
+                    ? "border-transparent bg-gray-100"
+                    : "border-blue-light-200 hover:border-blue-light-300 bg-white hover:shadow-md"
+                }`}
+              >
                 {/* Donde */}
 
                 <div
-                  className={`relative flex min-w-0 flex-1 items-center gap-3 px-6 py-4 ${
-                    activeSearchPanel === "location" ? "bg-blue-light-50" : ""
+                  className={`relative flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-full px-6 py-3.5 transition-all duration-300 ${
+                    activeSearchPanel === "location"
+                      ? "z-10 bg-white shadow-lg ring-1 ring-black/5"
+                      : "hover:bg-gray-100"
                   }`}
+                  onClick={() => toggleSearchPanel("location")}
                 >
-                  <MapPin className="text-blue-light-400 h-5 w-5 flex-shrink-0" />
+                  <MapPin className="h-5 w-5 flex-shrink-0 text-gray-500" />
 
-                  <button
-                    type="button"
-                    onClick={() => toggleSearchPanel("location")}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <span className="text-md text-gray-dark-600 block font-semibold tracking-wide">
+                  <div className="min-w-0 flex-1 text-left">
+                    <span className="text-xs font-bold tracking-wider text-gray-800 uppercase">
                       Dónde
                     </span>
                     <span
-                      className={`block truncate text-sm font-semibold ${
-                        selectedLocation
-                          ? "text-gray-dark-400"
-                          : "text-gray-dark-400"
+                      className={`block truncate text-sm font-medium ${
+                        selectedLocation ? "text-gray-900" : "text-gray-500"
                       }`}
                     >
-                      {selectedLocation?.title || "Agregar ubicación"}
+                      {selectedLocation?.title || "Explora destinos"}
                     </span>
-                  </button>
+                  </div>
 
                   {activeSearchPanel === "location" && (
                     <LocationPopover
@@ -476,72 +479,83 @@ export default function Navbar() {
                   )}
                 </div>
 
-                <div className="bg-blue-light-150 h-12 w-px self-center"></div>
+                {/* Separator 1 */}
+                <div
+                  className={`h-8 w-px self-center bg-gray-300 transition-opacity duration-200 ${
+                    activeSearchPanel
+                      ? "opacity-0"
+                      : "opacity-100 group-hover:opacity-0"
+                  }`}
+                ></div>
 
                 {/* Fechas */}
 
                 <div
-                  className={`relative flex min-w-0 flex-1 items-center gap-3 px-6 py-4 ${
-                    activeSearchPanel === "dates" ? "bg-blue-light-50" : ""
+                  className={`relative flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-full px-6 py-3.5 transition-all duration-300 ${
+                    activeSearchPanel === "dates"
+                      ? "z-10 bg-white shadow-lg ring-1 ring-black/5"
+                      : "hover:bg-gray-100"
                   }`}
+                  onClick={() => toggleSearchPanel("dates")}
                 >
-                  <Calendar className="text-blue-light-400 h-5 w-5 flex-shrink-0" />
+                  <Calendar className="h-5 w-5 flex-shrink-0 text-gray-500" />
 
-                  <button
-                    type="button"
-                    onClick={() => toggleSearchPanel("dates")}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <span className="text-md text-gray-dark-600 block font-semibold tracking-wide">
-                      Fechas
+                  <div className="min-w-0 flex-1 text-left">
+                    <span className="text-xs font-bold tracking-wider text-gray-800 uppercase">
+                      Cuándo
                     </span>
                     <span
-                      className={`block truncate text-sm font-semibold ${
+                      className={`block truncate text-sm font-medium ${
                         checkInDate && checkOutDate
-                          ? "text-gray-dark-400"
-                          : "text-gray-dark-400"
+                          ? "text-gray-900"
+                          : "text-gray-500"
                       }`}
                     >
                       {checkInDate && checkOutDate
                         ? `${formatDate(checkInDate)} - ${formatDate(
                             checkOutDate
                           )}`
-                        : "Agregar fechas"}
+                        : "Cualquier fecha"}
                     </span>
-                  </button>
+                  </div>
                 </div>
 
-                <div className="bg-blue-light-150 h-12 w-px self-center"></div>
+                {/* Separator 2 */}
+                <div
+                  className={`h-8 w-px self-center bg-gray-300 transition-opacity duration-200 ${
+                    activeSearchPanel
+                      ? "opacity-0"
+                      : "opacity-100 group-hover:opacity-0"
+                  }`}
+                ></div>
 
                 {/* Quien + Search Button */}
 
                 <div
-                  className={`relative flex items-center gap-2 py-3 pr-3 pl-6 ${
-                    activeSearchPanel === "guests" ? "bg-blue-light-50" : ""
+                  className={`relative flex flex-[1.3] cursor-pointer items-center gap-2 rounded-full py-2 pr-2 pl-6 transition-all duration-300 ${
+                    activeSearchPanel === "guests"
+                      ? "z-10 bg-white shadow-lg ring-1 ring-black/5"
+                      : "hover:bg-gray-100"
                   }`}
+                  onClick={() => toggleSearchPanel("guests")}
                 >
-                  <Users className="text-blue-light-400 h-5 w-5 flex-shrink-0" />
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <Users className="h-5 w-5 flex-shrink-0 text-gray-500" />
 
-                  <button
-                    type="button"
-                    onClick={() => toggleSearchPanel("guests")}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <span className="text-md text-gray-dark-600 block font-semibold tracking-wide">
-                      Quién
-                    </span>
-                    <span
-                      className={`block truncate text-sm font-semibold ${
-                        totalGuests > 0
-                          ? "text-gray-dark-400"
-                          : "text-gray-dark-400"
-                      }`}
-                    >
-                      {totalGuests > 0
-                        ? getGuestSummary()
-                        : "Agregar huéspedes"}
-                    </span>
-                  </button>
+                    <div className="min-w-0 flex-1 text-left">
+                      <span className="text-xs font-bold tracking-wider text-gray-800 uppercase">
+                        Quién
+                      </span>
+                      <span
+                        className={`block truncate text-sm font-medium ${
+                          totalGuests > 0 ? "text-gray-900" : "text-gray-500"
+                        }`}
+                      >
+                        {totalGuests > 0 ? getGuestSummary() : "¿Cuántos?"}
+                      </span>
+                    </div>
+                  </div>
+
                   {activeSearchPanel === "guests" && (
                     <GuestPopover
                       counts={guestCounts}
@@ -553,11 +567,25 @@ export default function Navbar() {
                   {/* Search Button */}
 
                   <button
-                    onClick={handleSearch}
-                    className="from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 ml-3 flex h-14 w-14 transform items-center justify-center rounded-full bg-gradient-to-br text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSearch();
+                    }}
+                    className={`from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 ml-2 flex items-center justify-center rounded-full bg-gradient-to-br text-white shadow-md transition-all duration-300 hover:shadow-lg ${
+                      activeSearchPanel ? "h-12 w-auto gap-2 px-6" : "h-12 w-12"
+                    }`}
                     aria-label="Buscar"
                   >
-                    <Search className="h-5 w-5" />
+                    <Search className="h-5 w-5 stroke-[2.5px]" />
+                    <span
+                      className={`overflow-hidden font-bold whitespace-nowrap transition-all duration-300 ${
+                        activeSearchPanel
+                          ? "max-w-[100px] opacity-100"
+                          : "max-w-0 opacity-0"
+                      }`}
+                    >
+                      Buscar
+                    </span>
                   </button>
                 </div>
               </div>

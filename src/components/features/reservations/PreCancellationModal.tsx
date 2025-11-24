@@ -21,7 +21,6 @@ export function PreCancellationModal({
   onConfirmCancel,
   totalAmount,
   policyType,
-  checkInDate
 }: PreCancellationModalProps) {
   const [modalState, setModalState] = useState<ModalState>("confirm");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -32,20 +31,21 @@ export function PreCancellationModal({
   const calculateRefund = () => {
     // Esto es simplificado. En producción usarías date-fns para la diferencia de días real
     const daysUntilCheckIn = 10; // Simulación: Faltan 10 días
-    
+
     let refundPercentage = 0;
-    
+
     if (policyType === "flexible") {
-       refundPercentage = daysUntilCheckIn > 1 ? 100 : 0; // Reembolso total hasta 24h antes
+      refundPercentage = daysUntilCheckIn > 1 ? 100 : 0; // Reembolso total hasta 24h antes
     } else if (policyType === "moderate") {
-       refundPercentage = daysUntilCheckIn > 5 ? 100 : 50; 
-    } else { // Strict
-       refundPercentage = daysUntilCheckIn > 14 ? 50 : 0;
+      refundPercentage = daysUntilCheckIn > 5 ? 100 : 50;
+    } else {
+      // Strict
+      refundPercentage = daysUntilCheckIn > 14 ? 50 : 0;
     }
 
     return {
       amount: totalAmount * (refundPercentage / 100),
-      percentage: refundPercentage
+      percentage: refundPercentage,
     };
   };
 
@@ -137,8 +137,8 @@ export function PreCancellationModal({
   const isProcessing = modalState === "processing";
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4 text-amber-600">
             <div className="bg-amber-100 p-2 rounded-full">
