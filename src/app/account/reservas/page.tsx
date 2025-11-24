@@ -13,6 +13,8 @@ import {
   type GuestReservation,
   type FilterSegment,
 } from "@/src/components/features/reservations";
+import { LeaveReviewModal } from "@/src/components/reviews/LeaveReviewModal";
+import { PreCancellationModal } from "@/src/components/features/reservations/PreCancellationModal";
 
 type ReservationStatus = "current" | "upcoming" | "past" | "cancelled";
 
@@ -115,6 +117,22 @@ export default function ReservationsPage() {
   >("all");
   const { bookings, loading, error, refreshBookings } = useTenantBookings();
   const router = useRouter();
+
+  // Estados para modales
+  const [reviewModal, setReviewModal] = useState({
+    isOpen: false,
+    bookingId: null as number | null,
+    targetName: "",
+    targetImage: undefined as string | undefined,
+  });
+
+  const [cancelModal, setCancelModal] = useState({
+    isOpen: false,
+    bookingId: null as number | null,
+    totalAmount: 0,
+    checkInDate: "",
+    policyType: "flexible" as "flexible" | "moderate" | "strict",
+  });
   const createChatForReservation = useCallback(
     (reservation: FormattedReservation) => {
       if (typeof window === "undefined") {
@@ -184,6 +202,58 @@ export default function ReservationsPage() {
     [createChatForReservation, router]
   );
 
+  // Funciones para cancelación
+  const handleCancelReservation = useCallback((reservation: GuestReservation) => {
+    const bookingId = parseInt(reservation.id.replace("RES-", ""), 10);
+    const booking = bookings.find(b => b.bookingId === bookingId);
+    
+    if (booking) {
+      setCancelModal({
+        isOpen: true,
+        bookingId: booking.bookingId,
+        totalAmount: booking.totalAmount,
+        checkInDate: booking.checkinDate,
+        policyType: "flexible", // Por defecto flexible
+      });
+    }
+  }, [bookings]);
+
+  const handleConfirmCancel = useCallback(async () => {
+    if (!cancelModal.bookingId) return;
+
+    try {
+      await bookingService.cancelBookingAsTenant(cancelModal.bookingId);
+      setCancelModal(prev => ({ ...prev, isOpen: false }));
+      refreshBookings();
+    } catch (error: any) {
+      console.error("Error cancelando:", error);
+      // El error se maneja en el modal, así que lo re-lanzamos
+      throw error;
+    }
+  }, [cancelModal.bookingId, refreshBookings]);
+
+  // Funciones para reseñas
+  const handleLeaveReview = useCallback((reservation: GuestReservation) => {
+    const bookingId = parseInt(reservation.id.replace("RES-", ""), 10);
+    
+    setReviewModal({
+      isOpen: true,
+      bookingId: bookingId,
+      targetName: reservation.propertyName,
+      targetImage: reservation.imageUrl,
+    });
+  }, []);
+
+  const handleSubmitReview = useCallback(async (rating: number, comment: string) => {
+    if (!reviewModal.bookingId) return;
+    
+    console.log("📝 Enviando reseña:", { bookingId: reviewModal.bookingId, rating, comment });
+    // TODO: Implementar servicio de reseñas
+    // await reviewService.create({ bookingId: reviewModal.bookingId, rating, comment });
+    
+    setReviewModal(prev => ({ ...prev, isOpen: false }));
+  }, [reviewModal.bookingId]);
+
   // Convertir los bookings de la BD al formato de la UI
   const reservations = useMemo<GuestReservation[]>(() => {
     const formattedBookings: GuestReservation[] = bookings.map(
@@ -202,6 +272,8 @@ export default function ReservationsPage() {
           checkOut: booking.checkoutDate,
           guests: booking.guestCount,
           status,
+          dbStatus: booking.status, // Estado original de la BD
+          totalAmount: booking.totalAmount, // Para cálculo de reembolso
           hostName: bookingService.getHostFullName(booking),
           price: bookingService.formatCurrency(booking.totalAmount),
           notes: booking.hostNote || "Sin notas adicionales del anfitrion.",
@@ -292,12 +364,33 @@ export default function ReservationsPage() {
                 onChatWithHost={(res) =>
                   handleChatClick(res as FormattedReservation)
                 }
+                onCancelReservation={handleCancelReservation}
+                onLeaveReview={handleLeaveReview}
                 canStartChat={canStartChat}
               />
             );
           })
         )}
       </section>
+
+      {/* Modales */}
+      <LeaveReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={() => setReviewModal(prev => ({ ...prev, isOpen: false }))}
+        onSubmit={handleSubmitReview}
+        reviewRole="guest"
+        targetName={reviewModal.targetName}
+        targetImage={reviewModal.targetImage}
+      />
+
+      <PreCancellationModal 
+        isOpen={cancelModal.isOpen}
+        onClose={() => setCancelModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirmCancel={handleConfirmCancel}
+        totalAmount={cancelModal.totalAmount}
+        policyType={cancelModal.policyType}
+        checkInDate={cancelModal.checkInDate}
+      />
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { Button } from "@/src/components/ui/Button";
 type ReservationStatus =
   | "pending"
   | "confirmed"
+  | "accepted"
   | "completed"
   | "declined"
   | "cancelled";
@@ -124,7 +125,7 @@ export default function GuestRequestModal({
           showFinancial: true,
           showPrivacy: true,
         };
-      case "confirmed":
+      case "accepted":
         return {
           title: "Reserva Confirmada",
           statusText: "Confirmada",
@@ -133,6 +134,7 @@ export default function GuestRequestModal({
           showFinancial: true,
           showPrivacy: false,
         };
+        
       case "completed":
         return {
           title: "Reserva Completada",
@@ -506,7 +508,7 @@ export default function GuestRequestModal({
             )}
 
           {/* Notas del Host */}
-          {request.status === "confirmed" && (
+          {request.status === "accepted" && (
             <section>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
@@ -641,21 +643,14 @@ export default function GuestRequestModal({
                   variant="ghost"
                   onClick={() => onDecline?.(request.id)}
                   leftIcon={XCircle}
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className=""
                 >
                   Rechazar
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => onSendMessage?.(request.id)}
-                  leftIcon={MessageSquare}
-                >
-                  Enviar Mensaje
                 </Button>
               </>
             )}
 
-            {request.status === "confirmed" && (
+            {request.status === "accepted" && (
               <>
                 <Button
                   onClick={() => onSendMessage?.(request.id)}
