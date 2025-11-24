@@ -142,6 +142,9 @@ export default function PaginaCrearRecinto() {
   };
 
   const isNextDisabled = () => {
+    if (currentStep === 1 && propertyData.propertyType === "") {
+      return true;
+    }
     if (currentStep === 5 && propertyData.images.length === 0) {
       return true;
     }

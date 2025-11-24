@@ -1,7 +1,7 @@
 // src/components/host/crear-recinto/Paso7_Precio.tsx
 
 import { StepHeader } from "./StepHeader";
-import { Lightbulb, TrendingUp, Info } from "lucide-react";
+import { Lightbulb, TrendingUp, Info, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect, startTransition } from "react";
 
 interface StepProps {
@@ -14,16 +14,37 @@ interface StepProps {
 
 const SUGGESTED_PRICE = 120;
 const PLATFORM_FEE_PERCENT = 0.1;
+const MIN_PRICE = 10;
 
 export function Paso7_Precio({ data, updateData }: StepProps) {
   const [localPriceString, setLocalPriceString] = useState(
     data.basePriceNight > 0 ? data.basePriceNight.toString() : ""
   );
 
-  useEffect(() => {
-    const newStr =
-      data.basePriceNight > 0 ? data.basePriceNight.toString() : "";
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  
+  const isPriceEmpty = localPriceString === "";
+  const isValid = !isPriceEmpty && data.basePriceNight >= MIN_PRICE;
 
+  useEffect(() => {
+    let showTimer: NodeJS.Timeout;
+    let hideTimer: NodeJS.Timeout;
+
+    if (isValid) {
+      showTimer = setTimeout(() => setShowSuccessMessage(true), 0);
+      hideTimer = setTimeout(() => setShowSuccessMessage(false), 3000);
+    } else {
+      showTimer = setTimeout(() => setShowSuccessMessage(false), 0);
+    }
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [isValid]);
+
+  useEffect(() => {
+    const newStr = data.basePriceNight > 0 ? data.basePriceNight.toString() : "";
     if (newStr !== localPriceString) {
       startTransition(() => setLocalPriceString(newStr));
     }
@@ -97,9 +118,11 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
                 value={localPriceString}
                 onChange={handlePriceChange}
                 placeholder="120"
-                className="w-full rounded-xl border-2 border-slate-300 bg-white 
-                           py-3 pl-12 pr-24 text-3xl font-bold text-slate-700 outline-none
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className={`w-full rounded-xl border-2 bg-white 
+                           py-3 pl-12 pr-24 text-3xl font-bold text-slate-700 outline-none transition-colors
+                           ${!isValid 
+                             ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
+                             : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
               />
 
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500 font-medium">
@@ -173,10 +196,10 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
 
           <button
             onClick={handleUseSuggestion}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl 
-                       bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white 
-                       shadow-sm transition-all hover:bg-blue-700 
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-2xl 
+            bg-gradient-to-r from-blue-light-500 to-blue-vivid-500 px-4 py-2.5 text-sm font-semibold text-white 
+            shadow-sm transition-all hover:bg-blue-700 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             <TrendingUp className="w-4 h-4" />
             Usar precio sugerido
@@ -186,6 +209,29 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
             Esta es solo una sugerencia. Eres libre de establecer el precio que quieras.
           </p>
         </div>
+      </div>
+
+      <div className="mt-2 min-h-[60px] transition-all duration-300">
+        
+        {!isValid && (
+          <div className="p-3 border border-red-200 bg-red-50 rounded-lg flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
+            <XCircle className="w-5 h-5 text-red-600" />
+            <p className="text-sm text-red-700 font-medium">
+              {isPriceEmpty 
+                ? "Debes establecer un precio por noche para continuar." 
+                : `El precio mínimo debe ser ${formatCurrency(MIN_PRICE)}.`}
+            </p>
+          </div>
+        )}
+
+        {isValid && showSuccessMessage && (
+          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <p className="text-sm text-green-700 font-medium">
+              ¡Precio válido establecido!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

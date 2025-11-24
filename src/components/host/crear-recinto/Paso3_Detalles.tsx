@@ -149,9 +149,9 @@ export function Paso3_Detalles({ data, updateData }: StepProps) {
             label="Baños"
             description="Total de baños (enteros)"
             value={data.bathrooms}
-            min={1}
+            min={0}
             onIncrease={() => handleIncrease("bathrooms")}
-            onDecrease={() => handleDecrease("bathrooms", 1)}
+            onDecrease={() => handleDecrease("bathrooms", 0)}
           />
         </div>
       </div>

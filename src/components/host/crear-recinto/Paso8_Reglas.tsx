@@ -2,6 +2,7 @@
 
 import { StepHeader } from "./StepHeader";
 import { Clock, ListChecks, CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface StepProps {
   data: {
@@ -15,6 +16,30 @@ interface StepProps {
 const MIN_RULES_LENGTH = 20;
 
 export function Paso8_Reglas({ data, updateData }: StepProps) {
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  const isCheckinValid = data.checkinTime !== "";
+  const isCheckoutValid = data.checkoutTime !== "";
+  const isRulesValid = data.houseRules.length >= MIN_RULES_LENGTH;
+  const isValid = isCheckinValid && isCheckoutValid && isRulesValid;
+
+  useEffect(() => {
+    let showTimer: NodeJS.Timeout;
+    let hideTimer: NodeJS.Timeout;
+
+    if (isValid) {
+      showTimer = setTimeout(() => setShowSuccessMessage(true), 0);   
+      hideTimer = setTimeout(() => setShowSuccessMessage(false), 3000);
+    } else {
+      showTimer = setTimeout(() => setShowSuccessMessage(false), 0);
+    }
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [isValid]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -49,9 +74,11 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
                 value={data.checkinTime}
                 onChange={handleChange}
                 step="1800"
-                className="relative w-full rounded-xl border-2 border-slate-300 bg-white 
-                           py-2.5 pl-10 pr-4 text-slate-700 outline-none
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className={`relative w-full rounded-xl border-2 bg-white 
+                           py-2.5 pl-10 pr-4 text-slate-700 outline-none transition-colors
+                           ${!isCheckinValid 
+                             ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
+                             : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
               />
             </div>
           </label>
@@ -70,9 +97,11 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
                 value={data.checkoutTime}
                 onChange={handleChange}
                 step="1800"
-                className="relative w-full rounded-xl border-2 border-slate-300 bg-white 
-                           py-2.5 pl-10 pr-4 text-slate-700 outline-none
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className={`relative w-full rounded-xl border-2 bg-white 
+                           py-2.5 pl-10 pr-4 text-slate-700 outline-none transition-colors
+                           ${!isCheckoutValid 
+                             ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
+                             : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
               />
             </div>
           </label>
@@ -99,18 +128,20 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
               onChange={handleChange}
               rows={10}
               placeholder="Ej: No hacer ruido después de las 10 PM. No dejar la basura fuera..."
-              className="w-full rounded-xl border-2 border-slate-300 bg-white 
-                         py-2.5 px-4 text-slate-700 outline-none resize-none
-                         focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className={`w-full rounded-xl border-2 bg-white 
+                         py-2.5 px-4 text-slate-700 outline-none resize-none transition-colors
+                         ${!isRulesValid && data.houseRules.length > 0
+                           ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
+                           : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
             />
 
             <span
-              className={`text-xs font-medium
-                             ${
-                               data.houseRules.length < MIN_RULES_LENGTH
-                                 ? "text-red-500"
-                                 : "text-green-600"
-                             }`}
+              className={`text-xs font-medium transition-colors
+                         ${
+                           !isRulesValid
+                             ? "text-red-500"
+                             : "text-green-600"
+                         }`}
             >
               {data.houseRules.length} / {MIN_RULES_LENGTH} caracteres mínimos recomendados
             </span>
@@ -159,6 +190,32 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
             </ul>
           </div>
         </div>
+      </div>
+
+      <div className="mt-2 min-h-[60px] transition-all duration-300">
+        
+        {!isValid && (
+          <div className="p-3 border border-red-200 bg-red-50 rounded-lg flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
+              <XCircle className="w-4 h-4" />
+              <span>Completa los siguientes campos:</span>
+            </div>
+            <ul className="list-disc list-inside text-xs text-red-600 pl-6">
+              {!isCheckinValid && <li>Selecciona la hora de llegada (Check-in).</li>}
+              {!isCheckoutValid && <li>Selecciona la hora de salida (Check-out).</li>}
+              {!isRulesValid && <li>Las reglas no cumplen la longitud mínima o están vacías.</li>}
+            </ul>
+          </div>
+        )}
+
+        {isValid && showSuccessMessage && (
+          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <p className="text-sm text-green-700 font-medium">
+              ¡Reglas y horarios establecidos correctamente!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

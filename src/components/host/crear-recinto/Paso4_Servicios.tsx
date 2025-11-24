@@ -1,5 +1,6 @@
 // src/components/host/crear-recinto/Paso4_Servicios.tsx
 
+import { useState } from "react";
 import { StepHeader } from "./StepHeader";
 import {
   Wifi,
@@ -32,6 +33,8 @@ import {
   Accessibility,
   BellOff,
   WashingMachine,
+  ChevronDown, 
+  ChevronUp,  
 } from "lucide-react";
 
 interface StepProps {
@@ -145,6 +148,18 @@ const amenityGroups = [
 ];
 
 export function Paso4_Servicios({ data, updateData }: StepProps) {
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([
+    "Servicios Destacados",
+  ]);
+
+  const toggleGroup = (title: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(title)
+        ? prev.filter((t) => t !== title) 
+        : [...prev, title] 
+    );
+  };
+
   const handleToggleAmenity = (amenityId: string) => {
     const currentAmenities = data.amenities;
     if (currentAmenities.includes(amenityId)) {
@@ -163,48 +178,88 @@ export function Paso4_Servicios({ data, updateData }: StepProps) {
       <StepHeader
         title="¿Qué servicios ofrece tu recinto?"
         subtitle="Selecciona todos los servicios que pones a disposición de tus huéspedes."
-        helpText="Estos son los filtros más usados por los huéspedes. Asegúrate de marcar solo lo que realmente ofreces para gestionar bien sus expectativas."
+        helpText="Estos son los filtros más usados por los huéspedes. Asegúrate de marcar solo lo que realmente ofreces."
       />
 
-      <div className="flex flex-col gap-8">
-        {amenityGroups.map((group) => (
-          <div key={group.title} className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold text-slate-700">
-              {group.title}
-            </h2>
+      <div className="flex flex-col gap-4">
+        {amenityGroups.map((group) => {
+          const isExpanded = expandedGroups.includes(group.title);
+          
+          const selectedCount = group.amenities.filter((a) =>
+            data.amenities.includes(a.id)
+          ).length;
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {group.amenities.map((amenity) => {
-                const isSelected = data.amenities.includes(amenity.id);
+          return (
+            <div
+              key={group.title}
+              className={`border rounded-2xl transition-all duration-300 ${
+                isExpanded
+                  ? "border-blue-200 bg-white"
+                  : "border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.title)}
+                className="w-full flex items-center justify-between p-5 text-left outline-none"
+              >
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-semibold text-slate-800">
+                    {group.title}
+                  </h2>
 
-                const baseStyle =
-                  "rounded-xl p-4 cursor-pointer transition-all duration-200 flex flex-col gap-2 items-center justify-center border-2 h-full";
-
-                const unselectedStyle =
-                  "bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02]";
-
-                const selectedStyle =
-                  "bg-blue-600 text-white shadow-lg scale-[1.02]";
-
-                return (
-                  <button
-                    type="button"
-                    key={amenity.id}
-                    onClick={() => handleToggleAmenity(amenity.id)}
-                    className={`${baseStyle} ${
-                      isSelected ? selectedStyle : unselectedStyle
-                    }`}
-                  >
-                    {amenityIcons[amenity.id] || amenityIcons["default"]}
-                    <span className="text-sm font-medium text-center leading-tight">
-                      {amenity.name}
+                  {selectedCount > 0 && (
+                    <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
+                      {selectedCount} seleccionados
                     </span>
-                  </button>
-                );
-              })}
+                  )}
+                </div>
+                {isExpanded ? (
+                  <ChevronUp className="w-5 h-5 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-slate-400" />
+                )}
+              </button>
+
+              {isExpanded && (
+                <div className="p-5 pt-0 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {group.amenities.map((amenity) => {
+                      const isSelected = data.amenities.includes(amenity.id);
+
+                      const baseStyle =
+                        "rounded-xl p-4 cursor-pointer transition-all duration-200 flex flex-col gap-2 items-center justify-center border-2 h-full";
+
+                      const unselectedStyle =
+                        "bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02]";
+
+                      const selectedStyle =
+                        "bg-blue-600 text-white shadow-lg scale-[1.02] border-blue-600";
+
+                      return (
+                        <button
+                          type="button"
+                          key={amenity.id}
+                          onClick={() => handleToggleAmenity(amenity.id)}
+                          className={`${baseStyle} ${
+                            isSelected ? selectedStyle : unselectedStyle
+                          }`}
+                        >
+                          <div className={isSelected ? "text-white" : "text-slate-600"}>
+                             {amenityIcons[amenity.id] || amenityIcons["default"]}
+                          </div>
+                          <span className="text-sm font-medium text-center leading-tight">
+                            {amenity.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

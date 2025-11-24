@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { StepHeader } from "./StepHeader";
 
 interface StepProps {
   data: {
@@ -17,6 +18,19 @@ interface StepProps {
   updateData: (data: Partial<StepProps["data"]>) => void;
 }
 
+// Lista de distritos de Lima conocidos
+  const LIMA_DISTRICTS = [
+    'Miraflores', 'San Isidro', 'Barranco', 'Surco', 'La Molina', 
+    'San Borja', 'Jesús María', 'Lince', 'Magdalena', 'Pueblo Libre',
+    'San Miguel', 'Cercado de Lima', 'Lima', 'Breña', 'La Victoria',
+    'Surquillo', 'Chorrillos', 'San Juan de Miraflores', 'Villa María del Triunfo',
+    'Villa El Salvador', 'Ate', 'Santa Anita', 'El Agustino', 'San Luis',
+    'Callao', 'Bellavista', 'La Perla', 'Carmen de la Legua', 'Ventanilla',
+    'Los Olivos', 'San Martín de Porres', 'Independencia', 'Comas',
+    'Carabayllo', 'Puente Piedra', 'Ancón', 'Santa Rosa', 'Rímac',
+    'San Juan de Lurigancho', 'Lurigancho', 'Chaclacayo', 'Cieneguilla'
+  ];
+  
 // Componente para manejar el marcador arrastrable
 function DraggableMarker({ 
   position, 
@@ -93,18 +107,6 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
     setIsClient(true);
   }, []);
 
-  // Lista de distritos de Lima conocidos
-  const LIMA_DISTRICTS = [
-    'Miraflores', 'San Isidro', 'Barranco', 'Surco', 'La Molina', 
-    'San Borja', 'Jesús María', 'Lince', 'Magdalena', 'Pueblo Libre',
-    'San Miguel', 'Cercado de Lima', 'Lima', 'Breña', 'La Victoria',
-    'Surquillo', 'Chorrillos', 'San Juan de Miraflores', 'Villa María del Triunfo',
-    'Villa El Salvador', 'Ate', 'Santa Anita', 'El Agustino', 'San Luis',
-    'Callao', 'Bellavista', 'La Perla', 'Carmen de la Legua', 'Ventanilla',
-    'Los Olivos', 'San Martín de Porres', 'Independencia', 'Comas',
-    'Carabayllo', 'Puente Piedra', 'Ancón', 'Santa Rosa', 'Rímac',
-    'San Juan de Lurigancho', 'Lurigancho', 'Chaclacayo', 'Cieneguilla'
-  ];
 
   // Función auxiliar para encontrar distrito en el texto
   const findDistrictInText = useCallback((text: string): string | null => {
@@ -311,17 +313,11 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold text-gray-dark-800">
-          ¿Dónde está ubicado tu recinto?
-        </h2>
-        <p className="text-sm text-gray-dark-600">
-          Tu dirección solo se compartirá con los huéspedes después de que confirmen una reserva.
-        </p>
-        <p className="text-sm text-blue-light-700 bg-blue-light-50 p-3 rounded-lg border border-blue-light-200">
-          💡 Busca tu dirección o haz clic en el mapa para colocar el marcador. Puedes arrastrarlo para ajustar la ubicación exacta.
-        </p>
-      </div>
+      <StepHeader 
+        title="¿Dónde está ubicado tu recinto?"
+        subtitle="Tu dirección solo se compartirá con los huéspedes después de que confirmen una reserva."
+        helpText=" 💡Busca tu dirección o haz clic en el mapa para colocar el marcador. Puedes arrastrarlo para ajustar la ubicación exacta."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <label className="flex flex-col gap-2 text-sm font-semibold text-blue-light-700 md:col-span-2">
@@ -445,10 +441,10 @@ export function Paso2_Ubicacion({ data, updateData }: StepProps) {
         )}
       </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+      {/* <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
         <strong>Nota:</strong> La geocodificación usa el servicio gratuito de OpenStreetMap (Nominatim). 
         Para producción, considera usar un servicio más robusto como Google Maps Geocoding API.
-      </div>
+      </div> */}
     </div>
   );
 }

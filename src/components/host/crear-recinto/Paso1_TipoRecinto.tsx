@@ -1,7 +1,8 @@
 // src/components/host/crear-recinto/Paso1_TipoRecinto.tsx
 
-import { Home, Building, MountainSnow, BedDouble } from "lucide-react";
+import { Home, Building, MountainSnow, BedDouble, CheckCircle } from "lucide-react";
 import { StepHeader } from "./StepHeader";
+import { useEffect, useState } from "react";
 
 const PROPERTY_TYPES = [
   {
@@ -38,6 +39,32 @@ interface StepProps {
 }
 
 export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    let hideTimer: NodeJS.Timeout;
+
+    if (data.propertyType) {
+      timer = setTimeout(() => {
+        setShowSuccess(true);
+      }, 0);
+
+      hideTimer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 2500);
+    } else {
+      timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 0);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(hideTimer);
+    };
+  }, [data.propertyType]);
+
   const handleSelectType = (typeId: string) => {
     updateData({ propertyType: typeId });
   };
@@ -82,6 +109,25 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-2 min-h-[50px] transition-all duration-300">
+        {!data.propertyType && (
+          <div className="p-3 border border-red-200 bg-red-50 rounded-lg text-center animate-in fade-in slide-in-from-top-1 duration-300">
+            <p className="text-sm text-red-700 font-medium">
+              Para continuar con el siguiente paso, seleccione una de los tipos de recinto.
+            </p>
+          </div>
+        )}
+
+        {data.propertyType && showSuccess && (
+          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <p className="text-sm text-green-700 font-medium">
+              ¡Opción seleccionada correctamente!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

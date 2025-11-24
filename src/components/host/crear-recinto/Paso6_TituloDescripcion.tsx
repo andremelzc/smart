@@ -2,6 +2,7 @@
 
 import { StepHeader } from "./StepHeader";
 import { Lightbulb, CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface StepProps {
   data: {
@@ -16,6 +17,30 @@ const MIN_TITLE_LENGTH = 20;
 const MIN_DESC_LENGTH = 50;
 
 export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  
+  const isTitleValid = data.title.length >= MIN_TITLE_LENGTH;
+  const isDescValid = data.descriptionLong.length >= MIN_DESC_LENGTH;
+  const isValid = isTitleValid && isDescValid;
+
+  useEffect(() => {
+    let showTimer: NodeJS.Timeout;
+    let hideTimer: NodeJS.Timeout;
+
+    if (isValid) {
+      showTimer = setTimeout(() => setShowSuccessMessage(true), 0);
+      
+      hideTimer = setTimeout(() => setShowSuccessMessage(false), 3000);
+    } else {
+      showTimer = setTimeout(() => setShowSuccessMessage(false), 0);
+    }
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [isValid]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -29,7 +54,6 @@ export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
   };
 
   const titleCharsLeft = MAX_TITLE_LENGTH - data.title.length;
-  const titleMeetsMinimum = data.title.length >= MIN_TITLE_LENGTH;
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,18 +79,18 @@ export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
             value={data.title}
             onChange={handleChange}
             placeholder="Ej: Acogedor estudio céntrico con balcón"
-            className="w-full rounded-xl border-2 border-slate-300 bg-white 
-                       py-2.5 px-4 pr-12 text-slate-700 outline-none
-                       focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className={`w-full rounded-xl border-2 bg-white py-2.5 px-4 pr-12 outline-none focus:ring-2 focus:ring-blue-100 transition-colors
+              ${!isTitleValid && data.title.length > 0 ? 'border-red-300 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}
+            `}
           />
 
           <span
             className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium
-                           ${
-                             titleCharsLeft < 10
-                               ? "text-red-500"
-                               : "text-slate-400"
-                           }`}
+                       ${
+                         titleCharsLeft < 10
+                           ? "text-red-500"
+                           : "text-slate-400"
+                       }`}
           >
             {titleCharsLeft}
           </span>
@@ -78,12 +102,12 @@ export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
           </p>
           
           <span
-            className={`text-xs font-medium whitespace-nowrap ml-2
-                           ${
-                             titleMeetsMinimum
-                               ? "text-green-600"
-                               : "text-red-500"
-                           }`}
+            className={`text-xs font-medium whitespace-nowrap ml-2 transition-colors
+                       ${
+                         isTitleValid
+                           ? "text-green-600"
+                           : "text-red-500"
+                       }`}
           >
             {data.title.length} / {MIN_TITLE_LENGTH} caracteres mínimos
           </span>
@@ -106,18 +130,18 @@ export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
               onChange={handleChange}
               rows={10}
               placeholder="Empieza a describir tu espacio aquí..."
-              className="w-full rounded-xl border-2 border-slate-300 bg-white 
-                         py-2.5 px-4 text-slate-700 outline-none resize-none
-                         focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className={`w-full rounded-xl border-2 bg-white py-2.5 px-4 outline-none resize-none focus:ring-2 focus:ring-blue-100 transition-colors
+                ${!isDescValid && data.descriptionLong.length > 0 ? 'border-red-300 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}
+              `}
             />
 
             <span
-              className={`text-xs font-medium
-                             ${
-                               data.descriptionLong.length < MIN_DESC_LENGTH
-                                 ? "text-red-500"
-                                 : "text-green-600"
-                             }`}
+              className={`text-xs font-medium transition-colors
+                         ${
+                           !isDescValid
+                             ? "text-red-500"
+                             : "text-green-600"
+                         }`}
             >
               {data.descriptionLong.length} / {MIN_DESC_LENGTH} caracteres mínimos recomendados
             </span>
@@ -166,6 +190,31 @@ export function Paso6_TituloDescripcion({ data, updateData }: StepProps) {
             </ul>
           </div>
         </div>
+      </div>
+
+      <div className="mt-2 min-h-[60px] transition-all duration-300">
+        
+        {!isValid && (
+          <div className="p-3 border border-red-200 bg-red-50 rounded-lg flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
+              <XCircle className="w-4 h-4" />
+              <span>Completa los campos para continuar:</span>
+            </div>
+            <ul className="list-disc list-inside text-xs text-red-600 pl-6">
+              {!isTitleValid && <li>El título aún es muy corto o está vacío.</li>}
+              {!isDescValid && <li>La descripción aún es muy corta o está vacía.</li>}
+            </ul>
+          </div>
+        )}
+
+        {isValid && showSuccessMessage && (
+          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <p className="text-sm text-green-700 font-medium">
+              ¡Perfecto! Título y descripción listos.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
