@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 import { Geist, Geist_Mono } from "next/font/google";
-
 import { Providers } from "@/src/components/Providers";
+
+import { ReviewNudge } from "../components/reviews/ReviewNudge";
 
 import "./globals.css";
 
@@ -34,7 +35,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-background text-foreground`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <ReviewNudge />
+          {children}
+        </Providers>
       </body>
     </html>
   );
