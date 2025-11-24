@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { Button } from '@/src/components/ui/Button';
-import { Plus, Edit3, Eye, Trash2, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit3, Eye, Trash2, Search, Loader2, Calendar } from 'lucide-react';
 import { useAuth } from '@/src/hooks/useAuth';
 import { getHostProperties } from '@/src/hooks/useGetProperties';
 
@@ -151,6 +151,10 @@ export default function PropertiesPage() {
     console.log('Delete property:', propertyId);
   };
 
+  const handleManageAvailability = (propertyId: number) => {
+    router.push(`/host/properties/${propertyId}/availability`);
+  };
+
   // Render de carga inicial
   if (authLoading || (isAuthenticated && isLoadingData)) {
     return (
@@ -239,32 +243,45 @@ export default function PropertiesPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="primary"
-                  leftIcon={Edit3}
-                  onClick={() => handleEditProperty(property.id)}
-                  className="flex-1"
-                >
-                  Editar
-                </Button>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    leftIcon={Edit3}
+                    onClick={() => handleEditProperty(property.id)}
+                    className="flex-1"
+                  >
+                    Editar
+                  </Button>
 
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    iconOnly
+                    leftIcon={Eye}
+                    onClick={() => handleViewProperty(property.id)}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    iconOnly
+                    leftIcon={Trash2}
+                    onClick={() => handleDeleteProperty(property.id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  />
+                </div>
+                
+                {/* Botón de disponibilidad - segunda fila */}
                 <Button
                   size="sm"
                   variant="ghost"
-                  iconOnly
-                  leftIcon={Eye}
-                  onClick={() => handleViewProperty(property.id)}
-                />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  iconOnly
-                  leftIcon={Trash2}
-                  onClick={() => handleDeleteProperty(property.id)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                />
+                  leftIcon={Calendar}
+                  onClick={() => handleManageAvailability(property.id)}
+                  className="w-full border border-blue-200 text-blue-600 hover:bg-blue-50"
+                >
+                  Gestionar Disponibilidad
+                </Button>
               </div>
             </div>
           </div>
