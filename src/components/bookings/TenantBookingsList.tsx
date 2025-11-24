@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import { useTenantBookings } from "@/src/hooks/useTenantBookings";
 import { bookingService } from "@/src/services/booking.service";
+// 1. Importamos tus modales (Reseña y Cancelación)
 import { LeaveReviewModal } from "../reviews/LeaveReviewModal";
+import { PreCancellationModal } from "@/src/components/features/reservations/PreCancellationModal"; 
 import { Button } from "@/src/components/ui/Button";
 import {
   Calendar,
@@ -15,9 +17,10 @@ import {
   Loader2,
   AlertCircle,
   MessageSquarePlus,
+  Ban // Icono para cancelar
 } from "lucide-react";
 
-// Tipo para el estado del modal
+// Estado para el modal de reseña
 interface ReviewModalState {
   isOpen: boolean;
   bookingId: number | null;
@@ -25,10 +28,19 @@ interface ReviewModalState {
   targetImage?: string;
 }
 
+// 2. NUEVO: Estado para el modal de cancelación
+interface CancelModalState {
+  isOpen: boolean;
+  bookingId: number | null;
+  totalAmount: number;
+  checkInDate: string;
+  policyType: "flexible" | "moderate" | "strict";
+}
+
 export function TenantBookingsList() {
   const { bookings, loading, error, refreshBookings } = useTenantBookings();
 
-  // Estado para controlar el modal de reseña manual
+  // Estado Modal Reseña
   const [reviewModal, setReviewModal] = useState<ReviewModalState>({
     isOpen: false,
     bookingId: null,
@@ -36,35 +48,65 @@ export function TenantBookingsList() {
     targetImage: undefined,
   });
 
-  // Abrir el modal con los datos de la reserva seleccionada
+  // 3. NUEVO: Estado Modal Cancelación
+  const [cancelModal, setCancelModal] = useState<CancelModalState>({
+    isOpen: false,
+    bookingId: null,
+    totalAmount: 0,
+    checkInDate: "",
+    policyType: "flexible", // Por defecto flexible, idealmente vendría de la BD
+  });
+
+  // --- HANDLERS RESEÑA ---
   const handleOpenReview = (booking: any) => {
     setReviewModal({
       isOpen: true,
       bookingId: booking.bookingId,
-      targetName: booking.title, // Nombre de la propiedad
-      targetImage: booking.imageUrl || undefined, // Foto de la propiedad si existe
+      targetName: booking.title,
+      targetImage: booking.imageUrl || undefined,
     });
   };
 
-  // Lógica al enviar la reseña
   const handleSubmitReview = async (rating: number, comment: string) => {
     if (!reviewModal.bookingId) return;
-
-    console.log("📝 Enviando reseña manual:", {
-      bookingId: reviewModal.bookingId,
-      rating,
-      comment,
-      role: "guest",
-    });
-
-    // AQUÍ: Llamada a tu API real (ej: reviewService.createReview(...))
+    console.log("📝 Enviando reseña:", { bookingId: reviewModal.bookingId, rating, comment });
     // await reviewService.create({ ... });
-
-    // Cerrar modal y resetear
     setReviewModal((prev) => ({ ...prev, isOpen: false }));
-    
-    // Opcional: Refrescar reservas si la API devuelve que ya tiene reseña
-    // refreshBookings();
+  };
+
+  // --- 4. NUEVO: HANDLERS CANCELACIÓN ---
+  
+  const handleClickCancel = (booking: any) => {
+    // Abrimos el modal PRE-cancelación con los datos financieros
+    setCancelModal({
+      isOpen: true,
+      bookingId: booking.bookingId,
+      totalAmount: booking.totalAmount,
+      checkInDate: booking.checkinDate.toString(), // Aseguramos formato string
+      policyType: "flexible", // AQUÍ: Si tu backend trae 'policy', úsalo: booking.policy || 'flexible'
+    });
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelModal.bookingId) return;
+
+    try {
+      console.log("🚫 Confirmando cancelación para:", cancelModal.bookingId);
+      
+      // Llamada real a tu servicio (asegúrate de tener este método en bookingService o créalo)
+      // await bookingService.cancelBooking(cancelModal.bookingId);
+      
+      // Simulación de éxito
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Cerrar modal y refrescar lista
+      setCancelModal(prev => ({ ...prev, isOpen: false }));
+      refreshBookings(); // Recarga la lista para ver el estado 'CANCELLED'
+
+    } catch (error) {
+      console.error("Error cancelando:", error);
+      alert("No se pudo cancelar la reserva. Inténtalo más tarde.");
+    }
   };
 
   if (loading) {
@@ -82,16 +124,8 @@ export function TenantBookingsList() {
         <div className="flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-red-600" />
           <div>
-            <h3 className="font-semibold text-red-900">
-              Error al cargar reservas
-            </h3>
+            <h3 className="font-semibold text-red-900">Error al cargar</h3>
             <p className="text-sm text-red-700">{error}</p>
-            <button
-              onClick={refreshBookings}
-              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-            >
-              Intentar nuevamente
-            </button>
           </div>
         </div>
       </div>
@@ -102,12 +136,8 @@ export function TenantBookingsList() {
     return (
       <div className="p-8 text-center">
         <Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-        <h3 className="mb-2 text-lg font-semibold text-gray-900">
-          No tienes reservas
-        </h3>
-        <p className="text-gray-600">
-          Cuando hagas una reserva, aparecerá aquí.
-        </p>
+        <h3 className="mb-2 text-lg font-semibold text-gray-900">No tienes reservas</h3>
+        <p className="text-gray-600">Cuando hagas una reserva, aparecerá aquí.</p>
       </div>
     );
   }
@@ -116,16 +146,15 @@ export function TenantBookingsList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Mis Reservas</h2>
-        <span className="text-sm text-gray-600">
-          {bookings.length} reserva{bookings.length !== 1 ? "s" : ""}
-        </span>
+        <span className="text-sm text-gray-600">{bookings.length} reservas</span>
       </div>
 
       <div className="grid gap-6">
         {bookings.map((booking) => {
-          // Normalizar estado para comprobación
-          const isCompleted = booking.status.toLowerCase() === "completed";
-          // TODO: Agregar validación !booking.hasGuestReview cuando venga del backend
+          const status = booking.status.toUpperCase(); // Normalizar
+          const isCompleted = status === "COMPLETED";
+          // Solo se puede cancelar si está confirmada o pendiente, y es futura
+          const canCancel = (status === "CONFIRMED" || status === "PENDING" || status === "ACCEPTED");
           const canReview = isCompleted; 
 
           return (
@@ -143,15 +172,12 @@ export function TenantBookingsList() {
                     {bookingService.getFullAddress(booking)}
                   </div>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${bookingService.getStatusColor(
-                    booking.status
-                  )}`}
-                >
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${bookingService.getStatusColor(booking.status)}`}>
                   {bookingService.translateStatus(booking.status)}
                 </span>
               </div>
 
+              {/* Grid de detalles (Fechas, Huespedes, Precio) */}
               <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="mr-2 h-4 w-4 text-gray-400" />
@@ -171,10 +197,7 @@ export function TenantBookingsList() {
                   <Users className="mr-2 h-4 w-4 text-gray-400" />
                   <div>
                     <p className="font-medium">Huéspedes</p>
-                    <p>
-                      {booking.guestCount} persona
-                      {booking.guestCount !== 1 ? "s" : ""}
-                    </p>
+                    <p>{booking.guestCount} pers.</p>
                   </div>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
@@ -188,38 +211,35 @@ export function TenantBookingsList() {
                 </div>
               </div>
 
+              {/* Footer de la tarjeta con acciones */}
               <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <User className="mr-2 h-4 w-4 text-gray-400" />
-                  <span>
-                    Anfitrión: {bookingService.getHostFullName(booking)}
-                  </span>
+                  <span>Anfitrión: {bookingService.getHostFullName(booking)}</span>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="text-xs text-gray-500">
-                    <span>
-                      {bookingService.calculateStayDuration(
-                        booking.checkinDate,
-                        booking.checkoutDate
-                      )}{" "}
-                      día
-                      {bookingService.calculateStayDuration(
-                        booking.checkinDate,
-                        booking.checkoutDate
-                      ) !== 1
-                        ? "s"
-                        : ""}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3">
+                  
+                  {/* BOTÓN 1: CANCELAR (Solo si está activa) */}
+                  {canCancel && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleClickCancel(booking)} // 👈 Dispara el modal
+                      className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-100"
+                    >
+                      <Ban className="h-4 w-4" />
+                      Cancelar reserva
+                    </Button>
+                  )}
 
-                  {/* BOTÓN DE RESEÑA */}
+                  {/* BOTÓN 2: RESEÑA (Solo si completada) */}
                   {canReview && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenReview(booking)}
-                      className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
+                      className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
                     >
                       <MessageSquarePlus className="h-4 w-4" />
                       Escribir reseña
@@ -233,12 +253,8 @@ export function TenantBookingsList() {
                   <div className="flex items-start gap-2">
                     <MessageSquare className="mt-0.5 h-4 w-4 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium text-blue-900">
-                        Nota del anfitrión:
-                      </p>
-                      <p className="text-sm text-blue-800">
-                        {booking.hostNote}
-                      </p>
+                      <p className="text-sm font-medium text-blue-900">Nota del anfitrión:</p>
+                      <p className="text-sm text-blue-800">{booking.hostNote}</p>
                     </div>
                   </div>
                 </div>
@@ -248,14 +264,25 @@ export function TenantBookingsList() {
         })}
       </div>
 
-      {/* MODAL DE RESEÑA */}
+      {/* 5. Renderizado de Modales al final del DOM */}
+      
       <LeaveReviewModal
         isOpen={reviewModal.isOpen}
         onClose={() => setReviewModal((prev) => ({ ...prev, isOpen: false }))}
         onSubmit={handleSubmitReview}
-        reviewRole="guest" // Aquí siempre es el huésped opinando sobre la propiedad
+        reviewRole="guest"
         targetName={reviewModal.targetName}
         targetImage={reviewModal.targetImage}
+      />
+
+      {/* MODAL DE PRE-CANCELACIÓN */}
+      <PreCancellationModal 
+        isOpen={cancelModal.isOpen}
+        onClose={() => setCancelModal(prev => ({...prev, isOpen: false}))}
+        onConfirmCancel={handleConfirmCancel}
+        totalAmount={cancelModal.totalAmount}
+        policyType={cancelModal.policyType}
+        checkInDate={cancelModal.checkInDate}
       />
     </div>
   );

@@ -44,7 +44,12 @@ export function ReviewNudge() {
       if (!hasPendingReview) return;
 
       // 2. Determinar el role según el contexto actual (pathname)
-      const isHostContext = pathname.startsWith("/host");
+      // Solo mostrar en rutas específicas exactas
+      const isHostContext = pathname === "/host";
+      const isTenantContext = pathname === "/";
+      
+      // Si no estamos en ninguna de las rutas permitidas, no mostrar
+      if (!isHostContext && !isTenantContext) return;
       
       let mockPending: PendingReview;
 

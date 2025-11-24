@@ -1,4 +1,5 @@
 import Navbar from "@/src/components/layout/Navbar";
+import { Footer } from "@/src/components/layout/Footer";
 
 export default function MainLayout({
   children,
@@ -11,6 +12,7 @@ export default function MainLayout({
 
       <div className="max-w-8xl mx-auto w-full">
         <main className="min-h-screen px-6 py-6">{children}</main>
+        <Footer />
       </div>
     </>
   );
