@@ -14,6 +14,8 @@ import GuestRequestModal, {
 } from "@/src/components/features/host/GuestRequestModal";
 import DeclineReasonModal from "@/src/components/features/host/DeclineReasonModal";
 import AcceptReasonModal from "@/src/components/features/host/AcceptReasonModal";
+// Importamos el Modal de Reseña
+import { LeaveReviewModal } from "@/src/components/reviews/LeaveReviewModal";
 import { useHostBookings } from "@/src/hooks/useHostBookings";
 import { bookingService } from "@/src/services/booking.service";
 
@@ -62,7 +64,7 @@ const statusSegments: FilterSegment<"all" | HostReservationStatus>[] = [
 
 const timeSegments: FilterSegment<TimeFilter>[] = [
   { key: "present", label: "Presentes" },
-  { key: "upcoming", label: "Proximas" },
+  { key: "upcoming", label: "Próximas" },
   { key: "past", label: "Pasadas" },
   { key: "all", label: "Todas" },
 ];
@@ -90,10 +92,26 @@ export default function HostReservationsPage() {
   const [selectedReservation, setSelectedReservation] =
     useState<DetailedReservation | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  
+  // Modales de acción existentes
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [pendingDeclineId, setPendingDeclineId] = useState<string | null>(null);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null);
+  
+  // Nuevo Estado para el Modal de Reseña
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    bookingId: number | null;
+    guestName: string;
+    guestImage?: string;
+  }>({
+    isOpen: false,
+    bookingId: null,
+    guestName: "",
+    guestImage: undefined,
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { bookings, loading, error, refreshBookings } = useHostBookings();
@@ -260,7 +278,8 @@ export default function HostReservationsPage() {
     }
   }, [loadReservationDetails, selectedReservationId]);
 
-  // Funciones de callback para las acciones del modal
+  // --- HANDLERS DE ACCIÓN ---
+
   const handleAcceptReservation = (requestId: string) => {
     setPendingAcceptId(requestId);
     setShowAcceptModal(true);
@@ -269,7 +288,6 @@ export default function HostReservationsPage() {
   const handleConfirmAccept = async (note: string) => {
     if (!pendingAcceptId) return;
 
-    // Extraer el bookingId numérico del requestId (formato: RES-123)
     const bookingId = parseInt(pendingAcceptId.replace("RES-", ""), 10);
 
     if (isNaN(bookingId)) {
@@ -281,15 +299,10 @@ export default function HostReservationsPage() {
 
     try {
       await bookingService.acceptBooking(bookingId, note || undefined);
-
-      // Cerrar modales y limpiar estado
       setShowAcceptModal(false);
       setSelectedReservationId(null);
       setPendingAcceptId(null);
-
-      // Refrescar la lista de reservas
       await refreshBookings();
-
       console.log("✅ Reserva aceptada exitosamente");
     } catch (error) {
       console.error("❌ Error al aceptar reserva:", error);
@@ -309,7 +322,6 @@ export default function HostReservationsPage() {
   const handleConfirmDecline = async (reason: string) => {
     if (!pendingDeclineId) return;
 
-    // Extraer el bookingId numérico del requestId (formato: RES-123)
     const bookingId = parseInt(pendingDeclineId.replace("RES-", ""), 10);
 
     if (isNaN(bookingId)) {
@@ -321,15 +333,10 @@ export default function HostReservationsPage() {
 
     try {
       await bookingService.declineBooking(bookingId, reason || undefined);
-
-      // Cerrar modales y limpiar estado
       setShowDeclineModal(false);
       setSelectedReservationId(null);
       setPendingDeclineId(null);
-
-      // Refrescar la lista de reservas
       await refreshBookings();
-
       console.log("✅ Reserva rechazada exitosamente");
     } catch (error) {
       console.error("❌ Error al rechazar reserva:", error);
@@ -344,7 +351,6 @@ export default function HostReservationsPage() {
   const handleCancelReservation = (requestId: string) => {
     if (confirm("¿Estás seguro de que quieres cancelar esta reserva?")) {
       console.log("Cancelar reserva:", requestId);
-      // TODO: Implementar lógica de cancelar reserva
       setSelectedReservationId(null);
     }
   };
@@ -355,27 +361,57 @@ export default function HostReservationsPage() {
     setSelectedReservationId(null);
   };
 
+  // ✅ LOGICA DE RESEÑAS CONECTADA
   const handleWriteReview = (requestId: string) => {
-    console.log("Escribir reseña:", requestId);
-    // TODO: Abrir modal de reseña
+    const numericId = parseInt(requestId.replace("RES-", ""), 10);
+    
+    // Intentamos buscar la reserva completa para obtener la foto del huésped
+    // Si tenemos selectedReservation (el modal de detalles abierto), usamos eso.
+    const guestImage = selectedReservation?.profileImageUrl || 
+                       bookings.find(b => b.bookingId === numericId)?.imageUrl;
+
+    const guestName = selectedReservation?.guestName || 
+                      formattedReservations.find(r => r.id === requestId)?.guestName || 
+                      "Huésped";
+
+    setReviewModal({
+      isOpen: true,
+      bookingId: numericId,
+      guestName: guestName,
+      guestImage: guestImage || undefined
+    });
+
+    // Cerramos el modal de detalles para enfocar la reseña
     setSelectedReservationId(null);
+  };
+
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!reviewModal.bookingId) return;
+
+    console.log("👑 Host enviando reseña:", { 
+      bookingId: reviewModal.bookingId, 
+      rating, 
+      comment 
+    });
+
+    // AQUÍ: Llamada al servicio real
+    // await reviewService.createHostReview(...)
+
+    setReviewModal(prev => ({ ...prev, isOpen: false }));
   };
 
   const handleViewReviews = (requestId: string) => {
     console.log("Ver reseñas:", requestId);
-    // TODO: Mostrar modal de reseñas
     setSelectedReservationId(null);
   };
 
   const handleViewMessages = (requestId: string) => {
     console.log("Ver mensajes:", requestId);
-    // TODO: Redirigir a historial de mensajes
     setSelectedReservationId(null);
   };
 
   const handleModifyReservation = (requestId: string) => {
     console.log("Modificar reserva:", requestId);
-    // TODO: Abrir modal de modificación
     setSelectedReservationId(null);
   };
 
@@ -418,8 +454,8 @@ export default function HostReservationsPage() {
             Reservas de mis espacios
           </h1>
           <p className="max-w-3xl text-gray-600">
-            Revisa el estado de tus reservas actuales, identifica las proximas
-            llegadas y navega rapidamente al detalle para aceptar o rechazar
+            Revisa el estado de tus reservas actuales, identifica las próximas
+            llegadas y navega rápidamente al detalle para aceptar o rechazar
             solicitudes pendientes.
           </p>
         </header>
@@ -505,6 +541,16 @@ export default function HostReservationsPage() {
         checkOut={selectedReservation?.checkOut}
         totalAmount={selectedReservation?.totalAmount}
         isLoading={isSubmitting}
+      />
+
+      {/* ✅ Modal de Reseña (Host) */}
+      <LeaveReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={() => setReviewModal(prev => ({ ...prev, isOpen: false }))}
+        onSubmit={handleSubmitReview}
+        reviewRole="host" // 👈 Activa el modo anfitrión (morado)
+        targetName={reviewModal.guestName}
+        targetImage={reviewModal.guestImage}
       />
 
       {/* Modal de carga para detalles */}
