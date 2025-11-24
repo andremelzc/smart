@@ -249,12 +249,12 @@ function AccountMessagesContent() {
     <div className="flex flex-col gap-4">
       {/* Título de la sección (igual al mockup) */}
       <div className="flex items-center gap-2">
-        <MessageCircle className="w-5 h-5 text-blue-600" />
+        <MessageCircle className="h-5 w-5 text-blue-600" />
         <p className="text-sm font-semibold text-gray-700">
           Chat disponible cuando envías una solicitud
         </p>
       </div>
-      <h1 className="text-3xl font-semibold text-gray-dark-900 mb-2">
+      <h1 className="text-gray-dark-900 mb-2 text-3xl font-semibold">
         Mensajes
       </h1>
       <p className="text-gray-dark-600 -mt-4">
@@ -263,26 +263,26 @@ function AccountMessagesContent() {
       </p>
 
       {/* Contenedor principal del chat (2 columnas) */}
-      <div className="border border-gray-200 rounded-2xl h-[calc(100vh-300px)] min-h-[500px] grid grid-cols-1 md:grid-cols-3 overflow-hidden">
+      <div className="grid h-[calc(100vh-300px)] min-h-[500px] grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 md:grid-cols-3">
         {/* Columna Izquierda: Lista de Conversaciones */}
         <div className="flex flex-col border-r border-gray-200 bg-white">
-          <div className="p-4 border-b border-gray-200">
+          <div className="border-b border-gray-200 p-4">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Buscar anfitrión o reserva"
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pr-4 pl-10 text-sm focus:bg-white focus:ring-1 focus:ring-blue-500"
               />
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
             {/* --- NUEVO: Texto de ayuda del mockup --- */}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="mt-2 text-xs text-gray-500">
               Solo verás las conversaciones de reservas que tú iniciaste.
             </p>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 space-y-1 overflow-y-auto p-2">
             {conversations.length === 0 ? (
-              <p className="p-4 text-sm text-center text-gray-500">
+              <p className="p-4 text-center text-sm text-gray-500">
                 No tienes conversaciones. Inicia un chat desde una de tus
                 reservas.
               </p>
@@ -300,7 +300,7 @@ function AccountMessagesContent() {
         </div>
 
         {/* Columna Derecha: Chat Activo */}
-        <div className="md:col-span-2 flex flex-col bg-gray-50 h-full">
+        <div className="flex h-full flex-col bg-gray-50 md:col-span-2">
           {!activeConversation ? (
             <ChatPlaceholder />
           ) : (
@@ -309,9 +309,9 @@ function AccountMessagesContent() {
               <ChatHeader conversation={activeConversation} />
 
               {/* Cuerpo de Mensajes */}
-              <div className="flex-1 p-4 md:p-6 space-y-4 overflow-y-auto">
+              <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
                 {/* --- NUEVO: Mensaje de "Chat generado" del mockup --- */}
-                <p className="text-xs text-center text-gray-400">
+                <p className="text-center text-xs text-gray-400">
                   Chat generado automaticamente <br />
                   Creado el{" "}
                   {new Date(
@@ -374,30 +374,24 @@ function ConversationListItem({
   return (
     <button
       onClick={() => onSelect(conversation.reservationId)}
-      className={`w-full text-left p-4 rounded-lg transition-colors ${
-        isActive
-          ? "bg-blue-50 border border-blue-200"
-          : "hover:bg-gray-50"
+      className={`w-full rounded-lg p-4 text-left transition-colors ${
+        isActive ? "border border-blue-200 bg-blue-50" : "hover:bg-gray-50"
       }`}
     >
-      <div className="flex justify-between items-center mb-1">
-        <h3 className="font-semibold text-gray-800">
-          {conversation.hostName}
-        </h3>
+      <div className="mb-1 flex items-center justify-between">
+        <h3 className="font-semibold text-gray-800">{conversation.hostName}</h3>
         <span
-          className={`px-2 py-0.5 text-xs font-medium rounded ${statusClass}`} // --- MODIFICADO: "rounded" en vez de "rounded-full"
+          className={`rounded px-2 py-0.5 text-xs font-medium ${statusClass}`} // --- MODIFICADO: "rounded" en vez de "rounded-full"
         >
           {statusLabel}
         </span>
       </div>
-      <p className="text-sm text-gray-600 truncate">
+      <p className="truncate text-sm text-gray-600">
         {conversation.propertyName}
       </p>
-      <p className="text-xs text-gray-400 mt-1">
-        {conversation.reservationId}
-      </p>
+      <p className="mt-1 text-xs text-gray-400">{conversation.reservationId}</p>
       {lastMessage && (
-        <p className="text-sm text-gray-500 mt-2 truncate">
+        <p className="mt-2 truncate text-sm text-gray-500">
           <span className="font-medium">
             {lastMessage.sender === "guest" ? "Tú: " : "Anfitrión: "}
           </span>
@@ -419,24 +413,24 @@ function ChatHeader({ conversation }: { conversation: Conversation }) {
   };
 
   return (
-    <div className="p-4 border-b border-gray-200 bg-white shadow-sm">
+    <div className="border-b border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900">
             {conversation.hostName}
           </h2>
-          <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+          <div className="mt-1 flex items-center gap-4 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+              <Calendar className="h-3 w-3" />
               {formatDate(conversation.checkIn)} -{" "}
               {formatDate(conversation.checkOut)}
             </span>
             <span className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
+              <MapPin className="h-3 w-3" />
               {conversation.location}
             </span>
             <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
+              <Users className="h-3 w-3" />
               {conversation.guests} huésped
               {conversation.guests > 1 ? "es" : ""}
             </span>
@@ -472,16 +466,16 @@ function MessageBubble({
   return (
     <div className={`flex ${isGuest ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-xs md:max-w-md p-3 rounded-2xl ${
+        className={`max-w-xs rounded-2xl p-3 md:max-w-md ${
           isGuest
-            ? "bg-blue-600 text-white rounded-br-lg"
-            : "bg-white text-gray-800 border border-gray-200 rounded-bl-lg"
+            ? "rounded-br-lg bg-blue-600 text-white"
+            : "rounded-bl-lg border border-gray-200 bg-white text-gray-800"
         }`}
       >
         <p className="text-sm">{message.content}</p>
         <p
-          className={`text-xs mt-1 ${
-            isGuest ? "text-blue-100/70 text-right" : "text-gray-400" // --- MODIFICADO: hora alineada
+          className={`mt-1 text-xs ${
+            isGuest ? "text-right text-blue-100/70" : "text-gray-400" // --- MODIFICADO: hora alineada
           }`}
         >
           {formatTime(message.timestamp)}
@@ -507,10 +501,10 @@ function ChatInput({
   return (
     <form
       onSubmit={onSendMessage}
-      className="p-4 bg-white border-t border-gray-200"
+      className="border-t border-gray-200 bg-white p-4"
     >
       {/* --- NUEVO: Mensaje de "Comparte detalles" del mockup --- */}
-      <div className="p-3 rounded-lg bg-gray-100 text-center mb-3">
+      <div className="mb-3 rounded-lg bg-gray-100 p-3 text-center">
         <p className="text-sm text-gray-600">
           Comparte detalles con el anfitrión para acelerar la confirmación...
         </p>
@@ -522,7 +516,7 @@ function ChatInput({
           onChange={(e) => setCurrentMessage(e.target.value)}
           placeholder="Escribe tu mensaje..."
           rows={1}
-          className="flex-1 p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 resize-none"
+          className="flex-1 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm focus:bg-white focus:ring-1 focus:ring-blue-500"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -532,14 +526,14 @@ function ChatInput({
         />
         <button
           type="submit"
-          className="p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="rounded-lg bg-blue-600 p-3 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
           disabled={!currentMessage.trim()}
         >
-          <Send className="w-5 h-5" />
+          <Send className="h-5 w-5" />
         </button>
       </div>
       {/* --- NUEVO: Texto de "Consejo" del mockup --- */}
-      <p className="text-xs text-gray-400 mt-2 text-center">
+      <p className="mt-2 text-center text-xs text-gray-400">
         Consejo: responde rápido para mantener tu lugar.
       </p>
     </form>
@@ -550,8 +544,8 @@ function ChatInput({
 
 function ChatPlaceholder() {
   return (
-    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-      <MessageCircle className="w-16 h-16 text-gray-300" />
+    <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+      <MessageCircle className="h-16 w-16 text-gray-300" />
       <h3 className="mt-4 text-lg font-semibold text-gray-700">
         Selecciona una conversación
       </h3>

@@ -75,10 +75,10 @@ export default function AccountSidebar() {
   const allItems = isHost ? [...sidebarItems, ...hostItems] : sidebarItems;
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 h-full flex flex-col">
+    <aside className="flex h-full w-80 flex-col border-r border-gray-200 bg-white">
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
+          <div className="mb-8 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6">
             <div className="flex items-center gap-4">
               {user?.image ? (
                 <Image
@@ -86,24 +86,27 @@ export default function AccountSidebar() {
                   alt={user.name || "Usuario"}
                   width={64}
                   height={64}
-                  className="rounded-full object-cover border-4 border-white shadow-lg"
+                  className="rounded-full border-4 border-white object-cover shadow-lg"
                 />
               ) : (
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-                  <User className="w-8 h-8 text-white" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                  <User className="h-8 w-8 text-white" />
                 </div>
               )}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 text-lg truncate">
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-lg font-bold text-gray-900">
                   {user?.name || "Usuario"}
                 </h3>
-                <p className="text-sm text-gray-600 mt-0.5 truncate" title={user?.email || undefined}>
+                <p
+                  className="mt-0.5 truncate text-sm text-gray-600"
+                  title={user?.email || undefined}
+                >
                   {user?.email}
                 </p>
                 {isHost && (
                   <div className="mt-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm">
-                      <Building2 className="w-3.5 h-3.5" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                      <Building2 className="h-3.5 w-3.5" />
                       Anfitrion
                     </span>
                   </div>
@@ -121,11 +124,13 @@ export default function AccountSidebar() {
                 return (
                   <div
                     key={item.name}
-                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 cursor-not-allowed bg-gray-50 border border-gray-200"
+                    className="flex cursor-not-allowed items-center gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-400"
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium text-gray-400">{item.name}</div>
+                      <div className="font-medium text-gray-400">
+                        {item.name}
+                      </div>
                       <div className="text-sm text-gray-400">Proximamente</div>
                     </div>
                   </div>
@@ -136,28 +141,36 @@ export default function AccountSidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  className={`group flex w-full items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 ${
                     isActive
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
                   <Icon
-                    className={`w-5 h-5 ${
-                      isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"
+                    className={`h-5 w-5 ${
+                      isActive
+                        ? "text-white"
+                        : "text-gray-500 group-hover:text-gray-700"
                     }`}
                   />
                   <div className="flex-1 text-left">
-                    <div className={`font-medium ${isActive ? "text-white" : "text-gray-900"}`}>
+                    <div
+                      className={`font-medium ${isActive ? "text-white" : "text-gray-900"}`}
+                    >
                       {item.name}
                     </div>
-                    <div className={`text-sm ${isActive ? "text-blue-100" : "text-gray-500"}`}>
+                    <div
+                      className={`text-sm ${isActive ? "text-blue-100" : "text-gray-500"}`}
+                    >
                       {item.description}
                     </div>
                   </div>
                   <ChevronRight
-                    className={`w-4 h-4 transition-transform ${
-                      isActive ? "text-white rotate-90" : "text-gray-400 group-hover:translate-x-1"
+                    className={`h-4 w-4 transition-transform ${
+                      isActive
+                        ? "rotate-90 text-white"
+                        : "text-gray-400 group-hover:translate-x-1"
                     }`}
                   />
                 </Link>

@@ -20,7 +20,7 @@ export async function GET() {
           port: process.env.DB_PORT,
           sid: process.env.DB_SID,
           username: process.env.DB_USERNAME,
-          password: process.env.DB_PASSWORD ? "********" : "(vacío)"
+          password: process.env.DB_PASSWORD ? "********" : "(vacío)",
         },
       },
     });
@@ -30,15 +30,16 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : 'Error de conexión',
-        errorType: error instanceof Error ? error.constructor.name : 'UnknownError',
+        message: error instanceof Error ? error.message : "Error de conexión",
+        errorType:
+          error instanceof Error ? error.constructor.name : "UnknownError",
         env: {
           DB_USERNAME: process.env.DB_USERNAME,
           DB_PASSWORD: process.env.DB_PASSWORD ? "********" : "(vacío)",
           DB_HOST: process.env.DB_HOST,
           DB_PORT: process.env.DB_PORT,
-          DB_SID: process.env.DB_SID
-        }
+          DB_SID: process.env.DB_SID,
+        },
       },
       { status: 500 }
     );

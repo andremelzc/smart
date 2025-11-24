@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { executeQuery } from '@/src/lib/database';
+import { NextResponse } from "next/server";
+import { executeQuery } from "@/src/lib/database";
 
 type LocationRow = {
   CIUDAD?: unknown;
@@ -15,15 +15,15 @@ type LocationRow = {
 };
 
 const toText = (value: unknown): string => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") {
     return String(value);
   }
-  return '';
+  return "";
 };
 
 const toNumber = (value: unknown): number => {
-  const numeric = typeof value === 'number' ? value : Number(value);
+  const numeric = typeof value === "number" ? value : Number(value);
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
@@ -49,8 +49,11 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: rows });
   } catch (error: unknown) {
-    console.error('Error fetching locations:', error);
-    const message = error instanceof Error ? error.message : 'No se pudo obtener las ubicaciones.';
+    console.error("Error fetching locations:", error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo obtener las ubicaciones.";
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

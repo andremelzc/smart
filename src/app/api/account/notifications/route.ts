@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import { getConnection } from "@/src/lib/database";
-import type { NotificationItem, NotificationRole, NotificationStatus } from "@/src/types/dtos/notifications.dto";
+import type {
+  NotificationItem,
+  NotificationRole,
+  NotificationStatus,
+} from "@/src/types/dtos/notifications.dto";
 import oracledb from "oracledb";
 
 interface OracleClob {
@@ -41,20 +45,20 @@ const STATUS_PRIORITY: Record<NotificationStatus, number> = {
 const canonicaliseStatus = (status: string): NotificationStatus => {
   const upper = status.toUpperCase();
   switch (upper) {
-    case 'ACCEPTED':
-    case 'CONFIRMED':
-      return 'ACCEPTED';
-    case 'DECLINED':
-    case 'REJECTED':
-      return 'DECLINED';
-    case 'CANCELLED':
-    case 'CANCELED':
-      return 'CANCELLED';
-    case 'COMPLETED':
-    case 'FINISHED':
-      return 'COMPLETED';
+    case "ACCEPTED":
+    case "CONFIRMED":
+      return "ACCEPTED";
+    case "DECLINED":
+    case "REJECTED":
+      return "DECLINED";
+    case "CANCELLED":
+    case "CANCELED":
+      return "CANCELLED";
+    case "COMPLETED":
+    case "FINISHED":
+      return "COMPLETED";
     default:
-      return 'PENDING';
+      return "PENDING";
   }
 };
 
@@ -85,8 +89,10 @@ const toIsoString = (value: Date | string | null | undefined) => {
   return date.toISOString();
 };
 
-const mapRowToNotification = async (row: RawNotificationRow): Promise<NotificationItem> => {
-  const status = canonicaliseStatus(row.STATUS || '');
+const mapRowToNotification = async (
+  row: RawNotificationRow
+): Promise<NotificationItem> => {
+  const status = canonicaliseStatus(row.STATUS || "");
   let eventAt: Date | null = null;
 
   switch (status) {
@@ -112,8 +118,11 @@ const mapRowToNotification = async (row: RawNotificationRow): Promise<Notificati
     status,
     createdAt: toIsoString(row.CREATED_AT),
     eventAt: toIsoString(eventAt),
-  checkinDate: toIsoString(row.CHECKIN_DATE) ?? new Date(row.CHECKIN_DATE).toISOString(),
-  checkoutDate: toIsoString(row.CHECKOUT_DATE) ?? new Date(row.CHECKOUT_DATE).toISOString(),
+    checkinDate:
+      toIsoString(row.CHECKIN_DATE) ?? new Date(row.CHECKIN_DATE).toISOString(),
+    checkoutDate:
+      toIsoString(row.CHECKOUT_DATE) ??
+      new Date(row.CHECKOUT_DATE).toISOString(),
     totalAmount: row.TOTAL_AMOUNT,
     currencyCode: row.CURRENCY_CODE,
     role: row.ROLE_TAG === ROLE_HOST ? ROLE_HOST : ROLE_TENANT,
@@ -126,7 +135,9 @@ const mapRowToNotification = async (row: RawNotificationRow): Promise<Notificati
 
 const CHECKIN_REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-const applyReminderMetadata = (notification: NotificationItem): NotificationItem => {
+const applyReminderMetadata = (
+  notification: NotificationItem
+): NotificationItem => {
   if (notification.status !== "ACCEPTED") {
     return notification;
   }
@@ -175,15 +186,23 @@ export async function GET(request: NextRequest) {
 
     const userId = Number.parseInt(session.user.id, 10);
     if (!Number.isFinite(userId)) {
-      return NextResponse.json({ error: "Identificador de usuario no valido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Identificador de usuario no valido" },
+        { status: 400 }
+      );
     }
 
     const roleParam = request.nextUrl.searchParams.get("role")?.toLowerCase();
-    const requestedRole = roleParam === ROLE_HOST || roleParam === ROLE_TENANT ? roleParam : null;
+    const requestedRole =
+      roleParam === ROLE_HOST || roleParam === ROLE_TENANT ? roleParam : null;
 
     connection = await getConnection();
 
-    const queries: Array<{ role: NotificationRole; sql: string; binds: oracledb.BindParameters }> = [];
+    const queries: Array<{
+      role: NotificationRole;
+      sql: string;
+      binds: oracledb.BindParameters;
+    }> = [];
 
     if (!requestedRole || requestedRole === ROLE_HOST) {
       queries.push({
@@ -255,7 +274,10 @@ export async function GET(request: NextRequest) {
       const rows = result.rows as RawNotificationRow[] | undefined;
       if (rows && rows.length > 0) {
         for (const row of rows) {
-          const enriched: RawNotificationRow = { ...row, ROLE_TAG: query.role } as RawNotificationRow;
+          const enriched: RawNotificationRow = {
+            ...row,
+            ROLE_TAG: query.role,
+          } as RawNotificationRow;
           const notification = await mapRowToNotification(enriched);
           notificationResults.push(applyReminderMetadata(notification));
         }
@@ -268,7 +290,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error al obtener notificaciones:", error);
-    return NextResponse.json({ error: "No se pudieron obtener las notificaciones" }, { status: 500 });
+    return NextResponse.json(
+      { error: "No se pudieron obtener las notificaciones" },
+      { status: 500 }
+    );
   } finally {
     if (connection) {
       try {

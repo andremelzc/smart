@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import { getConnection } from "@/src/lib/database";
-import oracledb from 'oracledb';
+import oracledb from "oracledb";
 
 export async function GET() {
   let connection: oracledb.Connection | null = null;
@@ -11,10 +11,7 @@ export async function GET() {
     // Verificar autenticación
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     const hostId = parseInt(session.user.id);
@@ -30,7 +27,7 @@ export async function GET() {
        END;`,
       {
         p_host_id: hostId,
-        p_bookings_cur: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+        p_bookings_cur: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
       }
     );
 
@@ -55,10 +52,10 @@ export async function GET() {
     if (outBinds.p_bookings_cur) {
       try {
         const bookingRows = await outBinds.p_bookings_cur.getRows();
-        
+
         for (const row of bookingRows) {
           const bookingRow = row as unknown[];
-          
+
           bookings.push({
             bookingId: bookingRow[0] as number,
             checkinDate: bookingRow[1] as string,
@@ -80,17 +77,16 @@ export async function GET() {
     // Respuesta exitosa
     return NextResponse.json({
       success: true,
-      data: bookings
+      data: bookings,
     });
-
   } catch (error) {
     console.error("Error en get_bookings_by_host:", error);
 
     // Manejar errores de Oracle específicos
-    if (error && typeof error === 'object' && 'errorNum' in error) {
+    if (error && typeof error === "object" && "errorNum" in error) {
       const oracleError = error as { errorNum: number; message: string };
       console.error("Oracle Error:", oracleError.errorNum, oracleError.message);
-      
+
       return NextResponse.json(
         { error: `Error en la base de datos: ${oracleError.message}` },
         { status: 500 }
@@ -102,7 +98,6 @@ export async function GET() {
       { error: "Error interno del servidor" },
       { status: 500 }
     );
-
   } finally {
     // Cerrar conexión si existe
     if (connection) {

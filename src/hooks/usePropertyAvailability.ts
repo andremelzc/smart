@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 /**
  * Tipos de disponibilidad
@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 export interface AvailabilityDay {
   date: string; // YYYY-MM-DD
   available: boolean;
-  reason: 'available' | 'booked' | 'blocked' | 'maintenance';
+  reason: "available" | "booked" | "blocked" | "maintenance";
 }
 
 export interface AvailabilitySummary {
@@ -29,14 +29,14 @@ interface UsePropertyAvailabilityReturn {
 
 /**
  * Hook para gestionar la disponibilidad de una propiedad
- * 
+ *
  * @param propertyId - ID de la propiedad
  * @param startDate - Fecha inicial (default: hoy)
  * @param endDate - Fecha final (default: hoy + 90 días)
- * 
+ *
  * @example
  * ```tsx
- * const { availability, summary, isLoading, checkDateRange } = 
+ * const { availability, summary, isLoading, checkDateRange } =
  *   usePropertyAvailability(propertyId, new Date(), futureDate);
  * ```
  */
@@ -51,15 +51,15 @@ export function usePropertyAvailability(
   const [error, setError] = useState<string | null>(null);
   const [isCheckingRange, setIsCheckingRange] = useState(false);
 
-  // Fechas por defecto
-  const start = startDate || new Date();
-  const end = endDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  // Convertir fechas a strings para dependencias estables
+  const startDateStr = startDate?.toISOString() ?? "";
+  const endDateStr = endDate?.toISOString() ?? "";
 
   /**
    * Formatear fecha a YYYY-MM-DD
    */
   const formatDate = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   /**
@@ -72,6 +72,10 @@ export function usePropertyAvailability(
     setError(null);
 
     try {
+      // Usar las fechas pasadas o crear defaults
+      const start = startDate || new Date();
+      const end = endDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
       const params = new URLSearchParams({
         startDate: formatDate(start),
         endDate: formatDate(end),
@@ -82,7 +86,7 @@ export function usePropertyAvailability(
       );
 
       if (!response.ok) {
-        throw new Error('Error al obtener disponibilidad');
+        throw new Error("Error al obtener disponibilidad");
       }
 
       const data = await response.json();
@@ -97,11 +101,13 @@ export function usePropertyAvailability(
           maintenanceDays: data.meta.maintenanceDays,
         });
       } else {
-        throw new Error(data.error || 'Error desconocido');
+        throw new Error(data.error || "Error desconocido");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar disponibilidad');
-      console.error('Error fetching availability:', err);
+      setError(
+        err instanceof Error ? err.message : "Error al cargar disponibilidad"
+      );
+      console.error("Error fetching availability:", err);
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +116,10 @@ export function usePropertyAvailability(
   /**
    * Verificar si un rango de fechas está disponible
    */
-  const checkDateRange = async (checkin: Date, checkout: Date): Promise<boolean> => {
+  const checkDateRange = async (
+    checkin: Date,
+    checkout: Date
+  ): Promise<boolean> => {
     if (!propertyId) return false;
 
     setIsCheckingRange(true);
@@ -119,9 +128,9 @@ export function usePropertyAvailability(
       const response = await fetch(
         `/api/properties/${propertyId}/availability`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             checkinDate: formatDate(checkin),
@@ -131,13 +140,13 @@ export function usePropertyAvailability(
       );
 
       if (!response.ok) {
-        throw new Error('Error al verificar disponibilidad');
+        throw new Error("Error al verificar disponibilidad");
       }
 
       const data = await response.json();
       return data.success && data.available;
     } catch (err) {
-      console.error('Error checking date range:', err);
+      console.error("Error checking date range:", err);
       return false;
     } finally {
       setIsCheckingRange(false);
@@ -155,7 +164,7 @@ export function usePropertyAvailability(
   useEffect(() => {
     fetchAvailability();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propertyId, start.getTime(), end.getTime()]);
+  }, [propertyId, startDateStr, endDateStr]);
 
   return {
     availability,

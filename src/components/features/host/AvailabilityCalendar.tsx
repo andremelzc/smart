@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { DayPicker, DateRange } from 'react-day-picker';
-import { es } from 'date-fns/locale';
-import 'react-day-picker/dist/style.css';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/src/components/ui/Button';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { DayPicker, DateRange } from "react-day-picker";
+import { es } from "date-fns/locale";
+import "react-day-picker/dist/style.css";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/src/components/ui/Button";
+import { Loader2 } from "lucide-react";
 
 // Importa tu servicio de disponibilidad
-import { 
-  hostAvailabilityService, 
+import {
+  hostAvailabilityService,
   SetAvailabilityParams,
-  HostCalendarDay
-} from '@/src/services/host-availability.service';
+  HostCalendarDay,
+} from "@/src/services/host-availability.service";
 
 type Props = {
   propertyId: string;
@@ -22,7 +22,7 @@ type Props = {
 // Define el tipo de respuesta del calendario (adaptado para el componente)
 type CalendarDay = {
   date: string;
-  status: 'available' | 'booked' | 'blocked' | 'maintenance' | 'special';
+  status: "available" | "booked" | "blocked" | "maintenance" | "special";
   pricePerNight?: number;
 };
 
@@ -33,7 +33,7 @@ type SetAvailabilityResponse = {
 };
 
 // Helper para convertir Date a string YYYY-MM-DD
-const toISODate = (date: Date): string => date.toISOString().split('T')[0];
+const toISODate = (date: Date): string => date.toISOString().split("T")[0];
 
 export function AvailabilityCalendar({ propertyId }: Props) {
   const queryClient = useQueryClient();
@@ -42,21 +42,30 @@ export function AvailabilityCalendar({ propertyId }: Props) {
 
   // --- QUERY (GET) ---
   // Obtiene los días del calendario con su estado
-  const { data: calendarDays, isLoading: isLoadingCalendar } = useQuery<CalendarDay[]>({
-    queryKey: ['hostCalendar', propertyId, currentMonth.getFullYear(), currentMonth.getMonth()],
+  const { data: calendarDays, isLoading: isLoadingCalendar } = useQuery<
+    CalendarDay[]
+  >({
+    queryKey: [
+      "hostCalendar",
+      propertyId,
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+    ],
     queryFn: async () => {
       const result = await hostAvailabilityService.getCalendar(
         propertyId,
         currentMonth.getMonth(), // 0-11
         currentMonth.getFullYear()
       );
-      
+
       // Mapear HostCalendarDay a CalendarDay
-      return (result || []).map((day: HostCalendarDay): CalendarDay => ({
-        date: day.date,
-        status: day.reason, // 'available' | 'booked' | 'blocked' | 'maintenance'
-        pricePerNight: day.price ?? undefined,
-      }));
+      return (result || []).map(
+        (day: HostCalendarDay): CalendarDay => ({
+          date: day.date,
+          status: day.reason, // 'available' | 'booked' | 'blocked' | 'maintenance'
+          pricePerNight: day.price ?? undefined,
+        })
+      );
     },
   });
 
@@ -77,18 +86,18 @@ export function AvailabilityCalendar({ propertyId }: Props) {
     onSuccess: (data: SetAvailabilityResponse) => {
       if (data.success) {
         // Refresca el calendario
-        queryClient.invalidateQueries({ 
-          queryKey: ['hostCalendar', propertyId] 
+        queryClient.invalidateQueries({
+          queryKey: ["hostCalendar", propertyId],
         });
         setSelectedRange(undefined);
-        alert('¡Calendario actualizado correctamente!');
+        alert("¡Calendario actualizado correctamente!");
       } else {
-        throw new Error('Error desconocido al guardar');
+        throw new Error("Error desconocido al guardar");
       }
     },
     onError: (error: Error) => {
       alert(`Error al guardar: ${error.message}`);
-    }
+    },
   });
 
   // --- MUTATION (DELETE) ---
@@ -99,63 +108,73 @@ export function AvailabilityCalendar({ propertyId }: Props) {
     { startDate: string; endDate: string }
   >({
     mutationFn: async ({ startDate, endDate }) => {
-      return await hostAvailabilityService.removeAvailability(propertyId, startDate, endDate);
+      return await hostAvailabilityService.removeAvailability(
+        propertyId,
+        startDate,
+        endDate
+      );
     },
 
     onSuccess: (data: SetAvailabilityResponse) => {
       if (data.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: ['hostCalendar', propertyId] 
+        queryClient.invalidateQueries({
+          queryKey: ["hostCalendar", propertyId],
         });
         setSelectedRange(undefined);
-        alert('¡Ajuste eliminado correctamente!');
+        alert("¡Ajuste eliminado correctamente!");
       } else {
-        throw new Error('Error desconocido al eliminar');
+        throw new Error("Error desconocido al eliminar");
       }
     },
     onError: (error: Error) => {
       alert(`Error al eliminar: ${error.message}`);
-    }
+    },
   });
 
   // --- Estilos para los días según su estado ---
   const modifiers = {
     booked: (day: Date): boolean => {
-      return days.some((d) => d.date === toISODate(day) && d.status === 'booked');
+      return days.some(
+        (d) => d.date === toISODate(day) && d.status === "booked"
+      );
     },
     blocked: (day: Date): boolean => {
-      return days.some((d) => 
-        d.date === toISODate(day) && (d.status === 'blocked' || d.status === 'maintenance')
+      return days.some(
+        (d) =>
+          d.date === toISODate(day) &&
+          (d.status === "blocked" || d.status === "maintenance")
       );
     },
     special: (day: Date): boolean => {
-      return days.some((d) => d.date === toISODate(day) && d.status === 'special');
+      return days.some(
+        (d) => d.date === toISODate(day) && d.status === "special"
+      );
     },
   };
 
   const modifiersClassNames = {
-    booked: 'day-booked',
-    blocked: 'day-blocked',
-    special: 'day-special',
+    booked: "day-booked",
+    blocked: "day-blocked",
+    special: "day-special",
   };
 
   // --- Handlers para guardar cambios ---
-  const handleSave = (kind: 'blocked' | 'maintenance' | 'special'): void => {
+  const handleSave = (kind: "blocked" | "maintenance" | "special"): void => {
     if (!selectedRange?.from || !selectedRange?.to) {
-      alert('Por favor selecciona un rango de fechas');
+      alert("Por favor selecciona un rango de fechas");
       return;
     }
 
     let price: number | null = null;
-    
+
     // Si es precio especial, pedir el monto
-    if (kind === 'special') {
+    if (kind === "special") {
       const priceInput = prompt("Ingresa el precio por noche (ej: 150.50):");
       if (!priceInput) return; // Usuario canceló
-      
+
       price = parseFloat(priceInput);
       if (isNaN(price) || price <= 0) {
-        alert('Precio inválido. Debe ser un número mayor a 0');
+        alert("Precio inválido. Debe ser un número mayor a 0");
         return;
       }
     }
@@ -172,11 +191,15 @@ export function AvailabilityCalendar({ propertyId }: Props) {
   // Manejador para eliminar ajuste de disponibilidad
   const handleRemove = () => {
     if (!selectedRange || !selectedRange.from || !selectedRange.to) {
-      alert('Por favor selecciona un rango de fechas');
+      alert("Por favor selecciona un rango de fechas");
       return;
     }
 
-    if (!confirm('¿Estás seguro de que quieres eliminar este ajuste de disponibilidad?')) {
+    if (
+      !confirm(
+        "¿Estás seguro de que quieres eliminar este ajuste de disponibilidad?"
+      )
+    ) {
       return;
     }
 
@@ -214,22 +237,22 @@ export function AvailabilityCalendar({ propertyId }: Props) {
       {/* Indicador de carga */}
       {isLoading && (
         <div className="flex justify-center p-4">
-          <Loader2 className="animate-spin h-6 w-6 text-primary" />
+          <Loader2 className="text-primary h-6 w-6 animate-spin" />
         </div>
       )}
 
       {/* Leyenda de colores */}
       <div className="flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-200 border border-red-600"></div>
+          <div className="h-4 w-4 border border-red-600 bg-red-200"></div>
           <span>Reservado</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-300 border border-gray-600"></div>
+          <div className="h-4 w-4 border border-gray-600 bg-gray-300"></div>
           <span>Bloqueado/Mantenimiento</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-200 border-2 border-green-700"></div>
+          <div className="h-4 w-4 border-2 border-green-700 bg-green-200"></div>
           <span>Precio Especial</span>
         </div>
       </div>
@@ -252,46 +275,50 @@ export function AvailabilityCalendar({ propertyId }: Props) {
 
       {/* Panel de acciones cuando hay fechas seleccionadas */}
       {selectedRange?.from && selectedRange.to && (
-        <div className="mt-4 p-6 border rounded-lg shadow-sm bg-card">
-          <h4 className="font-semibold text-lg mb-2">Editar Fechas Seleccionadas</h4>
-          <p className="text-sm text-muted-foreground mb-4">
-            <strong>Desde:</strong> {selectedRange.from.toLocaleDateString('es-ES')} <br />
-            <strong>Hasta:</strong> {selectedRange.to.toLocaleDateString('es-ES')}
+        <div className="bg-card mt-4 rounded-lg border p-6 shadow-sm">
+          <h4 className="mb-2 text-lg font-semibold">
+            Editar Fechas Seleccionadas
+          </h4>
+          <p className="text-muted-foreground mb-4 text-sm">
+            <strong>Desde:</strong>{" "}
+            {selectedRange.from.toLocaleDateString("es-ES")} <br />
+            <strong>Hasta:</strong>{" "}
+            {selectedRange.to.toLocaleDateString("es-ES")}
           </p>
-          
+
           <div className="flex flex-wrap gap-3">
-            <Button 
-              onClick={() => handleSave('blocked')} 
-              disabled={isLoading} 
+            <Button
+              onClick={() => handleSave("blocked")}
+              disabled={isLoading}
               variant="primary"
             >
               Bloquear
             </Button>
-            <Button 
-              onClick={() => handleSave('special')} 
+            <Button
+              onClick={() => handleSave("special")}
               disabled={isLoading}
               variant="primary"
             >
               Poner Precio Especial
             </Button>
-            <Button 
-              onClick={() => handleSave('maintenance')} 
-              disabled={isLoading} 
+            <Button
+              onClick={() => handleSave("maintenance")}
+              disabled={isLoading}
               variant="ghost"
             >
               Mantenimiento
             </Button>
-            <Button 
-              onClick={handleRemove} 
-              disabled={isLoading} 
+            <Button
+              onClick={handleRemove}
+              disabled={isLoading}
               variant="ghost"
               className="text-red-600 hover:bg-red-50"
             >
               Eliminar Ajuste
             </Button>
-            <Button 
-              onClick={() => setSelectedRange(undefined)} 
-              disabled={isLoading} 
+            <Button
+              onClick={() => setSelectedRange(undefined)}
+              disabled={isLoading}
               variant="ghost"
             >
               Cancelar

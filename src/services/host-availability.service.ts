@@ -7,7 +7,7 @@
 export type HostCalendarDay = {
   date: string; // "YYYY-MM-DD"
   available: boolean;
-  reason: 'available' | 'booked' | 'blocked' | 'maintenance' | 'special';
+  reason: "available" | "booked" | "blocked" | "maintenance" | "special";
   price: number | null; // Precio específico o null (usará base price)
 };
 
@@ -72,7 +72,10 @@ export const hostAvailabilityService = {
 
       return data;
     } catch (error: unknown) {
-      console.error("❌ Error en hostAvailabilityService.setAvailability:", error);
+      console.error(
+        "❌ Error en hostAvailabilityService.setAvailability:",
+        error
+      );
       throw error instanceof Error ? error : new Error("Error de conexión");
     }
   },
@@ -97,12 +100,17 @@ export const hostAvailabilityService = {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al eliminar el ajuste de disponibilidad");
+        throw new Error(
+          data.message || "Error al eliminar el ajuste de disponibilidad"
+        );
       }
 
       return data;
     } catch (error: unknown) {
-      console.error("❌ Error en hostAvailabilityService.removeAvailability:", error);
+      console.error(
+        "❌ Error en hostAvailabilityService.removeAvailability:",
+        error
+      );
       throw error instanceof Error ? error : new Error("Error de conexión");
     }
   },
