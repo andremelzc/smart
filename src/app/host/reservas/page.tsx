@@ -92,13 +92,13 @@ export default function HostReservationsPage() {
   const [selectedReservation, setSelectedReservation] =
     useState<DetailedReservation | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  
+
   // Modales de acción existentes
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [pendingDeclineId, setPendingDeclineId] = useState<string | null>(null);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null);
-  
+
   // Nuevo Estado para el Modal de Reseña
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean;
@@ -364,21 +364,23 @@ export default function HostReservationsPage() {
   // ✅ LOGICA DE RESEÑAS CONECTADA
   const handleWriteReview = (requestId: string) => {
     const numericId = parseInt(requestId.replace("RES-", ""), 10);
-    
+
     // Intentamos buscar la reserva completa para obtener la foto del huésped
     // Si tenemos selectedReservation (el modal de detalles abierto), usamos eso.
-    const guestImage = selectedReservation?.profileImageUrl || 
-                       bookings.find(b => b.bookingId === numericId)?.imageUrl;
+    const guestImage =
+      selectedReservation?.profileImageUrl ||
+      bookings.find((b) => b.bookingId === numericId)?.imageUrl;
 
-    const guestName = selectedReservation?.guestName || 
-                      formattedReservations.find(r => r.id === requestId)?.guestName || 
-                      "Huésped";
+    const guestName =
+      selectedReservation?.guestName ||
+      formattedReservations.find((r) => r.id === requestId)?.guestName ||
+      "Huésped";
 
     setReviewModal({
       isOpen: true,
       bookingId: numericId,
       guestName: guestName,
-      guestImage: guestImage || undefined
+      guestImage: guestImage || undefined,
     });
 
     // Cerramos el modal de detalles para enfocar la reseña
@@ -388,16 +390,16 @@ export default function HostReservationsPage() {
   const handleSubmitReview = async (rating: number, comment: string) => {
     if (!reviewModal.bookingId) return;
 
-    console.log("👑 Host enviando reseña:", { 
-      bookingId: reviewModal.bookingId, 
-      rating, 
-      comment 
+    console.log("👑 Host enviando reseña:", {
+      bookingId: reviewModal.bookingId,
+      rating,
+      comment,
     });
 
     // AQUÍ: Llamada al servicio real
     // await reviewService.createHostReview(...)
 
-    setReviewModal(prev => ({ ...prev, isOpen: false }));
+    setReviewModal((prev) => ({ ...prev, isOpen: false }));
   };
 
   const handleViewReviews = (requestId: string) => {
@@ -546,7 +548,7 @@ export default function HostReservationsPage() {
       {/* ✅ Modal de Reseña (Host) */}
       <LeaveReviewModal
         isOpen={reviewModal.isOpen}
-        onClose={() => setReviewModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setReviewModal((prev) => ({ ...prev, isOpen: false }))}
         onSubmit={handleSubmitReview}
         reviewRole="host" // 👈 Activa el modo anfitrión (morado)
         targetName={reviewModal.guestName}

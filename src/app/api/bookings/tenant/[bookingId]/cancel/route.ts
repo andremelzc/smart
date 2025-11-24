@@ -70,19 +70,29 @@ export async function POST(
       );
     }
 
-    if ((bookingRow.STATUS || "").toUpperCase() !== STATUS_ACCEPTED) {
+    // Log para debuggear
+    console.log(`Cancelation attempt - BookingId: ${bookingId}, Status: ${bookingRow.STATUS}, CheckIn: ${bookingRow.CHECKIN_DATE}`);
+
+    const currentStatus = (bookingRow.STATUS || "").toUpperCase();
+    const allowedStatuses = ["ACCEPTED", "CONFIRMED", "PENDING"];
+    
+    if (!allowedStatuses.includes(currentStatus)) {
+      console.log(`Status not allowed for cancellation: ${currentStatus}`);
       return NextResponse.json(
-        { error: "Solo se pueden cancelar reservas aceptadas" },
+        { error: `No se puede cancelar una reserva en estado ${currentStatus.toLowerCase()}` },
         { status: 409 }
       );
     }
 
     const checkinDate = new Date(bookingRow.CHECKIN_DATE);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (checkinDate <= today) {
+    today.setHours(23, 59, 59, 999); // Permitir cancelación hasta el final del día
+    
+    console.log(`Date comparison - CheckIn: ${checkinDate}, Today: ${today}`);
+    
+    if (checkinDate < today) {
       return NextResponse.json(
-        { error: "No se puede cancelar despues de la fecha de check-in" },
+        { error: "No se puede cancelar después de la fecha de check-in" },
         { status: 409 }
       );
     }

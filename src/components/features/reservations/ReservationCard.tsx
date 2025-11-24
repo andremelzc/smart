@@ -11,6 +11,8 @@ import {
   CheckCircle,
   XCircle,
   MessageCircle,
+  Ban,
+  MessageSquarePlus,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 
@@ -23,6 +25,8 @@ export interface BaseReservation {
   checkOut: string;
   guests: number;
   status: string;
+  dbStatus?: string; // Estado original de la BD para lógica de cancelación
+  totalAmount?: number; // Para cálculo de reembolso
 }
 
 // Host-specific reservation (from host perspective)
@@ -59,6 +63,9 @@ interface BaseReservationCardProps<T extends BaseReservation> {
   actionLabel?: string;
   actionIcon?: React.ComponentType<{ className?: string }>;
   isSelected?: boolean;
+  // 🆕 Nuevas props para cancelación
+  onCancel?: (reservation: T) => void;
+  onReview?: (reservation: T) => void;
 }
 
 // Format date range helper
@@ -78,6 +85,29 @@ const formatDay = (dateString: string) => {
   }).format(new Date(dateString));
 };
 
+// 🆕 Helper: Determinar si se puede cancelar según estado
+const canCancelReservation = (status: string, dbStatus?: string): boolean => {
+  // Usar dbStatus si está disponible, sino usar status
+  const statusToCheck = dbStatus || status;
+  const normalizedStatus = statusToCheck.trim().toUpperCase();
+  const cancellableStatuses = ["PENDING", "CONFIRMED", "ACCEPTED", "APPROVED"];
+  return cancellableStatuses.includes(normalizedStatus);
+};
+
+// 🆕 Helper: Determinar si se puede reseñar según estado
+const canReviewReservation = (status: string, dbStatus?: string): boolean => {
+  // Usar dbStatus si está disponible, sino usar status
+  const statusToCheck = dbStatus || status;
+  const normalizedStatus = statusToCheck.trim().toUpperCase();
+  const reviewableStatuses = ["COMPLETED"]; // Solo reservas completamente terminadas
+  return normalizedStatus === "COMPLETED" || (normalizedStatus === "ACCEPTED" && status === "past");
+};
+
+// 🆕 Helper: Verificar si la reserva es pasada (para no cancelar reservas pasadas)
+const isPastReservation = (checkOutDate: string): boolean => {
+  return new Date(checkOutDate) < new Date();
+};
+
 export function ReservationCard<T extends BaseReservation>({
   reservation,
   statusConfig,
@@ -86,6 +116,8 @@ export function ReservationCard<T extends BaseReservation>({
   actionLabel,
   actionIcon: ActionIcon = ChevronRight,
   isSelected = false,
+  onCancel,
+  onReview,
 }: BaseReservationCardProps<T>) {
   const statusInfo = statusConfig[reservation.status];
   const isHostVariant = variant === "host";
@@ -98,6 +130,29 @@ export function ReservationCard<T extends BaseReservation>({
   const guestReservation = isGuestVariant
     ? (reservation as unknown as GuestReservation)
     : null;
+
+  // 🆕 Determinar qué botones mostrar según estado
+  const showCancelButton = 
+    isGuestVariant && 
+    onCancel && 
+    canCancelReservation(reservation.status, reservation.dbStatus) &&
+    !isPastReservation(reservation.checkOut);
+
+  const showReviewButton = 
+    isGuestVariant && 
+    onReview && 
+    canReviewReservation(reservation.status, reservation.dbStatus);
+
+  // Debug temporal
+  if (isGuestVariant) {
+    console.log(`ReservationCard Debug - ID: ${reservation.id}`);
+    console.log(`- status: ${reservation.status}, dbStatus: ${reservation.dbStatus}`);
+    console.log(`- isGuestVariant: ${isGuestVariant}, onCancel: ${!!onCancel}`);
+    console.log(`- canCancelReservation: ${canCancelReservation(reservation.status, reservation.dbStatus)}`);
+    console.log(`- isPastReservation: ${isPastReservation(reservation.checkOut)}`);
+    console.log(`- showCancelButton: ${showCancelButton}`);
+    console.log(`- showReviewButton: ${showReviewButton}`);
+  }
 
   return (
     <article className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
@@ -241,13 +296,42 @@ export function ReservationCard<T extends BaseReservation>({
         )}
       </div>
 
-      {/* Action buttons for guest variant */}
-      {isGuestVariant && onAction && (
+      {/* 🆕 Action buttons for guest variant - CON CANCELAR Y RESEÑA */}
+      {isGuestVariant && (
         <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-          <Button variant="ghost" onClick={() => onAction(reservation)}>
-            <ActionIcon className="mr-2 h-4 w-4" />
-            {actionLabel || "Acción"}
-          </Button>
+          {/* Botón de Chat (original) */}
+          {onAction && (
+            <Button variant="ghost" onClick={() => onAction(reservation)}>
+              <ActionIcon className="mr-2 h-4 w-4" />
+              {actionLabel || "Acción"}
+            </Button>
+          )}
+
+          {/* 🆕 Botón CANCELAR (solo si está en estado cancelable) */}
+          {showCancelButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCancel!(reservation)}
+              className="gap-2 border border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+            >
+              <Ban className="h-4 w-4" />
+              Cancelar reserva
+            </Button>
+          )}
+
+          {/* 🆕 Botón RESEÑA (solo si está completada) */}
+          {showReviewButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onReview!(reservation)}
+              className="gap-2 border border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50"
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+              Escribir reseña
+            </Button>
+          )}
         </div>
       )}
     </article>
@@ -281,27 +365,27 @@ export function GuestReservationCard({
   reservation,
   statusConfig,
   onChatWithHost,
+  onCancelReservation, // 🆕
+  onLeaveReview, // 🆕
   canStartChat,
 }: {
   reservation: GuestReservation;
   statusConfig: Record<string, StatusConfig>;
   onChatWithHost?: (reservation: GuestReservation) => void;
+  onCancelReservation?: (reservation: GuestReservation) => void; // 🆕
+  onLeaveReview?: (reservation: GuestReservation) => void; // 🆕
   canStartChat?: boolean;
 }) {
-  return canStartChat ? (
+  return (
     <ReservationCard
       reservation={reservation}
       statusConfig={statusConfig}
       variant="guest"
-      onAction={onChatWithHost}
-      actionLabel="Chat con anfitrión"
-      actionIcon={MessageCircle}
-    />
-  ) : (
-    <ReservationCard
-      reservation={reservation}
-      statusConfig={statusConfig}
-      variant="guest"
+      onAction={canStartChat ? onChatWithHost : undefined}
+      actionLabel={canStartChat ? "Chat con anfitrión" : undefined}
+      actionIcon={canStartChat ? MessageCircle : undefined}
+      onCancel={onCancelReservation} // 🆕
+      onReview={onLeaveReview} // 🆕
     />
   );
 }
