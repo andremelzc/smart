@@ -267,9 +267,10 @@ export default function PaginaCrearRecinto() {
         <div className="flex justify-between items-center mt-8">
           {/* Botón Atrás */}
           <Button
+            variant="secondary"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 rounded-xl bg-white border-2 border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed"
+            // className="flex items-center gap-2 rounded-2xl bg-white border-2 border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <CircleChevronLeft className="w-5 h-5" />
             Atrás
@@ -278,8 +279,9 @@ export default function PaginaCrearRecinto() {
           {/* Grupo central: Guardar y Salir (solo visible si no estamos en el último paso) */}
           {currentStep < 9 && (
             <Button
+              variant="secondary"
               onClick={() => router.push("/host/dashboard")}
-              className="flex items-center gap-2 rounded-xl bg-white border-2 border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400"
+              // className="flex items-center gap-2 rounded-2xl bg-white border-2 border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400"
               aria-label="Guardar y salir del editor"
             >
               <X className="w-4 h-4" />
@@ -292,15 +294,16 @@ export default function PaginaCrearRecinto() {
             <Button
               onClick={nextStep}
               disabled={isNextDisabled()}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 border-2 border-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:border-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              // className="flex items-center gap-2 rounded-xl bg-blue-600 border-2 border-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:border-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
               <CircleChevronRight className="w-5 h-5" />
             </Button>
           ) : (
             <Button
+              variant="accept"
               onClick={handlePublish}
-              className="flex items-center gap-2 rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm border-2 border-green-700 transition-all hover:bg-green-700 hover:border-green-800"
+              // className="flex items-center gap-2 rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm border-2 border-green-700 transition-all hover:bg-green-700 hover:border-green-800"
             >
               Confirmar y Publicar
             </Button>
