@@ -54,7 +54,7 @@ export function ReviewNudge() {
           bookingId: "RES-H999",
           role: "host", 
           targetName: "Maria Gonzalez",
-          targetImage: "https://i.pravatar.cc/150?u=maria",
+          targetImage: "",
           location: "Reserva en tu propiedad",
           checkInDate: "15 Nov",
           checkOutDate: "20 Nov"

@@ -9,6 +9,9 @@ import {
   AlertCircle,
   MapPin,
   Calendar,
+  Image,
+  Home,
+  User,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 
@@ -64,6 +67,23 @@ export function LeaveReviewModal({
     };
   }, [isOpen]);
 
+  // Cerrar modal con tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -116,11 +136,19 @@ export function LeaveReviewModal({
 
   const currentConfig = config[reviewRole];
 
+  // Handler para cerrar modal al hacer click fuera
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
   return (
     <div
       className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gray-dark-900/60 backdrop-blur-sm p-4 transition-opacity duration-300 ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
+      onClick={handleBackdropClick}
     >
       <div
         className={`relative w-full max-w-lg transform rounded-3xl bg-white shadow-2xl transition-all duration-300 ${
@@ -157,12 +185,27 @@ export function LeaveReviewModal({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div
-                className={`w-full h-full flex items-center justify-center ${currentConfig.iconBg}`}
-              >
-                <MessageSquare
-                  className={`w-12 h-12 ${currentConfig.iconColor}`}
-                />
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
+                {/* Shimmer effect overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                
+                {/* Skeleton content */}
+                <div className="flex flex-col items-center space-y-4 z-10">
+                  {reviewRole === "guest" ? (
+                    <Home className="w-20 h-20 text-gray-300" />
+                  ) : (
+                    <User className="w-20 h-20 text-gray-300" />
+                  )}
+                  
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-32 h-3 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-20 h-2 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+                    {reviewRole === "guest" ? "Sin imagen de propiedad" : "Sin foto de perfil"}
+                  </div>
+                </div>
               </div>
             )}
           </div>
