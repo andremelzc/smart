@@ -1,6 +1,6 @@
-import { HomeHighlightsService } from '@/src/services/home-highlights.service';
-import type { CityHighlight } from '@/src/services/home-highlights.service';
-import { CityCarousel } from '@/src/components/features/properties/CityCarousel';
+import { HomeHighlightsService } from "@/src/services/home-highlights.service";
+import type { CityHighlight } from "@/src/services/home-highlights.service";
+import { CityCarousel } from "@/src/components/features/properties/CityCarousel";
 
 export default async function HomePage() {
   let highlights: CityHighlight[] = [];
@@ -8,7 +8,7 @@ export default async function HomePage() {
   try {
     highlights = await HomeHighlightsService.getCityHighlights();
   } catch (error) {
-    console.error('No se pudieron cargar los destacados de inicio:', error);
+    console.error("No se pudieron cargar los destacados de inicio:", error);
   }
 
   return (
@@ -63,7 +63,8 @@ export default async function HomePage() {
         <div className="space-y-12">
           {highlights.length === 0 ? (
             <div className="rounded-3xl border border-blue-light-100 bg-blue-light-50 px-6 py-8 text-center text-gray-dark-500">
-              Aun no hay propiedades destacadas disponibles. Vuelve pronto para descubrir nuevos alojamientos.
+              Aun no hay propiedades destacadas disponibles. Vuelve pronto para
+              descubrir nuevos alojamientos.
             </div>
           ) : (
             highlights.map((group) => (
@@ -75,4 +76,3 @@ export default async function HomePage() {
     </main>
   );
 }
-
