@@ -166,6 +166,7 @@ export function CheckoutModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Bloquear scroll cuando el modal esta abierto
 
@@ -287,12 +288,18 @@ export function CheckoutModal({
         return newErrors;
       });
     }
+    
+    // Limpiar error general
+    if (submitError) {
+      setSubmitError(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
+    setSubmitError(null);
 
     try {
       // Validar con Zod
@@ -309,6 +316,9 @@ export function CheckoutModal({
           }
         });
         setErrors(fieldErrors);
+      } else {
+        // Error general (ej: fallo en el pago)
+        setSubmitError(error instanceof Error ? error.message : "Error al procesar el pago");
       }
     } finally {
       setIsSubmitting(false);
@@ -549,6 +559,14 @@ export function CheckoutModal({
 
               {/* Botón de pago */}
               <div className="space-y-3 pt-2">
+                {/* Mensaje de error general */}
+                {submitError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <p>{submitError}</p>
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full"

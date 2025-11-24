@@ -2,6 +2,8 @@
 
 import { use } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/src/hooks/useAuth";
 import { usePropertyDetail } from "@/src/hooks/usePropertyDetail";
 import { GuestCounts } from "@/src/components/layout/search/GuestPopover";
 import {
@@ -35,7 +37,9 @@ interface BookingDates {
 
 export default function PropertyPage({ params }: PropertyPageProps) {
   const { id } = use(params);
+  const router = useRouter();
   const { property, isLoading, error } = usePropertyDetail(id);
+  const { isAuthenticated } = useAuth();
 
   // Estados para funcionalidades
 
@@ -137,6 +141,12 @@ export default function PropertyPage({ params }: PropertyPageProps) {
       return;
     }
 
+    if (!isAuthenticated) {
+      const callbackUrl = encodeURIComponent(window.location.href);
+      router.push(`/login?callbackUrl=${callbackUrl}`);
+      return;
+    }
+
     setShowCheckout(true);
     setShowSuccess(false);
   };
@@ -146,33 +156,29 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   };
 
   const handlePay = async (paymentDetails: CheckoutFormData) => {
-    try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          propertyId: parseInt(id),
-          checkIn: selectedDates.checkIn,
-          checkOut: selectedDates.checkOut,
-          guests: selectedDates.guests,
-          paymentDetails,
-        }),
-      });
+    // Propagar errores al modal en lugar de capturarlos aqui
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        propertyId: parseInt(id),
+        checkIn: selectedDates.checkIn,
+        checkOut: selectedDates.checkOut,
+        guests: selectedDates.guests,
+        paymentDetails,
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Error al procesar la reserva");
-      }
-
-      setShowCheckout(false);
-      setShowSuccess(true);
-    } catch (error) {
-      console.error("Error booking:", error);
-      alert(error instanceof Error ? error.message : "Error al procesar la reserva");
+    if (!response.ok) {
+      throw new Error(data.error || "Error al procesar la reserva");
     }
+
+    setShowCheckout(false);
+    setShowSuccess(true);
   };
 
   const handleCloseSuccess = () => {
