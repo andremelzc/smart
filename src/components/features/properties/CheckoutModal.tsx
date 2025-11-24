@@ -1,17 +1,76 @@
 "use client";
 
-import { useEffect } from "react";
-
+import { useEffect, useState } from "react";
 import Image from "next/image";
-
-import { X, Star, Home, CreditCard, Lock } from "lucide-react";
-
+import { X, Star, Home, CreditCard, Lock, AlertCircle } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { GuestCounts } from "@/src/components/layout/search/GuestPopover";
+import { z } from "zod";
+
+// Algoritmo de Luhn para validar números de tarjeta
+function validateLuhn(cardNumber: string): boolean {
+  const digits = cardNumber.replace(/\s/g, "").split("").map(Number);
+  let sum = 0;
+  let isEven = false;
+
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = digits[i];
+
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+
+    sum += digit;
+    isEven = !isEven;
+  }
+
+  return sum % 10 === 0;
+}
+
+// Validar que la tarjeta no esté vencida
+function isNotExpired(expiryDate: string): boolean {
+  const [month, year] = expiryDate.split("/").map(Number);
+  const now = new Date();
+  const currentYear = now.getFullYear() % 100; // Últimos 2 dígitos
+  const currentMonth = now.getMonth() + 1;
+
+  if (year < currentYear) return false;
+  if (year === currentYear && month < currentMonth) return false;
+  return true;
+}
+
+// Schema de validación con Zod
+const checkoutFormSchema = z.object({
+  cardName: z
+    .string()
+    .min(3, "El nombre debe tener al menos 3 caracteres")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras y espacios"),
+
+  cardNumber: z
+    .string()
+    .transform((val) => val.replace(/\s/g, ""))
+    .refine((val) => /^\d{16}$/.test(val), "El número de tarjeta debe tener 16 dígitos")
+    .refine(validateLuhn, "Número de tarjeta inválido"),
+
+  expiryDate: z
+    .string()
+    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Formato inválido (MM/AA)")
+    .refine(isNotExpired, "La tarjeta está vencida"),
+
+  cvv: z
+    .string()
+    .regex(/^\d{3,4}$/, "El CVV debe tener 3 o 4 dígitos"),
+
+  email: z.string().email("Correo electrónico inválido"),
+});
+
+type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 
 interface PropertyImage {
   url: string;
-
   alt?: string;
 }
 
@@ -61,6 +120,33 @@ interface CheckoutModalProps {
   currencyFormatter: (value: number) => string;
 }
 
+// Componente para mostrar errores de campo
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+      <AlertCircle className="h-3 w-3" />
+      {message}
+    </p>
+  );
+}
+
+// Función para formatear número de tarjeta con espacios
+function formatCardNumber(value: string): string {
+  const cleaned = value.replace(/\s/g, "");
+  const groups = cleaned.match(/.{1,4}/g);
+  return groups ? groups.join(" ") : cleaned;
+}
+
+// Función para formatear fecha de expiración
+function formatExpiryDate(value: string): string {
+  const cleaned = value.replace(/\D/g, "");
+  if (cleaned.length >= 2) {
+    return cleaned.slice(0, 2) + "/" + cleaned.slice(2, 4);
+  }
+  return cleaned;
+}
+
 export function CheckoutModal({
   isOpen,
   onClose,
@@ -68,9 +154,19 @@ export function CheckoutModal({
   property,
   selectedDates,
   pricing,
-
   currencyFormatter,
 }: CheckoutModalProps) {
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    cardName: "",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    email: "",
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Bloquear scroll cuando el modal esta abierto
 
   useEffect(() => {
@@ -153,6 +249,71 @@ export function CheckoutModal({
     typeof property.reviews.averageRating === "number"
       ? property.reviews.averageRating.toFixed(1)
       : "0.0";
+
+  // Handlers del formulario
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    let formattedValue = value;
+
+    // Auto-formatear según el campo
+    if (field === "cardNumber") {
+      const cleaned = value.replace(/\s/g, "");
+      if (cleaned.length <= 16 && /^\d*$/.test(cleaned)) {
+        formattedValue = formatCardNumber(cleaned);
+      } else {
+        return; // No permitir más de 16 dígitos
+      }
+    } else if (field === "expiryDate") {
+      const cleaned = value.replace(/\D/g, "");
+      if (cleaned.length <= 4) {
+        formattedValue = formatExpiryDate(cleaned);
+      } else {
+        return;
+      }
+    } else if (field === "cvv") {
+      if (value.length <= 4 && /^\d*$/.test(value)) {
+        formattedValue = value;
+      } else {
+        return;
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, [field]: formattedValue }));
+
+    // Limpiar error del campo cuando el usuario escribe
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      // Validar con Zod
+      checkoutFormSchema.parse(formData);
+
+      // Si la validación pasa, proceder con el pago
+      onPay();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.issues.forEach((issue) => {
+          if (issue.path[0]) {
+            fieldErrors[issue.path[0] as string] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -275,7 +436,6 @@ export function CheckoutModal({
             <header className="space-y-2">
               <div className="flex items-center gap-2 text-blue-light-600">
                 <CreditCard className="h-5 w-5" />
-
                 <span className="text-xs font-semibold uppercase tracking-wide">
                   Simulacion de pago
                 </span>
@@ -290,89 +450,126 @@ export function CheckoutModal({
               </p>
             </header>
 
-            <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Nombre en la tarjeta */}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
                   Nombre en la tarjeta
                 </label>
-
                 <input
                   type="text"
+                  value={formData.cardName}
+                  onChange={(e) => handleInputChange("cardName", e.target.value)}
                   placeholder="Juan Perez"
-                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                    errors.cardName
+                      ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                      : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  }`}
                 />
+                <FieldError message={errors.cardName} />
               </div>
 
+              {/* Número de tarjeta */}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
                   Numero de tarjeta
                 </label>
-
                 <input
                   type="text"
+                  value={formData.cardNumber}
+                  onChange={(e) => handleInputChange("cardNumber", e.target.value)}
                   placeholder="1234 5678 9012 3456"
-                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                    errors.cardNumber
+                      ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                      : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  }`}
                 />
+                <FieldError message={errors.cardNumber} />
               </div>
 
+              {/* Fecha de expiración y CVV */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Fecha de expiracion
                   </label>
-
                   <input
                     type="text"
+                    value={formData.expiryDate}
+                    onChange={(e) => handleInputChange("expiryDate", e.target.value)}
                     placeholder="MM/AA"
-                    className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                      errors.expiryDate
+                        ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                        : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    }`}
                   />
+                  <FieldError message={errors.expiryDate} />
                 </div>
 
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     CVV
                   </label>
-
                   <input
                     type="text"
+                    value={formData.cvv}
+                    onChange={(e) => handleInputChange("cvv", e.target.value)}
                     placeholder="123"
-                    className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                      errors.cvv
+                        ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                        : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    }`}
                   />
+                  <FieldError message={errors.cvv} />
                 </div>
               </div>
 
+              {/* Correo electrónico */}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
                   Correo de confirmacion
                 </label>
-
                 <input
                   type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="correo@ejemplo.com"
-                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                    errors.email
+                      ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                      : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  }`}
                 />
+                <FieldError message={errors.email} />
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <Button
-                type="button"
-                className="w-full"
-                size="lg"
-                onClick={onPay}
-              >
-                {`Pagar${
-                  pricing.grandTotal > 0
-                    ? ` ${currencyFormatter(pricing.grandTotal)}`
-                    : ""
-                }`}
-              </Button>
+              {/* Botón de pago */}
+              <div className="space-y-3 pt-2">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? "Procesando..."
+                    : `Pagar${
+                        pricing.grandTotal > 0
+                          ? ` ${currencyFormatter(pricing.grandTotal)}`
+                          : ""
+                      }`}
+                </Button>
 
-              <p className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                <Lock className="h-4 w-4" />
-                Tus datos estan protegidos con cifrado SSL.
-              </p>
-            </div>
+                <p className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                  <Lock className="h-4 w-4" />
+                  Tus datos estan protegidos con cifrado SSL.
+                </p>
+              </div>
+            </form>
           </section>
         </div>
       </div>
