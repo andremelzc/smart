@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useState } from "react";
 import { usePropertyDetail } from "@/src/hooks/usePropertyDetail";
-
+import { GuestCounts } from "@/src/components/layout/search/GuestPopover";
 import {
   PropertyReviews,
   PropertyImageGallery,
@@ -16,7 +16,6 @@ import {
   CheckoutModal,
   SuccessModal,
 } from "@/src/components/features/properties";
-
 import {
   PropertyLoadingState,
   PropertyErrorState,
@@ -29,40 +28,37 @@ interface PropertyPageProps {
 
 interface BookingDates {
   checkIn: string;
-
   checkOut: string;
-
-  guests: number;
+  guests: GuestCounts;
 }
 
 export default function PropertyPage({ params }: PropertyPageProps) {
   const { id } = use(params);
-
   const { property, isLoading, error } = usePropertyDetail(id);
 
   // Estados para funcionalidades
 
   const [selectedDates, setSelectedDates] = useState<BookingDates>({
     checkIn: "",
-
     checkOut: "",
-
-    guests: 1,
+    guests: {
+      adults: 1,
+      children: 0,
+      babies: 0,
+      pets: 0,
+    },
   });
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Funciones de calculo y utilidades
-
   const getNightCount = () => {
     const { checkIn, checkOut } = selectedDates;
     if (!checkIn || !checkOut) return 0;
 
     const start = new Date(checkIn);
-
     const end = new Date(checkOut);
-
     const diff = end.getTime() - start.getTime();
 
     if (!Number.isFinite(diff) || diff <= 0) {
@@ -76,9 +72,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     if (typeof property?.basePriceNight !== "number") {
       return 0;
     }
-
     const nights = getNightCount();
-
     return nights > 0 ? nights * property.basePriceNight : 0;
   };
 
@@ -99,11 +93,8 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   // Calculos de precios
 
   const nightsCount = getNightCount();
-
   const totalPrice = calculateTotalPrice();
-
   const serviceFee = Math.round(totalPrice * 0.14);
-
   const grandTotal = totalPrice + serviceFee;
 
   // Formateo de moneda
@@ -125,7 +116,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     `${currencyPrefix}${value.toLocaleString("es-PE")}`;
 
   // Validacion de capacidad maxima
-
   const maxGuests =
     typeof property.capacity === "number" && property.capacity > 0
       ? property.capacity
@@ -147,7 +137,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     }
 
     setShowCheckout(true);
-
     setShowSuccess(false);
   };
 
@@ -215,7 +204,6 @@ export default function PropertyPage({ params }: PropertyPageProps) {
               <PropertyAmenities
                 amenities={property.amenities.map((amenity) => ({
                   name: amenity.name || "",
-
                   icon: amenity.icon,
                 }))}
               />

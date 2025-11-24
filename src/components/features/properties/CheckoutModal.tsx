@@ -7,6 +7,7 @@ import Image from "next/image";
 import { X, Star, Home, CreditCard, Lock } from "lucide-react";
 
 import { Button } from "@/src/components/ui/Button";
+import { GuestCounts } from "@/src/components/layout/search/GuestPopover";
 
 interface PropertyImage {
   url: string;
@@ -43,10 +44,8 @@ interface CheckoutModalProps {
 
   selectedDates: {
     checkIn: string;
-
     checkOut: string;
-
-    guests: number;
+    guests: GuestCounts;
   };
 
   pricing: {
@@ -131,9 +130,19 @@ export function CheckoutModal({
     ? formatDateLabel(selectedDates.checkOut)
     : "";
 
-  const guestsLabel = `${selectedDates.guests} huesped${
-    selectedDates.guests !== 1 ? "es" : ""
-  }`;
+  const getGuestSummary = () => {
+    const { adults, children, babies, pets } = selectedDates.guests;
+    const parts: string[] = [];
+    
+    if (adults > 0) parts.push(`${adults} adulto${adults !== 1 ? 's' : ''}`);
+    if (children > 0) parts.push(`${children} niño${children !== 1 ? 's' : ''}`);
+    if (babies > 0) parts.push(`${babies} bebé${babies !== 1 ? 's' : ''}`);
+    if (pets > 0) parts.push(`${pets} mascota${pets !== 1 ? 's' : ''}`);
+    
+    return parts.length > 0 ? parts.join(', ') : '1 adulto';
+  };
+
+  const guestsLabel = getGuestSummary();
 
   const summaryImage =
     property.images && property.images.length > 0

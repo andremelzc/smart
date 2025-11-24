@@ -9,6 +9,7 @@ interface GuestPopoverProps {
   counts: GuestCounts;
   onChange: (next: GuestCounts) => void;
   onClear?: () => void;
+  maxGuests?: number;
 }
 
 export const GUEST_FIELDS: Array<{
@@ -22,9 +23,21 @@ export const GUEST_FIELDS: Array<{
   { key: 'pets', label: 'Mascotas', description: 'Incluye mascotas o animales de servicio' },
 ];
 
-export function GuestPopover({ counts, onChange, onClear }: GuestPopoverProps) {
+export function GuestPopover({ counts, onChange, onClear, maxGuests }: GuestPopoverProps) {
   const update = (key: keyof GuestCounts, delta: number) => {
     const nextValue = Math.max(0, counts[key] + delta);
+    
+    // Validar que adultos + niños no excedan maxGuests
+    if (maxGuests && (key === 'adults' || key === 'children')) {
+      const newGuestCount = key === 'adults' 
+        ? nextValue + counts.children 
+        : counts.adults + nextValue;
+      
+      if (newGuestCount > maxGuests) {
+        return; // No permitir el cambio si excede el máximo
+      }
+    }
+    
     onChange({ ...counts, [key]: nextValue });
   };
 
@@ -66,8 +79,13 @@ export function GuestPopover({ counts, onChange, onClear }: GuestPopoverProps) {
               <button
                 type="button"
                 onClick={() => update(key, 1)}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-light-200 text-blue-light-600 transition-colors hover:border-blue-light-300"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-light-200 text-blue-light-600 transition-colors hover:border-blue-light-300 disabled:cursor-not-allowed disabled:border-blue-light-100 disabled:text-blue-light-200"
                 aria-label={`Incrementar ${label}`}
+                disabled={
+                  maxGuests && (key === 'adults' || key === 'children')
+                    ? counts.adults + counts.children >= maxGuests
+                    : false
+                }
               >
                 +
               </button>

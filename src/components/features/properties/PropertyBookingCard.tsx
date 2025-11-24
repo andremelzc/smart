@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import * as React from "react";
-import { Star, Calendar as CalendarIcon } from "lucide-react";
+import { Star, Calendar as CalendarIcon, Users } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/src/components/ui/Button";
@@ -13,13 +13,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { usePropertyAvailability } from "@/src/hooks/usePropertyAvailability";
+import { GuestPopover, GuestCounts } from "@/src/components/layout/search/GuestPopover";
 
 interface BookingDates {
   checkIn: string;
-
   checkOut: string;
-
-  guests: number;
+  guests: GuestCounts;
 }
 
 interface PropertyBookingCardProps {
@@ -48,6 +47,8 @@ export function PropertyBookingCard({
   className = "",
 }: PropertyBookingCardProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [guestPopoverOpen, setGuestPopoverOpen] = useState(false);
+  const guestPopoverRef = React.useRef<HTMLDivElement>(null);
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
     to: Date | undefined;
@@ -75,6 +76,22 @@ export function PropertyBookingCard({
     today,
     threeMonthsLater
   );
+
+  // Cerrar guest popover al hacer click fuera
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (guestPopoverRef.current && !guestPopoverRef.current.contains(event.target as Node)) {
+        setGuestPopoverOpen(false);
+      }
+    };
+
+    if (guestPopoverOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [guestPopoverOpen]);
 
   // Función para convertir Date a string YYYY-MM-DD sin problemas de zona horaria
   const dateToString = useCallback((date: Date): string => {
@@ -157,12 +174,21 @@ export function PropertyBookingCard({
 
   // Validacion de huespedes
 
-  const guestsCount = Math.min(selectedDates.guests, maxGuests);
+  const handleGuestsChange = (newGuests: GuestCounts) => {
+    onDatesChange({ ...selectedDates, guests: newGuests });
+  };
 
-  const handleGuestsChange = (newGuests: number) => {
-    const validGuests = Math.min(newGuests, maxGuests);
 
-    onDatesChange({ ...selectedDates, guests: validGuests });
+  const getGuestSummary = () => {
+    const { adults, children, babies, pets } = selectedDates.guests;
+    const parts: string[] = [];
+    
+    if (adults > 0) parts.push(`${adults} adulto${adults !== 1 ? 's' : ''}`);
+    if (children > 0) parts.push(`${children} niño${children !== 1 ? 's' : ''}`);
+    if (babies > 0) parts.push(`${babies} bebé${babies !== 1 ? 's' : ''}`);
+    if (pets > 0) parts.push(`${pets} mascota${pets !== 1 ? 's' : ''}`);
+    
+    return parts.length > 0 ? parts.join(', ') : 'Agregar huéspedes';
   };
 
   const canReserve =
@@ -342,26 +368,27 @@ export function PropertyBookingCard({
             </PopoverContent>
           </Popover>
 
-          <div className="border border-gray-300 rounded-lg p-3">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              HUESPEDES
-            </label>
-
-            <select
-              value={guestsCount}
-              onChange={(e) =>
-                handleGuestsChange(parseInt(e.target.value, 10) || 1)
-              }
-              className="w-full text-sm border-none outline-none bg-transparent"
+          <div className="relative" ref={guestPopoverRef}>
+            <button
+              type="button"
+              onClick={() => setGuestPopoverOpen(!guestPopoverOpen)}
+              className="w-full border border-gray-300 rounded-lg p-3 hover:border-gray-400 transition-colors text-left cursor-pointer"
             >
-              {Array.from({ length: maxGuests }, (_, index) => index + 1).map(
-                (value) => (
-                  <option key={value} value={value}>
-                    {value} huesped{value !== 1 ? "es" : ""}
-                  </option>
-                )
-              )}
-            </select>
+              <label className="block text-xs font-medium text-gray-700 mb-1 cursor-pointer">
+                HUÉSPEDES
+              </label>
+              <div className="flex items-center gap-2 text-sm cursor-pointer">
+                <Users className="h-4 w-4" />
+                <span>{getGuestSummary()}</span>
+              </div>
+            </button>
+            {guestPopoverOpen && (
+              <GuestPopover
+                counts={selectedDates.guests}
+                onChange={handleGuestsChange}
+                maxGuests={maxGuests}
+              />
+            )}
           </div>
           {(selectedDates.checkIn || selectedDates.checkOut) && (
             <div className="p-3 border-t border-gray-200">
