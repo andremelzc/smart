@@ -20,13 +20,18 @@ export function ReviewNudge() {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
+  const [pendingReview, setPendingReview] = useState<PendingReview | null>(
+    null
+  );
 
   useEffect(() => {
     // Lógica: Solo ejecutar si el usuario está autenticado y en página relevante
     const isHostContext = pathname.startsWith("/host");
-    const isTenantContext = pathname === "/" || pathname.startsWith("/account") || pathname.startsWith("/properties");
-    
+    const isTenantContext =
+      pathname === "/" ||
+      pathname.startsWith("/account") ||
+      pathname.startsWith("/properties");
+
     const shouldShowReviews = isHostContext || isTenantContext;
 
     if (isAuthenticated && shouldShowReviews && !isOpen) {
@@ -47,22 +52,22 @@ export function ReviewNudge() {
       // Solo mostrar en rutas específicas exactas
       const isHostContext = pathname === "/host";
       const isTenantContext = pathname === "/";
-      
+
       // Si no estamos en ninguna de las rutas permitidas, no mostrar
       if (!isHostContext && !isTenantContext) return;
-      
+
       let mockPending: PendingReview;
 
       if (isHostContext) {
         // CASO A: Estoy en contexto HOST -> calificar a un HUÉSPED
         mockPending = {
           bookingId: "RES-H999",
-          role: "host", 
+          role: "host",
           targetName: "Maria Gonzalez",
           targetImage: "",
           location: "Reserva en tu propiedad",
           checkInDate: "15 Nov",
-          checkOutDate: "20 Nov"
+          checkOutDate: "20 Nov",
         };
       } else {
         // CASO B: Estoy en contexto TENANT -> calificar una PROPIEDAD
@@ -70,10 +75,11 @@ export function ReviewNudge() {
           bookingId: "RES-T123",
           role: "guest",
           targetName: "Loft moderno en Miraflores",
-          targetImage: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+          targetImage:
+            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
           location: "Miraflores, Lima",
           checkInDate: "15 Nov",
-          checkOutDate: "20 Nov"
+          checkOutDate: "20 Nov",
         };
       }
 
@@ -82,7 +88,6 @@ export function ReviewNudge() {
         setPendingReview(mockPending);
         setIsOpen(true);
       }, 1500);
-
     } catch (error) {
       console.error("Error checking reviews:", error);
     }
@@ -91,10 +96,10 @@ export function ReviewNudge() {
   const handleSubmitReview = async (rating: number, comment: string) => {
     if (!pendingReview) return;
 
-    console.log(`Enviando reseña como ${pendingReview.role}:`, { 
-      bookingId: pendingReview.bookingId, 
-      rating, 
-      comment 
+    console.log(`Enviando reseña como ${pendingReview.role}:`, {
+      bookingId: pendingReview.bookingId,
+      rating,
+      comment,
     });
 
     // AQUÍ: Conectar con tu servicio de reseñas real

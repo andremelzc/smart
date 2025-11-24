@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   X,
   Star,
   Loader2,
-  MessageSquare,
   AlertCircle,
   MapPin,
   Calendar,
-  Image,
   Home,
   User,
 } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/src/components/ui/Button";
 
 type ReviewRole = "guest" | "host";
@@ -46,6 +45,11 @@ export function LeaveReviewModal({
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(onClose, 200);
+  }, [onClose]);
 
   // Animación de entrada/salida
   useEffect(() => {
@@ -82,14 +86,9 @@ export function LeaveReviewModal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 200);
-  };
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -145,29 +144,29 @@ export function LeaveReviewModal({
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gray-dark-900/60 backdrop-blur-sm p-4 transition-opacity duration-300 ${
+      className={`bg-gray-dark-900/60 fixed inset-0 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
       onClick={handleBackdropClick}
     >
       <div
         className={`relative w-full max-w-lg transform rounded-3xl bg-white shadow-2xl transition-all duration-300 ${
-          isVisible ? "scale-100 translate-y-0" : "scale-95 translate-y-8"
+          isVisible ? "translate-y-0 scale-100" : "translate-y-8 scale-95"
         }`}
       >
         {/* Header con gradiente */}
         <div
-          className={`relative px-8 py-6 bg-gradient-to-br rounded-t-3xl overflow-hidden from-blue-light-500 to-blue-vivid-600`}
+          className={`from-blue-light-500 to-blue-vivid-600 relative overflow-hidden rounded-t-3xl bg-gradient-to-br px-8 py-6`}
         >
           <button
             onClick={handleClose}
             aria-label="Cerrar modal"
-            className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white hover:bg-white/30 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 cursor-pointer rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-white/30"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
 
-          <h2 className="text-2xl font-bold text-white text-center mb-1">
+          <h2 className="mb-1 text-center text-2xl font-bold text-white">
             {currentConfig.title}
           </h2>
           <p className="text-blue-light-50 text-center text-sm">
@@ -177,33 +176,38 @@ export function LeaveReviewModal({
 
         <div className="p-8">
           {/* Imagen con proporciones 16:9 */}
-          <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-lg mb-6 bg-gray-200">
+          <div className="mb-6 aspect-video w-full overflow-hidden rounded-2xl bg-gray-200 shadow-lg">
             {targetImage ? (
-              <img
-                src={targetImage}
-                alt={targetName}
-                className="w-full h-full object-cover"
-              />
+              <div className="relative h-full w-full">
+                <Image
+                  src={targetImage}
+                  alt={targetName}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
+              <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                 {/* Shimmer effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                
+                <div className="animate-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+
                 {/* Skeleton content */}
-                <div className="flex flex-col items-center space-y-4 z-10">
+                <div className="z-10 flex flex-col items-center space-y-4">
                   {reviewRole === "guest" ? (
-                    <Home className="w-20 h-20 text-gray-300" />
+                    <Home className="h-20 w-20 text-gray-300" />
                   ) : (
-                    <User className="w-20 h-20 text-gray-300" />
+                    <User className="h-20 w-20 text-gray-300" />
                   )}
-                  
+
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="w-32 h-3 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-20 h-2 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-3 w-32 animate-pulse rounded bg-gray-200"></div>
+                    <div className="h-2 w-20 animate-pulse rounded bg-gray-200"></div>
                   </div>
-                  
-                  <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-                    {reviewRole === "guest" ? "Sin imagen de propiedad" : "Sin foto de perfil"}
+
+                  <div className="text-xs font-medium tracking-wide text-gray-400 uppercase">
+                    {reviewRole === "guest"
+                      ? "Sin imagen de propiedad"
+                      : "Sin foto de perfil"}
                   </div>
                 </div>
               </div>
@@ -211,28 +215,28 @@ export function LeaveReviewModal({
           </div>
 
           {/* Info de la propiedad/huésped */}
-          <div className="text-center mb-6">
-            <span className="text-sm text-gray-500 font-medium uppercase tracking-wide">
+          <div className="mb-6 text-center">
+            <span className="text-sm font-medium tracking-wide text-gray-500 uppercase">
               {currentConfig.subtitle}
             </span>
-            <h3 className="text-xl font-bold text-gray-dark-900 mt-1 mb-3">
+            <h3 className="text-gray-dark-900 mt-1 mb-3 text-xl font-bold">
               {targetName}
             </h3>
 
             {/* Ubicación y fechas (solo para guest reviews) */}
             {reviewRole === "guest" &&
               (location || (checkInDate && checkOutDate)) && (
-                <div className="flex flex-col gap-2 items-center">
+                <div className="flex flex-col items-center gap-2">
                   {location && (
                     <div className="flex items-center gap-1.5 text-gray-600">
-                      <MapPin className="w-4 h-4" />
+                      <MapPin className="h-4 w-4" />
                       <span className="text-sm font-medium">{location}</span>
                     </div>
                   )}
 
                   {checkInDate && checkOutDate && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-full">
-                      <Calendar className="w-4 h-4 text-blue-600" />
+                    <div className="flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5">
+                      <Calendar className="h-4 w-4 text-blue-600" />
                       <span className="text-sm font-medium text-blue-700">
                         {checkInDate} - {checkOutDate}
                       </span>
@@ -243,19 +247,19 @@ export function LeaveReviewModal({
           </div>
 
           {/* Estrellas Interactivas */}
-          <div className="flex justify-center gap-2 mb-8">
+          <div className="mb-8 flex justify-center gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
                 aria-label={`Calificar con ${star} estrellas`}
-                className="focus:outline-none transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-110 focus:outline-none active:scale-95"
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
                 onClick={() => setRating(star)}
               >
                 <Star
-                  className={`w-10 h-10 transition-colors duration-200 ${
+                  className={`h-10 w-10 transition-colors duration-200 ${
                     star <= (hoverRating || rating)
                       ? "fill-yellow-400 text-yellow-400"
                       : "fill-gray-100 text-gray-300"
@@ -267,15 +271,15 @@ export function LeaveReviewModal({
           </div>
 
           {/* Texto de calificación (Feedback visual) */}
-          <div className="text-center h-6 mb-6 -mt-4">
+          <div className="-mt-4 mb-6 h-6 text-center">
             {(hoverRating || rating) > 0 && (
               <span
-                className={`text-sm font-bold px-3 py-1 rounded-full ${
+                className={`rounded-full px-3 py-1 text-sm font-bold ${
                   (hoverRating || rating) >= 4
                     ? "bg-green-100 text-green-700"
                     : (hoverRating || rating) === 3
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
                 }`}
               >
                 {
@@ -297,10 +301,10 @@ export function LeaveReviewModal({
                   if (error) setError(null);
                 }}
                 rows={4}
-                className={`w-full rounded-2xl border p-4 text-gray-dark-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all resize-none ${
+                className={`text-gray-dark-700 w-full resize-none rounded-2xl border p-4 transition-all placeholder:text-gray-400 focus:ring-2 focus:outline-none ${
                   error
                     ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                    : "border-gray-200 focus:border-blue-light-500 focus:ring-blue-light-100 bg-gray-50 focus:bg-white"
+                    : "focus:border-blue-light-500 focus:ring-blue-light-100 border-gray-200 bg-gray-50 focus:bg-white"
                 }`}
                 placeholder={currentConfig.placeholder}
               />
@@ -309,7 +313,7 @@ export function LeaveReviewModal({
                   className={`text-xs ${
                     comment.length < 10
                       ? "text-gray-400"
-                      : "text-green-600 font-medium"
+                      : "font-medium text-green-600"
                   }`}
                 >
                   {comment.length} caracteres
@@ -320,15 +324,15 @@ export function LeaveReviewModal({
 
             {/* Mensaje de Error */}
             {error && (
-              <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-xl text-sm animate-shake">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className="animate-shake flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 {error}
               </div>
             )}
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex gap-3 mt-8">
+          <div className="mt-8 flex gap-3">
             <Button
               variant="ghost"
               onClick={handleClose}
@@ -339,12 +343,12 @@ export function LeaveReviewModal({
             </Button>
             <Button
               onClick={handleSubmit}
-              className={`flex-1 text-white shadow-lg cursor-pointer shadow-blue-500/25 bg-gradient-to-r from-blue-light-500 to-blue-vivid-600 hover:from-blue-light-600 hover:to-blue-vivid-700`}
+              className={`from-blue-light-500 to-blue-vivid-600 hover:from-blue-light-600 hover:to-blue-vivid-700 flex-1 cursor-pointer bg-gradient-to-r text-white shadow-lg shadow-blue-500/25`}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Enviando...
                 </div>
               ) : (
