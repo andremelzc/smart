@@ -114,8 +114,8 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     currencyCode === "PEN"
       ? "S/"
       : currencyCode === "USD"
-      ? "$"
-      : `${currencyCode} `;
+        ? "$"
+        : `${currencyCode} `;
 
   const formatCurrencyValue = (value: number) =>
     `${currencyPrefix}${value.toLocaleString("es-PE")}`;
@@ -188,7 +188,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   return (
     <>
       <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="mx-auto max-w-7xl px-4">
           {/* Informacion basica */}
 
           <PropertyBasicInfo
@@ -209,10 +209,10 @@ export default function PropertyPage({ params }: PropertyPageProps) {
             className="mb-8"
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Contenido principal */}
 
-            <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-8 lg:col-span-2">
               {/* Informacion del anfitrion */}
 
               <PropertyHostInfo

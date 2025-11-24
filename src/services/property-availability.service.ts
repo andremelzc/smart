@@ -1,10 +1,10 @@
-import { getConnection } from '@/src/lib/database';
-import oracledb from 'oracledb';
+import { getConnection } from "@/src/lib/database";
+import oracledb from "oracledb";
 
 export interface PropertyAvailabilityDay {
   date: string; // YYYY-MM-DD
   available: boolean;
-  reason: 'available' | 'booked' | 'blocked' | 'maintenance';
+  reason: "available" | "booked" | "blocked" | "maintenance";
 }
 
 export interface AvailabilitySummary {
@@ -17,21 +17,21 @@ export interface AvailabilitySummary {
 
 /**
  * Service para gestionar la disponibilidad de propiedades
- * 
+ *
  * Utiliza el package Oracle CALENDAR_AVAILABILITY_PKG con stored procedures
  * Sigue el mismo patrón que PROPERTY_PKG y BOOKING_PKG (OUT cursors)
- * 
+ *
  * LÓGICA DE DISPONIBILIDAD (implementada en Oracle):
- * 
+ *
  * 1. BOOKINGS (CONFIRMED/PENDING) → NO DISPONIBLE (reason: 'booked')
  *    - Las fechas con reservas confirmadas o pendientes están bloqueadas
- * 
+ *
  * 2. AVAILABILITIES con KIND = 'BLOCKED' → NO DISPONIBLE (reason: 'blocked')
  *    - El host bloqueó manualmente estas fechas
- * 
+ *
  * 3. AVAILABILITIES con KIND = 'MAINTENANCE' → NO DISPONIBLE (reason: 'maintenance')
  *    - El recinto está en mantenimiento
- * 
+ *
  * 4. Por defecto → DISPONIBLE (reason: 'available')
  *    - Disponible con precio base de la propiedad
  */
@@ -53,10 +53,23 @@ export class PropertyAvailabilityService {
       // Preparar parámetros para el SP (siguiendo patrón del proyecto)
       const bindParams: oracledb.BindParameters = {
         p_property_id: { val: propertyId, dir: oracledb.BIND_IN },
-        p_start_date: { val: startDate.toISOString().split('T')[0], dir: oracledb.BIND_IN },
-        p_end_date: { val: endDate.toISOString().split('T')[0], dir: oracledb.BIND_IN },
-        out_availability_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-        out_error_code: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+        p_start_date: {
+          val: startDate.toISOString().split("T")[0],
+          dir: oracledb.BIND_IN,
+        },
+        p_end_date: {
+          val: endDate.toISOString().split("T")[0],
+          dir: oracledb.BIND_IN,
+        },
+        out_availability_cursor: {
+          dir: oracledb.BIND_OUT,
+          type: oracledb.CURSOR,
+        },
+        out_error_code: {
+          dir: oracledb.BIND_OUT,
+          type: oracledb.STRING,
+          maxSize: 4000,
+        },
       };
 
       // Ejecutar el stored procedure
@@ -92,11 +105,19 @@ export class PropertyAvailabilityService {
         try {
           let row;
           while ((row = await availabilityCursor.getRow())) {
-            const dataRow = row as { DATE_STR: string; IS_AVAILABLE: number; REASON: string };
+            const dataRow = row as {
+              DATE_STR: string;
+              IS_AVAILABLE: number;
+              REASON: string;
+            };
             availability.push({
               date: dataRow.DATE_STR,
               available: dataRow.IS_AVAILABLE === 1,
-              reason: dataRow.REASON as 'available' | 'booked' | 'blocked' | 'maintenance'
+              reason: dataRow.REASON as
+                | "available"
+                | "booked"
+                | "blocked"
+                | "maintenance",
             });
           }
         } finally {
@@ -105,16 +126,15 @@ export class PropertyAvailabilityService {
       }
 
       return availability;
-
     } catch (error) {
-      console.error('Error fetching property availability:', error);
-      throw new Error('Failed to fetch property availability');
+      console.error("Error fetching property availability:", error);
+      throw new Error("Failed to fetch property availability");
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error('Error closing connection:', err);
+          console.error("Error closing connection:", err);
         }
       }
     }
@@ -137,10 +157,20 @@ export class PropertyAvailabilityService {
       // Preparar parámetros para el SP
       const bindParams: oracledb.BindParameters = {
         p_property_id: { val: propertyId, dir: oracledb.BIND_IN },
-        p_checkin_date: { val: checkinDate.toISOString().split('T')[0], dir: oracledb.BIND_IN },
-        p_checkout_date: { val: checkoutDate.toISOString().split('T')[0], dir: oracledb.BIND_IN },
+        p_checkin_date: {
+          val: checkinDate.toISOString().split("T")[0],
+          dir: oracledb.BIND_IN,
+        },
+        p_checkout_date: {
+          val: checkoutDate.toISOString().split("T")[0],
+          dir: oracledb.BIND_IN,
+        },
         out_is_available: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-        out_error_code: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+        out_error_code: {
+          dir: oracledb.BIND_OUT,
+          type: oracledb.STRING,
+          maxSize: 4000,
+        },
       };
 
       // Ejecutar el stored procedure
@@ -168,16 +198,15 @@ export class PropertyAvailabilityService {
       }
 
       return outBinds?.out_is_available === 1;
-
     } catch (error) {
-      console.error('Error checking range availability:', error);
-      throw new Error('Failed to check range availability');
+      console.error("Error checking range availability:", error);
+      throw new Error("Failed to check range availability");
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error('Error closing connection:', err);
+          console.error("Error closing connection:", err);
         }
       }
     }
@@ -207,18 +236,18 @@ export class PropertyAvailabilityService {
       maintenanceDays: 0,
     };
 
-    availability.forEach(day => {
+    availability.forEach((day) => {
       if (day.available) {
         summary.availableDays++;
       } else {
         switch (day.reason) {
-          case 'booked':
+          case "booked":
             summary.bookedDays++;
             break;
-          case 'blocked':
+          case "blocked":
             summary.blockedDays++;
             break;
-          case 'maintenance':
+          case "maintenance":
             summary.maintenanceDays++;
             break;
         }
@@ -246,7 +275,11 @@ export class PropertyAvailabilityService {
         p_property_id: { val: propertyId, dir: oracledb.BIND_IN },
         p_count: { val: count, dir: oracledb.BIND_IN },
         out_dates_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-        out_error_code: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+        out_error_code: {
+          dir: oracledb.BIND_OUT,
+          type: oracledb.STRING,
+          maxSize: 4000,
+        },
       };
 
       // Ejecutar el stored procedure
@@ -290,16 +323,15 @@ export class PropertyAvailabilityService {
       }
 
       return dates;
-
     } catch (error) {
-      console.error('Error fetching next available dates:', error);
-      throw new Error('Failed to fetch next available dates');
+      console.error("Error fetching next available dates:", error);
+      throw new Error("Failed to fetch next available dates");
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error('Error closing connection:', err);
+          console.error("Error closing connection:", err);
         }
       }
     }
@@ -324,20 +356,20 @@ export class PropertyAvailabilityService {
          VALUES (:propertyId, TO_DATE(:startDate, 'YYYY-MM-DD'), TO_DATE(:endDate, 'YYYY-MM-DD'), 'BLOCKED')`,
         {
           propertyId,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0]
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
         },
         { autoCommit: true }
       );
     } catch (error) {
-      console.error('Error blocking dates:', error);
-      throw new Error('Failed to block dates');
+      console.error("Error blocking dates:", error);
+      throw new Error("Failed to block dates");
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error('Error closing connection:', err);
+          console.error("Error closing connection:", err);
         }
       }
     }
@@ -362,20 +394,20 @@ export class PropertyAvailabilityService {
          VALUES (:propertyId, TO_DATE(:startDate, 'YYYY-MM-DD'), TO_DATE(:endDate, 'YYYY-MM-DD'), 'MAINTENANCE')`,
         {
           propertyId,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0]
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
         },
         { autoCommit: true }
       );
     } catch (error) {
-      console.error('Error marking maintenance:', error);
-      throw new Error('Failed to mark maintenance');
+      console.error("Error marking maintenance:", error);
+      throw new Error("Failed to mark maintenance");
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error('Error closing connection:', err);
+          console.error("Error closing connection:", err);
         }
       }
     }
@@ -389,7 +421,7 @@ export class PropertyAvailabilityService {
     propertyId: number,
     startDate: Date,
     endDate: Date,
-    kind: 'BLOCKED' | 'MAINTENANCE'
+    kind: "BLOCKED" | "MAINTENANCE"
   ): Promise<void> {
     let connection: oracledb.Connection | undefined;
 
@@ -404,21 +436,21 @@ export class PropertyAvailabilityService {
            AND KIND = :kind`,
         {
           propertyId,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-          kind
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
+          kind,
         },
         { autoCommit: true }
       );
     } catch (error) {
-      console.error('Error unblocking dates:', error);
-      throw new Error('Failed to unblock dates');
+      console.error("Error unblocking dates:", error);
+      throw new Error("Failed to unblock dates");
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error('Error closing connection:', err);
+          console.error("Error closing connection:", err);
         }
       }
     }

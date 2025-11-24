@@ -65,7 +65,7 @@ export function ProfileField({
       return (
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-medium-500 mb-1">
+            <label className="text-gray-medium-500 mb-1 block text-xs font-medium">
               Nombre
             </label>
             <input
@@ -73,13 +73,13 @@ export function ProfileField({
               placeholder="Ingresa tu nombre"
               value={tempFirstName}
               onChange={(e) => onTempFirstNameChange?.(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-medium-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-light-500 focus:border-transparent"
+              className="border-gray-medium-200 focus:ring-blue-light-500 w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               disabled={isSaving}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-medium-500 mb-1">
+            <label className="text-gray-medium-500 mb-1 block text-xs font-medium">
               Apellido
             </label>
             <input
@@ -87,7 +87,7 @@ export function ProfileField({
               placeholder="Ingresa tu apellido"
               value={tempLastName}
               onChange={(e) => onTempLastNameChange?.(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-medium-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-light-500 focus:border-transparent"
+              className="border-gray-medium-200 focus:ring-blue-light-500 w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               disabled={isSaving}
             />
           </div>
@@ -103,16 +103,16 @@ export function ProfileField({
         placeholder={placeholder}
         value={inputValue}
         onChange={(e) => onTempValueChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-medium-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-light-500 focus:border-transparent"
+        className="border-gray-medium-200 focus:ring-blue-light-500 w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
         disabled={isSaving}
       />
     );
   };
 
   return (
-    <div className="flex items-center justify-between py-4 border-b border-gray-medium-100">
+    <div className="border-gray-medium-100 flex items-center justify-between border-b py-4">
       <div className="flex-1">
-        <h3 className="text-sm font-medium text-gray-medium-400 mb-1">
+        <h3 className="text-gray-medium-400 mb-1 text-sm font-medium">
           {label}
         </h3>
 
@@ -124,16 +124,16 @@ export function ProfileField({
               <button
                 onClick={onSave}
                 disabled={isSaving}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-light-500 hover:bg-blue-light-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-light-500 hover:bg-blue-light-600 focus:ring-blue-light-500 inline-flex items-center rounded border border-transparent px-3 py-1.5 text-xs font-medium text-white focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                    <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-white"></div>
                     Guardando...
                   </>
                 ) : (
                   <>
-                    <Check className="h-3 w-3 mr-1" />
+                    <Check className="mr-1 h-3 w-3" />
                     Guardar
                   </>
                 )}
@@ -142,9 +142,9 @@ export function ProfileField({
               <button
                 onClick={onCancel}
                 disabled={isSaving}
-                className="inline-flex items-center px-3 py-1.5 border border-gray-medium-200 text-xs font-medium rounded text-gray-dark-500 bg-white hover:bg-gray-medium-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="border-gray-medium-200 text-gray-dark-500 hover:bg-gray-medium-50 focus:ring-blue-light-500 inline-flex items-center rounded border bg-white px-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <X className="h-3 w-3 mr-1" />
+                <X className="mr-1 h-3 w-3" />
                 Cancelar
               </button>
             </div>
@@ -159,9 +159,9 @@ export function ProfileField({
       {!isEditing && (
         <button
           onClick={onEdit}
-          className="ml-4 text-blue-light-500 hover:text-blue-light-600 font-medium text-sm"
+          className="text-blue-light-500 hover:text-blue-light-600 ml-4 text-sm font-medium"
         >
-          <Pencil className="h-4 w-4 inline mr-1" />
+          <Pencil className="mr-1 inline h-4 w-4" />
 
           {value ? "Editar" : "Agregar"}
         </button>

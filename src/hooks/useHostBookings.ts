@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { bookingService } from '@/src/services/booking.service';
-import type { HostBooking } from '@/src/services/booking.service';
+import { useState, useEffect } from "react";
+import { bookingService } from "@/src/services/booking.service";
+import type { HostBooking } from "@/src/services/booking.service";
 
 interface UseHostBookingsReturn {
   bookings: HostBooking[];
@@ -23,7 +23,10 @@ export function useHostBookings(): UseHostBookingsReturn {
       const data = await bookingService.getHostBookings();
       setBookings(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar las reservas del host';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Error al cargar las reservas del host";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -48,6 +51,6 @@ export function useHostBookings(): UseHostBookingsReturn {
     error,
     refreshBookings,
     totalRevenue,
-    bookingCounts
+    bookingCounts,
   };
 }

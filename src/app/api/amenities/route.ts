@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { executeQuery } from '@/src/lib/database';
+import { NextResponse } from "next/server";
+import { executeQuery } from "@/src/lib/database";
 
 type AmenityRow = {
   ID?: number;
@@ -33,7 +33,9 @@ export async function GET() {
 
   try {
     const result = await executeQuery(sql);
-    const rows = Array.isArray(result.rows) ? (result.rows as AmenityRow[]) : [];
+    const rows = Array.isArray(result.rows)
+      ? (result.rows as AmenityRow[])
+      : [];
 
     const categories = new Map<
       number,
@@ -42,11 +44,15 @@ export async function GET() {
 
     rows.forEach((row) => {
       const amenityId = Number(
-        row.ID ?? row.id ?? row.AMENITY_ID ?? row.amenity_id ?? 0,
+        row.ID ?? row.id ?? row.AMENITY_ID ?? row.amenity_id ?? 0
       );
 
       const amenityLabelRaw = (
-        row.LABEL ?? row.label ?? row.NAME ?? row.name ?? ''
+        row.LABEL ??
+        row.label ??
+        row.NAME ??
+        row.name ??
+        ""
       ).toString();
 
       const categoryId = Number(
@@ -54,7 +60,7 @@ export async function GET() {
           row.ID_CATEGORIA ??
           row.CATEGORY_ID ??
           row.category_id ??
-          0,
+          0
       );
 
       const categoryNameRaw = (
@@ -62,7 +68,7 @@ export async function GET() {
         row.CATEGORIA ??
         row.category ??
         row.CATEGORY ??
-        ''
+        ""
       ).toString();
 
       if (
@@ -95,18 +101,22 @@ export async function GET() {
       amenities: category.amenities
         .filter(
           (amenity) =>
-            Number.isInteger(amenity.id) && amenity.id > 0 && amenity.label.length > 0,
+            Number.isInteger(amenity.id) &&
+            amenity.id > 0 &&
+            amenity.label.length > 0
         )
-        .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })),
+        .sort((a, b) =>
+          a.label.localeCompare(b.label, "es", { sensitivity: "base" })
+        ),
     }));
 
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
-    console.error('Error fetching amenities:', error);
-    const message = error instanceof Error ? error.message : 'No se pudo obtener los amenities.';
-    return NextResponse.json(
-      { success: false, message },
-      { status: 500 },
-    );
+    console.error("Error fetching amenities:", error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo obtener los amenities.";
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

@@ -1,10 +1,10 @@
 // En: src/app/host/properties/[propertyId]/availability/page.tsx
 
-import { Suspense } from 'react';
-import Link from 'next/link';
-import { AvailabilityCalendar } from '@/src/components/features/host/AvailabilityCalendar';
-import { Button } from '@/src/components/ui/Button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { Suspense } from "react";
+import Link from "next/link";
+import { AvailabilityCalendar } from "@/src/components/features/host/AvailabilityCalendar";
+import { Button } from "@/src/components/ui/Button";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 type Props = {
   params: Promise<{ propertyId: string }>;
@@ -34,11 +34,13 @@ export default async function AvailabilityPage({ params }: Props) {
 
       {/* Calendario de disponibilidad */}
       <div className="mt-6">
-        <Suspense fallback={
-          <div className="flex justify-center p-8">
-            <Loader2 className="animate-spin h-8 w-8 text-primary" />
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex justify-center p-8">
+              <Loader2 className="text-primary h-8 w-8 animate-spin" />
+            </div>
+          }
+        >
           <AvailabilityCalendar propertyId={propertyId} />
         </Suspense>
       </div>

@@ -1,25 +1,16 @@
-'use client';
+"use client";
 
-
-
-import { Users, Bed, Bath } from 'lucide-react';
-
-
+import { Users, Bed, Bath } from "lucide-react";
 
 interface Host {
-
   name: string;
 
   isVerified?: boolean;
 
   memberSince?: string;
-
 }
 
-
-
 interface PropertyHostInfoProps {
-
   propertyType: string;
 
   host: Host;
@@ -37,13 +28,9 @@ interface PropertyHostInfoProps {
   country: string;
 
   className?: string;
-
 }
 
-
-
 export function PropertyHostInfo({
-
   propertyType,
 
   host,
@@ -54,123 +41,69 @@ export function PropertyHostInfo({
 
   bathrooms,
 
-  beds, city, country,
+  beds,
+  city,
+  country,
 
-  className = ''
-
+  className = "",
 }: PropertyHostInfoProps) {
-
   const formatMemberSince = (memberSince?: string) => {
-
     try {
-
-      const date = typeof memberSince === 'string'
-
-        ? new Date(memberSince)
-
-        : new Date();
+      const date =
+        typeof memberSince === "string" ? new Date(memberSince) : new Date();
 
       return date.getFullYear();
-
     } catch {
-
-      return 'Fecha no disponible';
-
+      return "Fecha no disponible";
     }
-
   };
-
-
 
   const getHostInitial = (name: string) => {
-
-    return typeof name === 'string' && name.length > 0
-
+    return typeof name === "string" && name.length > 0
       ? name.charAt(0).toUpperCase()
-
-      : 'H';
-
+      : "H";
   };
-
-
 
   const formatHostName = (name: string) => {
+    if (typeof name !== "string" || name.length === 0) return "Anfitrion";
 
-    if (typeof name !== 'string' || name.length === 0) return 'Anfitrion';
-
-    const firstName = name.split(' ')[0];
+    const firstName = name.split(" ")[0];
 
     return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-
   };
 
-
-
   return (
-
     <div className={`border-b border-gray-200 pb-6 ${className}`}>
-
-      <div className="flex items-start justify-between mb-4">
-
+      <div className="mb-4 flex items-start justify-between">
         <div className="flex-1">
-
           <h2 className="text-xl font-semibold">
-
             {propertyType} en {city},{country}
-
           </h2>
 
-
-
-          <div className="flex flex-wrap items-center gap-4 text-gray-600 mt-2">
-
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-gray-600">
             <span className="flex items-center gap-1">
-
-              <Users className="w-4 h-4" />
-
-              {typeof capacity === 'number' ? capacity : 0} huespedes
-
+              <Users className="h-4 w-4" />
+              {typeof capacity === "number" ? capacity : 0} huespedes
             </span>
 
-
-
             <span className="flex items-center gap-1">
-
-              <Bed className="w-4 h-4" />
-
-              {typeof bedrooms === 'number' ? bedrooms : 0} habitaciones
-
+              <Bed className="h-4 w-4" />
+              {typeof bedrooms === "number" ? bedrooms : 0} habitaciones
             </span>
 
-
-
             <span className="flex items-center gap-1">
-
-              <Bath className="w-4 h-4" />
-
-              {typeof bathrooms === 'number' ? bathrooms : 0} baños
-
+              <Bath className="h-4 w-4" />
+              {typeof bathrooms === "number" ? bathrooms : 0} baños
             </span>
-
-
 
             {beds && beds > 0 && (
-
               <span className="flex items-center gap-1">
-
-                <Bed className="w-4 h-4" />
-
-                {typeof beds === 'number' ? beds : 0} camas
-
+                <Bed className="h-4 w-4" />
+                {typeof beds === "number" ? beds : 0} camas
               </span>
-
             )}
-
           </div>
-
         </div>
-
-
 
         {/*<div className="w-12 h-12 bg-blue-light-500 rounded-full flex items-center justify-center ml-4">*/}
 
@@ -181,10 +114,7 @@ export function PropertyHostInfo({
         {/*  </span>*/}
 
         {/*</div>*/}
-
       </div>
-
-
 
       {/*<div className="flex flex-wrap gap-4">*/}
 
@@ -200,8 +130,6 @@ export function PropertyHostInfo({
 
       {/*  )}*/}
 
-
-
       {/*  <div className="text-sm text-gray-600">*/}
 
       {/*    Miembro desde {formatMemberSince(host.memberSince)}*/}
@@ -210,48 +138,28 @@ export function PropertyHostInfo({
 
       {/*</div>*/}
 
-
-
       {/* Seccion del Anfitrion */}
 
-      <div className="border-t border-gray-200 mt-6 pt-6">
-
+      <div className="mt-6 border-t border-gray-200 pt-6">
         <div className="flex items-start gap-4">
-
-          <div className="w-12 h-12 bg-blue-light-500 rounded-full flex items-center justify-center flex-shrink-0">
-
+          <div className="bg-blue-light-500 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
             <span className="text-lg font-semibold text-white">
-
               {getHostInitial(host.name)}
-
             </span>
-
           </div>
-
-
 
           <div className="flex-1">
-
             <h3 className="font-semibold text-gray-900">
-
               Anfitrion: {formatHostName(host.name)}
-
             </h3>
 
-            <p className="text-sm text-gray-600 mt-1">
-
-              {host.isVerified ? 'Superanfitrion' : 'Anfitrion'}: desde {formatMemberSince(host.memberSince)}
-
+            <p className="mt-1 text-sm text-gray-600">
+              {host.isVerified ? "Superanfitrion" : "Anfitrion"}: desde{" "}
+              {formatMemberSince(host.memberSince)}
             </p>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   );
-
 }

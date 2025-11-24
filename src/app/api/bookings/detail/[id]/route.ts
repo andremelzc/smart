@@ -19,10 +19,7 @@ export async function GET(
     // Verificar autenticación
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     const resolvedParams = await params;
@@ -50,7 +47,7 @@ export async function GET(
       {
         p_booking_id: bookingId,
         p_user_id: userId,
-        p_booking_info_cur: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+        p_booking_info_cur: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
       }
     );
 
@@ -64,7 +61,7 @@ export async function GET(
     if (outBinds.p_booking_info_cur) {
       try {
         const rows = await outBinds.p_booking_info_cur.getRows();
-        
+
         if (rows.length === 0) {
           return NextResponse.json(
             { error: "Reserva no encontrada o sin acceso" },
@@ -73,7 +70,7 @@ export async function GET(
         }
 
         const row = rows[0] as unknown[];
-        
+
         bookingDetail = {
           // Datos básicos de la reserva
           bookingId: row[0] as number,
@@ -113,7 +110,6 @@ export async function GET(
           hasHostReview: Boolean(row[26] as number),
           hasGuestReview: Boolean(row[27] as number),
         };
-
       } finally {
         await outBinds.p_booking_info_cur.close();
       }
@@ -129,17 +125,16 @@ export async function GET(
     // Respuesta exitosa
     return NextResponse.json({
       success: true,
-      data: bookingDetail
+      data: bookingDetail,
     });
-
   } catch (error) {
     console.error("Error en get_detailed_booking_info:", error);
 
     // Manejar errores de Oracle específicos
-    if (error && typeof error === 'object' && 'errorNum' in error) {
+    if (error && typeof error === "object" && "errorNum" in error) {
       const oracleError = error as { errorNum: number; message: string };
       console.error("Oracle Error:", oracleError.errorNum, oracleError.message);
-      
+
       return NextResponse.json(
         { error: `Error en la base de datos: ${oracleError.message}` },
         { status: 500 }
@@ -151,7 +146,6 @@ export async function GET(
       { error: "Error interno del servidor" },
       { status: 500 }
     );
-
   } finally {
     if (connection) {
       try {

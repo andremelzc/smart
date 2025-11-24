@@ -375,7 +375,8 @@ function PropertySearchContent() {
           item: AmenityCategoryApiItem
         ): AmenityCategory | null => {
           const idValue =
-            (item?.id as unknown) ?? (item as { id_categoria?: unknown })?.id_categoria;
+            (item?.id as unknown) ??
+            (item as { id_categoria?: unknown })?.id_categoria;
           const nameValue =
             (item?.name as unknown) ??
             (item as { categoria?: unknown })?.categoria;
@@ -384,8 +385,7 @@ function PropertySearchContent() {
             typeof idValue === "number" || typeof idValue === "string"
               ? Number(idValue)
               : NaN;
-          const name =
-            typeof nameValue === "string" ? nameValue.trim() : "";
+          const name = typeof nameValue === "string" ? nameValue.trim() : "";
 
           if (!Number.isInteger(id) || id <= 0 || name.length === 0) {
             return null;
@@ -533,7 +533,7 @@ function PropertySearchContent() {
   return (
     <div className="space-y-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-gray-dark-800">
+        <h1 className="text-gray-dark-800 text-3xl font-semibold">
           Explora establecimientos
         </h1>
 

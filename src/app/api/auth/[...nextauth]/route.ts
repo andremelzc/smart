@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -80,16 +80,20 @@ export const authOptions: NextAuthOptions = {
 
         try {
           const result = await authStoredProcedures.validateCredentials(
-            credentials.email, 
+            credentials.email,
             credentials.password
           );
 
           if (!result.success || !result.userData) {
-            throw new Error(authStoredProcedures.getErrorMessage(result.errorCode || 'INVALID_CREDENTIALS'));
+            throw new Error(
+              authStoredProcedures.getErrorMessage(
+                result.errorCode || "INVALID_CREDENTIALS"
+              )
+            );
           }
 
           const userData = result.userData;
-          
+
           return {
             id: userData.userId.toString(),
             email: userData.email,
@@ -97,17 +101,16 @@ export const authOptions: NextAuthOptions = {
             dbUserId: userData.userId,
             // Agregar otros campos que necesites
           };
-          
         } catch (error) {
           console.error("Error in credentials authorization:", error);
-          
+
           if (error instanceof Error) {
             throw error;
           }
-          
+
           throw new Error("Error interno del servidor");
         }
-      }
+      },
     }),
   ],
 
@@ -136,7 +139,8 @@ export const authOptions: NextAuthOptions = {
           const safeName = name && name.trim() ? name.trim() : "Usuario";
           const nameParts = safeName.split(" ");
           const firstName = nameParts[0] || "Usuario";
-          const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+          const lastName =
+            nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
           const sql = `
         BEGIN 
@@ -154,7 +158,8 @@ export const authOptions: NextAuthOptions = {
           // Aseguramos providerAccountId (fallback a profile.sub)
           const typedAccount = account as NextAuthAccount;
           const typedProfile = profile as NextAuthProfile;
-          const providerAccountId = typedAccount?.providerAccountId ?? typedProfile?.sub ?? "";
+          const providerAccountId =
+            typedAccount?.providerAccountId ?? typedProfile?.sub ?? "";
           const binds = {
             p_email: email,
             p_first_name: firstName,
@@ -173,7 +178,7 @@ export const authOptions: NextAuthOptions = {
             providerAccountId: account.providerAccountId,
           });
 
-          const result = await executeQuery(sql, binds) as OracleResult;
+          const result = (await executeQuery(sql, binds)) as OracleResult;
 
           console.log(
             "📥 Respuesta completa de Oracle:",
@@ -187,8 +192,11 @@ export const authOptions: NextAuthOptions = {
           const dbIdentityId = result?.outBinds?.out_identity_id as number;
 
           if (dbUserId != null && dbIdentityId != null) {
-            console.log("✅ Usuario autenticado con IDs:", { dbUserId, dbIdentityId });
-            
+            console.log("✅ Usuario autenticado con IDs:", {
+              dbUserId,
+              dbIdentityId,
+            });
+
             // Usar el tipo extendido
             const extendedUser = user as ExtendedUser;
             extendedUser.dbUserId = dbUserId;
@@ -197,7 +205,7 @@ export const authOptions: NextAuthOptions = {
             // Obtener roles del usuario desde USER_PKG.SP_GET_USER_ROLES
             try {
               const schema = process.env.DB_SCHEMA?.trim();
-              const userPkg = process.env.DB_USER_PACKAGE?.trim() || 'USER_PKG';
+              const userPkg = process.env.DB_USER_PACKAGE?.trim() || "USER_PKG";
               let qualifiedName = `${userPkg}.SP_GET_USER_ROLES`;
               if (schema && schema.length > 0) {
                 qualifiedName = `${schema}.${qualifiedName}`;
@@ -206,31 +214,43 @@ export const authOptions: NextAuthOptions = {
               const rolesSql = `BEGIN ${qualifiedName}(:p_user_id, :out_is_tenant, :out_is_host); END;`;
               const rolesBinds = {
                 p_user_id: dbUserId,
-                out_is_tenant: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+                out_is_tenant: {
+                  dir: oracledb.BIND_OUT,
+                  type: oracledb.NUMBER,
+                },
                 out_is_host: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
               };
 
-              const rolesRes = await executeQuery(rolesSql, rolesBinds) as OracleResult;
+              const rolesRes = (await executeQuery(
+                rolesSql,
+                rolesBinds
+              )) as OracleResult;
               const isTenant = Number(rolesRes?.outBinds?.out_is_tenant) === 1;
               const isHost = Number(rolesRes?.outBinds?.out_is_host) === 1;
 
               extendedUser.dbIsTenant = isTenant;
               extendedUser.dbIsHost = isHost;
               extendedUser.dbRoles = [
-                ...(isTenant ? ['tenant'] : []),
-                ...(isHost ? ['host'] : []),
+                ...(isTenant ? ["tenant"] : []),
+                ...(isHost ? ["host"] : []),
               ];
-              console.log('👤 Roles asignados:', extendedUser.dbRoles);
+              console.log("👤 Roles asignados:", extendedUser.dbRoles);
             } catch (rolesErr) {
-              console.error('⚠️ No se pudieron obtener los roles del usuario:', rolesErr);
+              console.error(
+                "⚠️ No se pudieron obtener los roles del usuario:",
+                rolesErr
+              );
               // No bloqueamos el login por roles
             }
             return true;
           } else {
-            console.error("❌ El Stored Procedure no devolvió ambos OUT (user e identity).", {
-              dbUserId,
-              dbIdentityId,
-            });
+            console.error(
+              "❌ El Stored Procedure no devolvió ambos OUT (user e identity).",
+              {
+                dbUserId,
+                dbIdentityId,
+              }
+            );
             return false;
           }
         } catch (err) {
@@ -294,10 +314,11 @@ export const authOptions: NextAuthOptions = {
         if (userWithRoles?.dbRoles) {
           (token as Record<string, unknown>).roles = userWithRoles.dbRoles;
         }
-        if (typeof userWithRoles?.dbIsTenant !== 'undefined') {
-          (token as Record<string, unknown>).isTenant = userWithRoles.dbIsTenant;
+        if (typeof userWithRoles?.dbIsTenant !== "undefined") {
+          (token as Record<string, unknown>).isTenant =
+            userWithRoles.dbIsTenant;
         }
-        if (typeof userWithRoles?.dbIsHost !== 'undefined') {
+        if (typeof userWithRoles?.dbIsHost !== "undefined") {
           (token as Record<string, unknown>).isHost = userWithRoles.dbIsHost;
         }
       }

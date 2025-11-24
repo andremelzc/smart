@@ -94,30 +94,28 @@ export function Paso5_Fotos({ data, updateData }: StepProps) {
 
       <div
         onClick={handleDropzoneClick}
-        className={`flex flex-col items-center justify-center p-10 border-2 
-                   border-dashed rounded-xl transition-all
-                   ${
-                     isUploading
-                       ? "border-blue-400 bg-blue-50 cursor-wait"
-                       : "border-slate-300 bg-slate-50 cursor-pointer hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600"
-                   }`}
+        className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-all ${
+          isUploading
+            ? "cursor-wait border-blue-400 bg-blue-50"
+            : "cursor-pointer border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+        }`}
       >
         {isUploading ? (
           <>
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             <span className="mt-3 text-base font-semibold text-blue-600">
               Subiendo fotos... {uploadProgress}%
             </span>
-            <div className="w-48 h-2 bg-slate-200 rounded-full mt-2 overflow-hidden">
+            <div className="mt-2 h-2 w-48 overflow-hidden rounded-full bg-slate-200">
               <div
-                className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+                className="h-full rounded-full bg-blue-600 transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
           </>
         ) : (
           <>
-            <UploadCloud className="w-12 h-12 text-slate-600" />
+            <UploadCloud className="h-12 w-12 text-slate-600" />
             <span className="mt-3 text-base font-semibold text-slate-600">
               Haz clic para subir tus fotos
             </span>
@@ -141,11 +139,11 @@ export function Paso5_Fotos({ data, updateData }: StepProps) {
             Tus fotos ({data.images.length})
           </h3>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {data.images.map((image) => (
               <div
                 key={image.sortOrder}
-                className="relative aspect-video rounded-lg overflow-hidden border border-slate-200 group shadow-sm"
+                className="group relative aspect-video overflow-hidden rounded-lg border border-slate-200 shadow-sm"
               >
                 <Image
                   src={image.url || "/placeholder-room.svg"}
@@ -156,20 +154,17 @@ export function Paso5_Fotos({ data, updateData }: StepProps) {
                 />
 
                 {image.sortOrder === 1 && (
-                  <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded shadow-md">
+                  <span className="absolute top-2 left-2 rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white shadow-md">
                     Portada
                   </span>
                 )}
 
                 <button
                   onClick={() => handleRemoveImage(image.url)}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full 
-                             bg-black/60 text-white flex items-center justify-center
-                             opacity-0 group-hover:opacity-100 transition-opacity
-                             hover:bg-red-500"
+                  className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500"
                   aria-label="Eliminar foto"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             ))}
@@ -178,8 +173,8 @@ export function Paso5_Fotos({ data, updateData }: StepProps) {
       )}
 
       {data.images.length === 0 && (
-        <div className="p-3 border border-red-200 bg-red-50 rounded-lg text-center">
-          <p className="text-sm text-red-700 font-medium">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+          <p className="text-sm font-medium text-red-700">
             ¡Necesitas subir al menos 1 foto para poder continuar!
           </p>
         </div>

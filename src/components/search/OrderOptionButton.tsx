@@ -38,8 +38,8 @@ export function OrderOptionButton({
       </span>
 
       <span className="flex-1">
-        <p className="text-sm font-semibold text-gray-dark-700">{label}</p>
-        <p className="text-xs text-gray-dark-500">{description}</p>
+        <p className="text-gray-dark-700 text-sm font-semibold">{label}</p>
+        <p className="text-gray-dark-500 text-xs">{description}</p>
       </span>
     </button>
   );

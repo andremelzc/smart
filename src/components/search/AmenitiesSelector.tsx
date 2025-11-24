@@ -21,7 +21,7 @@ export function AmenitiesSelector({
 }: AmenitiesSelectorProps) {
   const initialOpenMap = useMemo(() => {
     if (categories.length === 0) return {};
-    
+
     const map: Record<number, boolean> = {};
     categories.forEach((category, index) => {
       map[category.id] = index === 0;
@@ -29,7 +29,8 @@ export function AmenitiesSelector({
     return map;
   }, [categories]);
 
-  const [openMap, setOpenMap] = useState<Record<string | number, boolean>>(initialOpenMap);
+  const [openMap, setOpenMap] =
+    useState<Record<string | number, boolean>>(initialOpenMap);
 
   useEffect(() => {
     setOpenMap(initialOpenMap);
@@ -54,8 +55,8 @@ export function AmenitiesSelector({
 
   if (loading) {
     return (
-      <span className="flex items-center gap-2 text-sm text-gray-dark-500">
-        <Loader2 className="h-4 w-4 animate-spin text-blue-light-500" />
+      <span className="text-gray-dark-500 flex items-center gap-2 text-sm">
+        <Loader2 className="text-blue-light-500 h-4 w-4 animate-spin" />
         Cargando amenities...
       </span>
     );
@@ -63,7 +64,7 @@ export function AmenitiesSelector({
 
   if (!loading && sortedCategories.length === 0) {
     return (
-      <span className="text-sm text-gray-dark-500">
+      <span className="text-gray-dark-500 text-sm">
         No hay amenities disponibles.
       </span>
     );
@@ -97,7 +98,7 @@ export function AmenitiesSelector({
                     className={`flex flex-1 basis-32 items-center justify-center rounded-full px-3 py-2 text-center text-sm font-medium transition-all ${
                       isSelected
                         ? "bg-blue-vivid-500 text-white shadow-md"
-                        : "border border-blue-light-200 bg-blue-light-50 text-blue-light-700 hover:border-blue-light-300"
+                        : "border-blue-light-200 bg-blue-light-50 text-blue-light-700 hover:border-blue-light-300 border"
                     }`}
                   >
                     <span className="max-w-full truncate whitespace-nowrap">

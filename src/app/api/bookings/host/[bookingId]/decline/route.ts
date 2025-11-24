@@ -22,16 +22,25 @@ export async function POST(
 
     const hostId = Number.parseInt(session.user.id, 10);
     if (!Number.isFinite(hostId)) {
-      return NextResponse.json({ error: "Identificador de usuario no valido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Identificador de usuario no valido" },
+        { status: 400 }
+      );
     }
 
-  const bookingId = Number.parseInt(bookingIdParam, 10);
+    const bookingId = Number.parseInt(bookingIdParam, 10);
     if (!Number.isFinite(bookingId)) {
-      return NextResponse.json({ error: "Identificador de reserva no valido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Identificador de reserva no valido" },
+        { status: 400 }
+      );
     }
 
-    const { hostNote } = (await request.json().catch(() => ({}))) as { hostNote?: unknown };
-    const normalizedHostNote = typeof hostNote === "string" ? hostNote.trim() : null;
+    const { hostNote } = (await request.json().catch(() => ({}))) as {
+      hostNote?: unknown;
+    };
+    const normalizedHostNote =
+      typeof hostNote === "string" ? hostNote.trim() : null;
 
     connection = await getConnection();
 
@@ -44,18 +53,29 @@ export async function POST(
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
-    const bookingRow = bookingQuery.rows?.[0] as ({ STATUS: string; HOST_ID: number }) | undefined;
+    const bookingRow = bookingQuery.rows?.[0] as
+      | { STATUS: string; HOST_ID: number }
+      | undefined;
 
     if (!bookingRow) {
-      return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Reserva no encontrada" },
+        { status: 404 }
+      );
     }
 
     if (bookingRow.HOST_ID !== hostId) {
-      return NextResponse.json({ error: "No esta autorizado para gestionar esta reserva" }, { status: 403 });
+      return NextResponse.json(
+        { error: "No esta autorizado para gestionar esta reserva" },
+        { status: 403 }
+      );
     }
 
     if ((bookingRow.STATUS || "").toUpperCase() !== STATUS_PENDING) {
-      return NextResponse.json({ error: "La reserva no se encuentra pendiente" }, { status: 409 });
+      return NextResponse.json(
+        { error: "La reserva no se encuentra pendiente" },
+        { status: 409 }
+      );
     }
 
     await connection.execute(
@@ -83,7 +103,10 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error al rechazar reserva:", error);
-    return NextResponse.json({ error: "No se pudo rechazar la reserva" }, { status: 500 });
+    return NextResponse.json(
+      { error: "No se pudo rechazar la reserva" },
+      { status: 500 }
+    );
   } finally {
     if (connection) {
       try {

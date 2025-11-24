@@ -97,12 +97,12 @@ export default function HostSidebar() {
   }
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 h-full flex flex-col">
+    <aside className="flex h-full w-80 flex-col border-r border-gray-200 bg-white">
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           {/* User Info Card */}
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 mb-8 border border-blue-200">
+          <div className="mb-8 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6">
             <div className="flex items-center gap-4">
               {user?.image ? (
                 <Image
@@ -110,10 +110,10 @@ export default function HostSidebar() {
                   alt={user.name || "Usuario"}
                   width={64}
                   height={64}
-                  className="rounded-full object-cover border-3 border-white shadow-lg"
+                  className="rounded-full border-3 border-white object-cover shadow-lg"
                 />
               ) : (
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-3 border-white shadow-lg">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-3 border-white bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
                   <span className="text-2xl font-bold text-white">
                     {user?.name?.charAt(0)?.toUpperCase() || "?"}
                   </span>
@@ -121,13 +121,13 @@ export default function HostSidebar() {
               )}
 
               <div className="flex-1">
-                <h3 className="font-bold text-gray-900 text-lg">
+                <h3 className="text-lg font-bold text-gray-900">
                   {user?.name || "Usuario"}
                 </h3>
 
-                <div className="flex items-center gap-2 mt-1">
+                <div className="mt-1 flex items-center gap-2">
                   <div className="flex items-center gap-1">
-                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <Building2 className="h-4 w-4 text-blue-600" />
 
                     <span className="text-sm font-medium text-blue-700">
                       Anfitrion
@@ -135,15 +135,15 @@ export default function HostSidebar() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
+                    <Users className="h-4 w-4" />
 
                     <span>245 huespedes</span>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500" />
+                    <Star className="h-4 w-4 text-yellow-500" />
 
                     <span>4.8</span>
                   </div>
@@ -164,20 +164,14 @@ export default function HostSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`
-
-                  w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200
-
-                  ${
+                  className={`group flex w-full items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 ${
                     active
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  }
-
-                `}
+                  } `}
                 >
                   <Icon
-                    className={`w-5 h-5 ${
+                    className={`h-5 w-5 ${
                       active
                         ? "text-white"
                         : "text-gray-500 group-hover:text-gray-700"
@@ -203,9 +197,9 @@ export default function HostSidebar() {
                   </div>
 
                   <ChevronRight
-                    className={`w-4 h-4 transition-transform ${
+                    className={`h-4 w-4 transition-transform ${
                       active
-                        ? "text-white rotate-90"
+                        ? "rotate-90 text-white"
                         : "text-gray-400 group-hover:translate-x-1"
                     }`}
                   />

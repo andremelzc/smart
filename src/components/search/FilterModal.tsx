@@ -47,7 +47,9 @@ export function FilterModal({
   onReset,
   onSubmit,
 }: FilterModalProps) {
-  const [sectionsOpen, setSectionsOpen] = useState<Record<string | number, boolean>>({
+  const [sectionsOpen, setSectionsOpen] = useState<
+    Record<string | number, boolean>
+  >({
     spaces: true,
     order: true,
   });
@@ -59,9 +61,9 @@ export function FilterModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center px-4 pb-10 pt-20 sm:pt-28">
+    <div className="fixed inset-0 z-40 flex items-start justify-center px-4 pt-20 pb-10 sm:pt-28">
       <div
-        className="absolute inset-0 bg-gray-dark-900/40 backdrop-blur-sm"
+        className="bg-gray-dark-900/40 absolute inset-0 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -70,19 +72,19 @@ export function FilterModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="filters-modal-title"
-        className="relative z-50 w-full max-w-full sm:max-w-3xl mt-7"
+        className="relative z-50 mt-7 w-full max-w-full sm:max-w-3xl"
       >
         <div className="flex max-h-[calc(100vh-5rem)] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
           <header className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
             <div className="space-y-1">
               <h2
                 id="filters-modal-title"
-                className="text-xl font-semibold text-gray-dark-800"
+                className="text-gray-dark-800 text-xl font-semibold"
               >
                 Filtros
               </h2>
 
-              <p className="text-sm text-gray-dark-500">
+              <p className="text-gray-dark-500 text-sm">
                 Personaliza tu búsqueda con criterios avanzados.
               </p>
             </div>
@@ -90,7 +92,7 @@ export function FilterModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-light-200 text-gray-dark-500 transition-all hover:border-blue-light-300 hover:text-gray-dark-700"
+              className="border-blue-light-200 text-gray-dark-500 hover:border-blue-light-300 hover:text-gray-dark-700 inline-flex h-10 w-10 items-center justify-center rounded-full border transition-all"
               aria-label="Cerrar filtros"
             >
               <X className="h-4 w-4" />
@@ -102,24 +104,24 @@ export function FilterModal({
               {/* Columna 1: Filtros básicos */}
               <div className="space-y-5">
                 <section className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-dark-700">
+                  <h3 className="text-gray-dark-700 text-sm font-semibold">
                     Ubicación y Precio
                   </h3>
 
                   <div className="space-y-3">
-                    <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                    <label className="text-gray-dark-600 flex flex-col gap-2 text-sm font-medium">
                       Ciudad
                       <input
                         name="city"
                         value={formValues.city}
                         onChange={onInputChange}
                         placeholder="¿A dónde quieres ir?"
-                        className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                        className="border-blue-light-150 bg-blue-light-50 text-gray-dark-700 focus:border-blue-light-400 focus:ring-blue-light-100 rounded-2xl border px-4 py-3 outline-none focus:ring-2"
                       />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                      <label className="text-gray-dark-600 flex flex-col gap-2 text-sm font-medium">
                         Precio mín.
                         <input
                           name="minPrice"
@@ -127,11 +129,11 @@ export function FilterModal({
                           onChange={onInputChange}
                           placeholder="S/"
                           inputMode="decimal"
-                          className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                          className="border-blue-light-150 bg-blue-light-50 text-gray-dark-700 focus:border-blue-light-400 focus:ring-blue-light-100 rounded-2xl border px-4 py-3 outline-none focus:ring-2"
                         />
                       </label>
 
-                      <label className="flex flex-col gap-2 text-sm font-medium text-gray-dark-600">
+                      <label className="text-gray-dark-600 flex flex-col gap-2 text-sm font-medium">
                         Precio máx.
                         <input
                           name="maxPrice"
@@ -139,7 +141,7 @@ export function FilterModal({
                           onChange={onInputChange}
                           placeholder="S/"
                           inputMode="decimal"
-                          className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                          className="border-blue-light-150 bg-blue-light-50 text-gray-dark-700 focus:border-blue-light-400 focus:ring-blue-light-100 rounded-2xl border px-4 py-3 outline-none focus:ring-2"
                         />
                       </label>
                     </div>
@@ -208,7 +210,7 @@ export function FilterModal({
               {/* Columna 2: Amenities */}
               <div className="space-y-5">
                 <section className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-dark-700">
+                  <h3 className="text-gray-dark-700 text-sm font-semibold">
                     Amenities
                   </h3>
 
@@ -233,7 +235,7 @@ export function FilterModal({
               <button
                 type="button"
                 onClick={onReset}
-                className="text-sm font-semibold text-blue-light-600 underline-offset-4 hover:underline"
+                className="text-blue-light-600 text-sm font-semibold underline-offset-4 hover:underline"
               >
                 Limpiar filtros
               </button>
@@ -243,14 +245,14 @@ export function FilterModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-2xl border border-blue-light-200 px-5 py-3 text-sm font-semibold text-gray-dark-600 transition-all hover:border-blue-light-300"
+                className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all"
               >
                 Cancelar
               </button>
 
               <button
                 type="submit"
-                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-vivid-500 to-blue-vivid-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:from-blue-vivid-600 hover:to-blue-vivid-700 focus:ring-2 focus:ring-blue-light-200"
+                className="from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 focus:ring-blue-light-200 inline-flex items-center justify-center rounded-2xl bg-gradient-to-br px-6 py-3 text-sm font-semibold text-white shadow-md transition-all focus:ring-2"
               >
                 {loadingResults ? "Buscando..." : "Mostrar resultados"}
               </button>

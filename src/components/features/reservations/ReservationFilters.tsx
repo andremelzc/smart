@@ -43,10 +43,12 @@ export function ReservationFilters<T = string>({
         </div>
 
         {/* Filters container */}
-        <div className={`flex flex-col gap-6 ${hasTimeFilters ? 'md:flex-row md:divide-x md:divide-gray-100' : ''}`}>
+        <div
+          className={`flex flex-col gap-6 ${hasTimeFilters ? "md:flex-row md:divide-x md:divide-gray-100" : ""}`}
+        >
           {/* Status filters */}
           <div className="flex-1 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
               Estado de reservas
             </p>
             <div className="flex flex-wrap gap-2">
@@ -58,8 +60,8 @@ export function ReservationFilters<T = string>({
                     onClick={() => onStatusChange(segment.key)}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                       isSelected
-                        ? "bg-blue-light-100 text-blue-light-700 border border-blue-light-300"
-                        : "text-gray-600 hover:bg-gray-100 border border-transparent"
+                        ? "bg-blue-light-100 text-blue-light-700 border-blue-light-300 border"
+                        : "border border-transparent text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     {segment.label}
@@ -72,9 +74,9 @@ export function ReservationFilters<T = string>({
           {/* Time filters - only for host variant */}
           {hasTimeFilters && (
             <>
-              <div className="border-t border-gray-100 md:border-t-0 md:border-l md:border-gray-100 md:h-20" />
+              <div className="border-t border-gray-100 md:h-20 md:border-t-0 md:border-l md:border-gray-100" />
               <div className="flex-1 space-y-3 md:pl-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
                   Relevancia temporal
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -86,8 +88,8 @@ export function ReservationFilters<T = string>({
                         onClick={() => onTimeChange!(segment.key)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                           isActive
-                            ? "bg-blue-light-100 text-blue-light-700 border border-blue-light-300"
-                            : "text-gray-600 border border-transparent hover:bg-gray-100"
+                            ? "bg-blue-light-100 text-blue-light-700 border-blue-light-300 border"
+                            : "border border-transparent text-gray-600 hover:bg-gray-100"
                         }`}
                       >
                         {segment.label}

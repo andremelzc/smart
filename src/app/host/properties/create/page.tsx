@@ -20,17 +20,18 @@ import dynamic from "next/dynamic";
 
 // Cargar Paso2_Ubicacion dinámicamente solo en el cliente
 const Paso2_Ubicacion = dynamic(
-  () => import("@/src/components/host/crear-recinto/Paso2_Ubicacion").then(
-    (mod) => ({ default: mod.Paso2_Ubicacion })
-  ),
-  { 
+  () =>
+    import("@/src/components/host/crear-recinto/Paso2_Ubicacion").then(
+      (mod) => ({ default: mod.Paso2_Ubicacion })
+    ),
+  {
     ssr: false,
     loading: () => (
-      <div className="flex flex-col items-center justify-center p-8 gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-light-600" />
+      <div className="flex flex-col items-center justify-center gap-3 p-8">
+        <Loader2 className="text-blue-light-600 h-8 w-8 animate-spin" />
         <span className="text-sm text-gray-600">Cargando mapa...</span>
       </div>
-    )
+    ),
   }
 );
 
@@ -185,8 +186,8 @@ export default function PaginaCrearRecinto() {
         isClickable={true}
       />
 
-      <div className="max-w-5xl mx-auto p-6 md:p-12">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 min-h-[450px]">
+      <div className="mx-auto max-w-5xl p-6 md:p-12">
+        <div className="min-h-[450px] rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
           {currentStep === 1 && (
             <Paso1_TipoRecinto
               data={{ propertyType: propertyData.propertyType }}
@@ -267,7 +268,7 @@ export default function PaginaCrearRecinto() {
         </div>
 
         {/* MEJORA: Todos los botones juntos en una sola fila */}
-        <div className="flex justify-between items-center mt-8">
+        <div className="mt-8 flex items-center justify-between">
           {/* Botón Atrás */}
           <Button
             variant="secondary"
@@ -275,7 +276,7 @@ export default function PaginaCrearRecinto() {
             disabled={currentStep === 1}
             // className="flex items-center gap-2 rounded-2xl bg-white border-2 border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <CircleChevronLeft className="w-5 h-5" />
+            <CircleChevronLeft className="h-5 w-5" />
             Atrás
           </Button>
 
@@ -287,7 +288,7 @@ export default function PaginaCrearRecinto() {
               // className="flex items-center gap-2 rounded-2xl bg-white border-2 border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400"
               aria-label="Guardar y salir del editor"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
               Guardar y Salir
             </Button>
           )}
@@ -300,7 +301,7 @@ export default function PaginaCrearRecinto() {
               // className="flex items-center gap-2 rounded-xl bg-blue-600 border-2 border-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:border-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
-              <CircleChevronRight className="w-5 h-5" />
+              <CircleChevronRight className="h-5 w-5" />
             </Button>
           ) : (
             <Button
@@ -315,14 +316,8 @@ export default function PaginaCrearRecinto() {
       </div>
 
       {showSuccessToast && (
-        <div
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 
-                        flex items-center gap-3 
-                        bg-slate-800 text-white 
-                        px-6 py-4 rounded-full shadow-lg
-                        border border-slate-700"
-        >
-          <CheckCircle className="w-6 h-6 text-green-400" />
+        <div className="fixed bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-slate-700 bg-slate-800 px-6 py-4 text-white shadow-lg">
+          <CheckCircle className="h-6 w-6 text-green-400" />
           <span className="font-medium">
             Se agregó el recinto correctamente
           </span>
@@ -330,7 +325,7 @@ export default function PaginaCrearRecinto() {
             onClick={() => setShowSuccessToast(false)}
             className="ml-2 text-slate-400 hover:text-white"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
       )}

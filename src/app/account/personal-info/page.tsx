@@ -98,16 +98,16 @@ export default function PersonalInfoPage() {
       {/* Banner de advertencia */}
 
       {!isProfileComplete && (
-        <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
+        <div className="mb-6 rounded-lg border-l-4 border-amber-400 bg-amber-50 p-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
 
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-amber-900 mb-1">
+              <h3 className="mb-1 text-sm font-semibold text-amber-900">
                 Completa tu información personal para reservar
               </h3>
 
-              <p className="text-sm text-amber-800 mb-2">
+              <p className="mb-2 text-sm text-amber-800">
                 Para poder realizar reservas de recintos, necesitas completar
                 todos los campos de tu perfil. Esto nos ayuda a brindarte un
                 mejor servicio y garantizar la seguridad de todos los usuarios.
@@ -116,7 +116,7 @@ export default function PersonalInfoPage() {
               <div className="text-sm text-amber-900">
                 <span className="font-medium">Campos faltantes:</span>
 
-                <ul className="list-disc list-inside mt-1 space-y-0.5">
+                <ul className="mt-1 list-inside list-disc space-y-0.5">
                   {missingFields.map((field) => (
                     <li key={field}>{field}</li>
                   ))}
