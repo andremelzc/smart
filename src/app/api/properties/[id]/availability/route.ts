@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PropertyAvailabilityService } from '@/src/services/property-availability.service';
+import { NextRequest, NextResponse } from "next/server";
+import { PropertyAvailabilityService } from "@/src/services/property-availability.service";
 
 /**
  * GET /api/properties/[id]/availability
- * 
+ *
  * Obtiene la disponibilidad de una propiedad para un rango de fechas
- * 
+ *
  * Query params:
  * - startDate: YYYY-MM-DD (opcional, default: hoy)
  * - endDate: YYYY-MM-DD (opcional, default: hoy + 90 días)
  * - summary: boolean (opcional, si es true retorna solo resumen)
- * 
+ *
  * Respuesta:
  * {
  *   success: boolean,
@@ -37,9 +37,9 @@ export async function GET(
     // Validar ID
     if (isNaN(propertyId) || propertyId <= 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID de propiedad inválido' 
+        {
+          success: false,
+          error: "ID de propiedad inválido",
         },
         { status: 400 }
       );
@@ -47,25 +47,23 @@ export async function GET(
 
     // Obtener parámetros de query
     const searchParams = request.nextUrl.searchParams;
-    const startDateStr = searchParams.get('startDate');
-    const endDateStr = searchParams.get('endDate');
-    const summaryOnly = searchParams.get('summary') === 'true';
+    const startDateStr = searchParams.get("startDate");
+    const endDateStr = searchParams.get("endDate");
+    const summaryOnly = searchParams.get("summary") === "true";
 
     // Defaults: hoy + 90 días
-    const startDate = startDateStr 
-      ? new Date(startDateStr) 
-      : new Date();
-    
-    const endDate = endDateStr 
-      ? new Date(endDateStr) 
+    const startDate = startDateStr ? new Date(startDateStr) : new Date();
+
+    const endDate = endDateStr
+      ? new Date(endDateStr)
       : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
     // Validar fechas
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Formato de fecha inválido. Use YYYY-MM-DD' 
+        {
+          success: false,
+          error: "Formato de fecha inválido. Use YYYY-MM-DD",
         },
         { status: 400 }
       );
@@ -73,28 +71,35 @@ export async function GET(
 
     if (startDate > endDate) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'La fecha de inicio debe ser anterior a la fecha de fin' 
+        {
+          success: false,
+          error: "La fecha de inicio debe ser anterior a la fecha de fin",
         },
         { status: 400 }
       );
     }
 
     // Obtener disponibilidad
-    const availability = await PropertyAvailabilityService.getPropertyAvailability(
-      propertyId,
-      startDate,
-      endDate
-    );
+    const availability =
+      await PropertyAvailabilityService.getPropertyAvailability(
+        propertyId,
+        startDate,
+        endDate
+      );
 
     // Calcular estadísticas
     const stats = {
       totalDays: availability.length,
-      availableDays: availability.filter(d => d.available).length,
-      bookedDays: availability.filter(d => !d.available && d.reason === 'booked').length,
-      blockedDays: availability.filter(d => !d.available && d.reason === 'blocked').length,
-      maintenanceDays: availability.filter(d => !d.available && d.reason === 'maintenance').length,
+      availableDays: availability.filter((d) => d.available).length,
+      bookedDays: availability.filter(
+        (d) => !d.available && d.reason === "booked"
+      ).length,
+      blockedDays: availability.filter(
+        (d) => !d.available && d.reason === "blocked"
+      ).length,
+      maintenanceDays: availability.filter(
+        (d) => !d.available && d.reason === "maintenance"
+      ).length,
     };
 
     // Si solo pide resumen, retornar solo stats
@@ -104,9 +109,9 @@ export async function GET(
         data: stats,
         meta: {
           propertyId,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-        }
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
+        },
       });
     }
 
@@ -116,22 +121,25 @@ export async function GET(
       data: availability,
       meta: {
         propertyId,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
+        startDate: startDate.toISOString().split("T")[0],
+        endDate: endDate.toISOString().split("T")[0],
         ...stats,
-      }
+      },
     });
-
   } catch (error) {
-    console.error('❌ Error en /api/properties/[id]/availability:', error);
-    
+    console.error("❌ Error en /api/properties/[id]/availability:", error);
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-        details: process.env.NODE_ENV === 'development' 
-          ? (error instanceof Error ? error.stack : String(error))
-          : undefined
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Error interno del servidor",
+        details:
+          process.env.NODE_ENV === "development"
+            ? error instanceof Error
+              ? error.stack
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -140,16 +148,16 @@ export async function GET(
 
 /**
  * POST /api/properties/[id]/availability/check
- * 
+ *
  * Verifica si un rango específico de fechas está disponible
  * Útil para validar antes de iniciar una reserva
- * 
+ *
  * Body:
  * {
  *   checkinDate: "YYYY-MM-DD",
  *   checkoutDate: "YYYY-MM-DD"
  * }
- * 
+ *
  * Respuesta:
  * {
  *   success: boolean,
@@ -167,7 +175,7 @@ export async function POST(
 
     if (isNaN(propertyId) || propertyId <= 0) {
       return NextResponse.json(
-        { success: false, error: 'ID de propiedad inválido' },
+        { success: false, error: "ID de propiedad inválido" },
         { status: 400 }
       );
     }
@@ -178,9 +186,9 @@ export async function POST(
 
     if (!checkinDate || !checkoutDate) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Debe proporcionar checkinDate y checkoutDate' 
+        {
+          success: false,
+          error: "Debe proporcionar checkinDate y checkoutDate",
         },
         { status: 400 }
       );
@@ -191,16 +199,16 @@ export async function POST(
 
     if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) {
       return NextResponse.json(
-        { success: false, error: 'Formato de fecha inválido' },
+        { success: false, error: "Formato de fecha inválido" },
         { status: 400 }
       );
     }
 
     if (checkin >= checkout) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'La fecha de check-in debe ser anterior al check-out' 
+        {
+          success: false,
+          error: "La fecha de check-in debe ser anterior al check-out",
         },
         { status: 400 }
       );
@@ -216,20 +224,19 @@ export async function POST(
     return NextResponse.json({
       success: true,
       available: isAvailable,
-      message: isAvailable 
-        ? 'Las fechas están disponibles' 
-        : 'Algunas fechas no están disponibles',
+      message: isAvailable
+        ? "Las fechas están disponibles"
+        : "Algunas fechas no están disponibles",
       checkinDate,
       checkoutDate,
     });
-
   } catch (error) {
-    console.error('❌ Error verificando disponibilidad:', error);
-    
+    console.error("❌ Error verificando disponibilidad:", error);
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Error al verificar disponibilidad' 
+      {
+        success: false,
+        error: "Error al verificar disponibilidad",
       },
       { status: 500 }
     );

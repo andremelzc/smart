@@ -1,4 +1,4 @@
-import oracledb from 'oracledb';
+import oracledb from "oracledb";
 
 const dbConfig: oracledb.PoolAttributes = {
   user: process.env.DB_USERNAME,
@@ -10,7 +10,7 @@ const dbConfig: oracledb.PoolAttributes = {
   poolTimeout: 60,
   connectTimeout: 60, // Aumentar timeout a 60 segundos
   queueTimeout: 60000,
-  enableStatistics: true
+  enableStatistics: true,
 };
 
 let pool: oracledb.Pool | null = null;
@@ -19,11 +19,13 @@ async function getPool(): Promise<oracledb.Pool> {
   if (!pool) {
     try {
       console.log("🔌 Creando pool de conexiones de Oracle...");
-      console.log(`📍 Conectando a: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_SID}`);
+      console.log(
+        `📍 Conectando a: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_SID}`
+      );
       console.log(`👤 Usuario: ${process.env.DB_USERNAME}`);
-      
+
       pool = await oracledb.createPool(dbConfig);
-      
+
       console.log("✅ Pool de conexiones de Oracle creado.");
       console.log(`📊 Pool stats - Min: ${pool.poolMin}, Max: ${pool.poolMax}`);
     } catch (err) {
@@ -33,7 +35,7 @@ async function getPool(): Promise<oracledb.Pool> {
         console.error("Detalles del error:", {
           message: oracleErr.message,
           code: oracleErr.code,
-          stack: oracleErr.stack
+          stack: oracleErr.stack,
         });
       }
       throw new Error("No se pudo inicializar la conexión a la base de datos.");
@@ -49,12 +51,12 @@ export async function getConnection(): Promise<oracledb.Connection> {
 }
 
 export async function executeQuery(
-  sql: string, 
+  sql: string,
   binds: oracledb.BindParameters = {},
   options?: oracledb.ExecuteOptions
 ) {
   let connection: oracledb.Connection | undefined;
-  
+
   try {
     const poolInstance = await getPool();
     connection = await poolInstance.getConnection();
@@ -62,12 +64,11 @@ export async function executeQuery(
     const executeOptions: oracledb.ExecuteOptions = {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
       autoCommit: true,
-      ...options
+      ...options,
     };
 
     const result = await connection.execute(sql, binds, executeOptions);
     return result;
-
   } catch (err) {
     console.error("Error en la consulta Oracle:", err);
     throw err;

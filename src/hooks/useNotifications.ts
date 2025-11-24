@@ -31,7 +31,9 @@ const buildUrl = (role?: NotificationRole) => {
   return `${base}?${params.toString()}`;
 };
 
-const deriveAvailableRoles = (items: NotificationItem[]): NotificationRole[] => {
+const deriveAvailableRoles = (
+  items: NotificationItem[]
+): NotificationRole[] => {
   const roles = new Set<NotificationRole>();
   items.forEach((item) => roles.add(item.role));
   return Array.from(roles);
@@ -79,7 +81,8 @@ export function useNotifications(
 
       const payload = await response.json();
       if (!response.ok) {
-        const message = payload?.error || "No se pudieron cargar las notificaciones";
+        const message =
+          payload?.error || "No se pudieron cargar las notificaciones";
         throw new Error(message);
       }
 

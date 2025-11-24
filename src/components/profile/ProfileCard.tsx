@@ -17,10 +17,10 @@ export function ProfileCard({
   message,
 }: ProfileCardProps) {
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="mx-auto max-w-4xl p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-dark-500 mb-2">{title}</h1>
+        <h1 className="text-gray-dark-500 mb-2 text-2xl font-bold">{title}</h1>
 
         <p className="text-gray-medium-400">{description}</p>
       </div>
@@ -28,17 +28,17 @@ export function ProfileCard({
       {/* Message Alert */}
       {message && (
         <div
-          className={`mb-6 p-4 rounded-md ${
+          className={`mb-6 rounded-md p-4 ${
             message.type === "success"
-              ? "bg-blue-light-50 border border-blue-light-200 text-blue-light-700"
-              : "bg-red-50 border border-red-200 text-red-800"
+              ? "bg-blue-light-50 border-blue-light-200 text-blue-light-700 border"
+              : "border border-red-200 bg-red-50 text-red-800"
           }`}
         >
           <div className="flex">
             <div className="flex-shrink-0">
               {message.type === "success" ? (
                 <svg
-                  className="h-5 w-5 text-blue-light-600"
+                  className="text-blue-light-600 h-5 w-5"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -72,7 +72,7 @@ export function ProfileCard({
 
       {/* Content Card */}
 
-      <div className="bg-white shadow-sm rounded-lg border border-gray-medium-100">
+      <div className="border-gray-medium-100 rounded-lg border bg-white shadow-sm">
         <div className="px-6 py-4">{children}</div>
       </div>
     </div>

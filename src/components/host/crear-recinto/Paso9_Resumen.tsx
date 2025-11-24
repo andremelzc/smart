@@ -63,7 +63,7 @@ function ResumenSection({
 }: ResumenSectionProps) {
   return (
     <div className="rounded-xl border-2 border-slate-200 bg-white">
-      <div className="flex justify-between items-center p-4 border-b border-slate-200">
+      <div className="flex items-center justify-between border-b border-slate-200 p-4">
         <div className="flex items-center gap-2">
           {icon}
           <h3 className="text-base font-semibold text-slate-800">{title}</h3>
@@ -71,9 +71,9 @@ function ResumenSection({
 
         <button
           onClick={() => goToStep(editStep)}
-          className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
         >
-          <Edit className="w-3.5 h-3.5" />
+          <Edit className="h-3.5 w-3.5" />
           Editar
         </button>
       </div>
@@ -100,13 +100,13 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
         helpText="Puedes hacer clic en 'Editar' en cualquier sección para volver y hacer cambios. Cuando estés listo, publica tu recinto!"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
           <ResumenSection
             title="Título y Tipo"
             editStep={1}
             goToStep={goToStep}
-            icon={<Home className="w-5 h-5 text-slate-600" />}
+            icon={<Home className="h-5 w-5 text-slate-600" />}
           >
             <h4 className="text-base font-semibold text-slate-800">
               {data.title || "Sin título"}
@@ -120,9 +120,9 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
             title="Detalles del Espacio"
             editStep={3}
             goToStep={goToStep}
-            icon={<Users className="w-5 h-5 text-slate-600" />}
+            icon={<Users className="h-5 w-5 text-slate-600" />}
           >
-            <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <ul className="list-inside list-disc space-y-1 text-sm text-slate-700">
               <li>{data.capacity ?? 0} huéspedes</li>
               <li>
                 {data.bedrooms ?? 0}{" "}
@@ -144,7 +144,7 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
             title="Servicios"
             editStep={4}
             goToStep={goToStep}
-            icon={<Sparkles className="w-5 h-5 text-slate-600" />}
+            icon={<Sparkles className="h-5 w-5 text-slate-600" />}
           >
             <p className="text-sm text-slate-700">
               {Array.isArray(data.amenities) ? data.amenities.length : 0}{" "}
@@ -159,7 +159,7 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
             title="Reglas y Horarios"
             editStep={8}
             goToStep={goToStep}
-            icon={<ListChecks className="w-5 h-5 text-slate-600" />}
+            icon={<ListChecks className="h-5 w-5 text-slate-600" />}
           >
             <div className="space-y-2">
               <p className="text-sm text-slate-700">
@@ -171,7 +171,7 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
                 {data.checkoutTime || "No definido"}
               </p>
               {data.houseRules && (
-                <p className="text-sm text-slate-700 mt-3 whitespace-pre-line">
+                <p className="mt-3 text-sm whitespace-pre-line text-slate-700">
                   {data.houseRules}
                 </p>
               )}
@@ -184,14 +184,14 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
             title="Fotos"
             editStep={5}
             goToStep={goToStep}
-            icon={<Camera className="w-5 h-5 text-slate-600" />}
+            icon={<Camera className="h-5 w-5 text-slate-600" />}
           >
             <div className="grid grid-cols-3 gap-2">
               {Array.isArray(data.images) &&
                 data.images.slice(0, 3).map((img, idx) => (
                   <div
                     key={img.sortOrder ?? idx}
-                    className="relative aspect-square rounded-lg overflow-hidden border border-slate-200"
+                    className="relative aspect-square overflow-hidden rounded-lg border border-slate-200"
                   >
                     <Image
                       src={img.url || "/placeholder-room.svg"}
@@ -204,13 +204,13 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
                 ))}
 
               {Array.isArray(data.images) && data.images.length > 3 && (
-                <div className="aspect-square bg-slate-100 flex items-center justify-center text-slate-700 text-sm font-semibold rounded-lg border border-slate-200">
+                <div className="flex aspect-square items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-sm font-semibold text-slate-700">
                   +{data.images.length - 3} más
                 </div>
               )}
 
               {(!Array.isArray(data.images) || data.images.length === 0) && (
-                <div className="col-span-3 aspect-video bg-slate-100 flex items-center justify-center text-slate-500 text-sm rounded-lg border border-slate-200">
+                <div className="col-span-3 flex aspect-video items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-sm text-slate-500">
                   Sin fotos
                 </div>
               )}
@@ -221,7 +221,7 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
             title="Ubicación"
             editStep={2}
             goToStep={goToStep}
-            icon={<MapPin className="w-5 h-5 text-slate-600" />}
+            icon={<MapPin className="h-5 w-5 text-slate-600" />}
           >
             <div className="space-y-1">
               <p className="text-sm text-slate-700">
@@ -244,7 +244,7 @@ export function Paso9_Resumen({ data, goToStep }: StepProps) {
             title="Precio"
             editStep={7}
             goToStep={goToStep}
-            icon={<DollarSign className="w-5 h-5 text-slate-600" />}
+            icon={<DollarSign className="h-5 w-5 text-slate-600" />}
           >
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-bold text-slate-800">

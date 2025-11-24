@@ -41,10 +41,10 @@ export function SearchResults({
   return (
     <section className="space-y-4">
       <header className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-dark-700">Resultados</h2>
+        <h2 className="text-gray-dark-700 text-xl font-semibold">Resultados</h2>
 
         {loading && (
-          <Loader2 className="h-5 w-5 animate-spin text-blue-light-500" />
+          <Loader2 className="text-blue-light-500 h-5 w-5 animate-spin" />
         )}
       </header>
 
@@ -57,7 +57,7 @@ export function SearchResults({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)] lg:items-start">
         <div className="space-y-4">
           {!loading && results.length === 0 && !error ? (
-            <p className="rounded-2xl border border-blue-light-150 bg-blue-light-50 px-4 py-6 text-center text-gray-dark-500">
+            <p className="border-blue-light-150 bg-blue-light-50 text-gray-dark-500 rounded-2xl border px-4 py-6 text-center">
               Usa los filtros para iniciar una búsqueda.
             </p>
           ) : (

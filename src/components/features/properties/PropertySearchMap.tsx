@@ -372,14 +372,14 @@ export function PropertySearchMap({
 
   if (!isClient) {
     return (
-      <div className="flex h-full w-full items-center justify-center text-sm text-gray-dark-500">
+      <div className="text-gray-dark-500 flex h-full w-full items-center justify-center text-sm">
         Cargando mapa...
       </div>
     );
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl border border-blue-light-150 bg-white shadow-sm">
+    <div className="border-blue-light-150 relative h-full w-full overflow-hidden rounded-3xl border bg-white shadow-sm">
       <MapContainer
         className="h-full w-full"
         center={initialCenter}
@@ -411,7 +411,7 @@ export function PropertySearchMap({
       </MapContainer>
 
       {loading && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm text-sm font-medium text-blue-light-700">
+        <div className="text-blue-light-700 pointer-events-none absolute inset-0 flex items-center justify-center bg-white/60 text-sm font-medium backdrop-blur-sm">
           Actualizando resultados...
         </div>
       )}

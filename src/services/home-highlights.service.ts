@@ -1,5 +1,5 @@
-import oracledb from 'oracledb';
-import { getConnection } from '@/src/lib/database';
+import oracledb from "oracledb";
+import { getConnection } from "@/src/lib/database";
 
 export type HighlightProperty = {
   propertyId: number;
@@ -74,16 +74,26 @@ export class HomeHighlightsService {
     try {
       connection = await getConnection();
 
-      const result = await connection.execute<OracleHighlightRow>(HIGHLIGHTS_QUERY, [], {
-        outFormat: oracledb.OUT_FORMAT_OBJECT,
-      });
+      const result = await connection.execute<OracleHighlightRow>(
+        HIGHLIGHTS_QUERY,
+        [],
+        {
+          outFormat: oracledb.OUT_FORMAT_OBJECT,
+        }
+      );
 
       const rows = Array.isArray(result.rows) ? result.rows : [];
       const groups = new Map<string, CityHighlight>();
 
       for (const row of rows) {
-        const city = typeof row.CITY === 'string' && row.CITY.trim().length > 0 ? row.CITY.trim() : 'Otros';
-        const country = typeof row.COUNTRY === 'string' && row.COUNTRY.trim().length > 0 ? row.COUNTRY.trim() : null;
+        const city =
+          typeof row.CITY === "string" && row.CITY.trim().length > 0
+            ? row.CITY.trim()
+            : "Otros";
+        const country =
+          typeof row.COUNTRY === "string" && row.COUNTRY.trim().length > 0
+            ? row.COUNTRY.trim()
+            : null;
 
         let highlight = groups.get(city);
         if (!highlight) {
@@ -96,27 +106,33 @@ export class HomeHighlightsService {
         }
 
         const propertyIdRaw = row.PROPERTY_ID;
-        const propertyId = typeof propertyIdRaw === 'number'
-          ? propertyIdRaw
-          : Number(propertyIdRaw ?? 0);
+        const propertyId =
+          typeof propertyIdRaw === "number"
+            ? propertyIdRaw
+            : Number(propertyIdRaw ?? 0);
 
         const averageRatingRaw = row.AVG_RATING;
-        const averageRatingValue = typeof averageRatingRaw === 'number'
-          ? averageRatingRaw
-          : typeof averageRatingRaw === 'string' && averageRatingRaw.trim().length > 0
-            ? Number(averageRatingRaw)
-            : null;
+        const averageRatingValue =
+          typeof averageRatingRaw === "number"
+            ? averageRatingRaw
+            : typeof averageRatingRaw === "string" &&
+                averageRatingRaw.trim().length > 0
+              ? Number(averageRatingRaw)
+              : null;
 
-        const averageRating = typeof averageRatingValue === 'number' && Number.isFinite(averageRatingValue)
-          ? averageRatingValue
-          : null;
+        const averageRating =
+          typeof averageRatingValue === "number" &&
+          Number.isFinite(averageRatingValue)
+            ? averageRatingValue
+            : null;
 
         highlight.properties.push({
           propertyId,
-          title: typeof row.TITLE === 'string' ? row.TITLE : 'Propiedad',
+          title: typeof row.TITLE === "string" ? row.TITLE : "Propiedad",
           city,
           country,
-          mainImageUrl: typeof row.MAIN_IMAGE_URL === 'string' ? row.MAIN_IMAGE_URL : null,
+          mainImageUrl:
+            typeof row.MAIN_IMAGE_URL === "string" ? row.MAIN_IMAGE_URL : null,
           averageRating,
         });
       }
@@ -127,7 +143,7 @@ export class HomeHighlightsService {
         try {
           await connection.close();
         } catch (error) {
-          console.error('Error closing Oracle connection:', error);
+          console.error("Error closing Oracle connection:", error);
         }
       }
     }

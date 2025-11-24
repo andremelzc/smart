@@ -294,7 +294,8 @@ export async function GET() {
     }
   } catch (error: unknown) {
     console.error("❌ Error general obteniendo perfil:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
 
     return NextResponse.json(
       {

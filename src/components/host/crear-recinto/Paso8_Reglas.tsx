@@ -28,7 +28,7 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
     let hideTimer: NodeJS.Timeout;
 
     if (isValid) {
-      showTimer = setTimeout(() => setShowSuccessMessage(true), 0);   
+      showTimer = setTimeout(() => setShowSuccessMessage(true), 0);
       hideTimer = setTimeout(() => setShowSuccessMessage(false), 3000);
     } else {
       showTimer = setTimeout(() => setShowSuccessMessage(false), 0);
@@ -59,14 +59,14 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
           Horarios de Check-in y Check-out
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-slate-700">
               Hora de Check-in (Llegada)
             </span>
 
             <div className="relative">
-              <Clock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+              <Clock className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
               <input
                 type="time"
@@ -74,11 +74,11 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
                 value={data.checkinTime}
                 onChange={handleChange}
                 step="1800"
-                className={`relative w-full rounded-xl border-2 bg-white 
-                           py-2.5 pl-10 pr-4 text-slate-700 outline-none transition-colors
-                           ${!isCheckinValid 
-                             ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
-                             : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
+                className={`relative w-full rounded-xl border-2 bg-white py-2.5 pr-4 pl-10 text-slate-700 transition-colors outline-none ${
+                  !isCheckinValid
+                    ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                    : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                }`}
               />
             </div>
           </label>
@@ -89,7 +89,7 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
             </span>
 
             <div className="relative">
-              <Clock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+              <Clock className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
               <input
                 type="time"
@@ -97,11 +97,11 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
                 value={data.checkoutTime}
                 onChange={handleChange}
                 step="1800"
-                className={`relative w-full rounded-xl border-2 bg-white 
-                           py-2.5 pl-10 pr-4 text-slate-700 outline-none transition-colors
-                           ${!isCheckoutValid 
-                             ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
-                             : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
+                className={`relative w-full rounded-xl border-2 bg-white py-2.5 pr-4 pl-10 text-slate-700 transition-colors outline-none ${
+                  !isCheckoutValid
+                    ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                    : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                }`}
               />
             </div>
           </label>
@@ -119,7 +119,7 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
           Añade cualquier otra norma específica de tu espacio.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+        <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-2">
             <textarea
               id="houseRules"
@@ -128,61 +128,61 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
               onChange={handleChange}
               rows={10}
               placeholder="Ej: No hacer ruido después de las 10 PM. No dejar la basura fuera..."
-              className={`w-full rounded-xl border-2 bg-white 
-                         py-2.5 px-4 text-slate-700 outline-none resize-none transition-colors
-                         ${!isRulesValid && data.houseRules.length > 0
-                           ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
-                           : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
+              className={`w-full resize-none rounded-xl border-2 bg-white px-4 py-2.5 text-slate-700 transition-colors outline-none ${
+                !isRulesValid && data.houseRules.length > 0
+                  ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              }`}
             />
 
             <span
-              className={`text-xs font-medium transition-colors
-                         ${
-                           !isRulesValid
-                             ? "text-red-500"
-                             : "text-green-600"
-                         }`}
+              className={`text-xs font-medium transition-colors ${
+                !isRulesValid ? "text-red-500" : "text-green-600"
+              }`}
             >
-              {data.houseRules.length} / {MIN_RULES_LENGTH} caracteres mínimos recomendados
+              {data.houseRules.length} / {MIN_RULES_LENGTH} caracteres mínimos
+              recomendados
             </span>
           </div>
 
-          <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 h-fit">
+          <div className="h-fit rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
             <div className="flex items-center gap-2">
-              <ListChecks className="w-6 h-6 text-blue-600" />
+              <ListChecks className="h-6 w-6 text-blue-600" />
               <h3 className="text-base font-semibold text-slate-800">
                 ¿Qué reglas incluir?
               </h3>
             </div>
 
-            <p className="text-xs text-slate-600 mt-2 mb-3">
+            <p className="mt-2 mb-3 text-xs text-slate-600">
               Piensa en cosas que sean importantes para ti y tu espacio:
             </p>
 
             <ul className="space-y-2.5">
               <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
                 <span className="text-xs text-slate-700">
                   Invitados: ¿Se permiten visitas que no estén en la reserva?
                 </span>
               </li>
 
               <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
                 <span className="text-xs text-slate-700">
-                  Ruido: ¿Hay horarios de silencio? (Ej: &quot;No música alta después de las 10 PM&quot;).
+                  Ruido: ¿Hay horarios de silencio? (Ej: &quot;No música alta
+                  después de las 10 PM&quot;).
                 </span>
               </li>
 
               <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
                 <span className="text-xs text-slate-700">
-                  Seguridad: (Ej: &quot;Cerrar siempre la puerta principal con llave&quot;).
+                  Seguridad: (Ej: &quot;Cerrar siempre la puerta principal con
+                  llave&quot;).
                 </span>
               </li>
 
               <li className="flex items-start gap-2">
-                <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
                 <span className="text-xs text-slate-700">
                   No incluyas reglas que ya cubrimos (Mascotas, Fumar, Fiestas)
                 </span>
@@ -193,25 +193,32 @@ export function Paso8_Reglas({ data, updateData }: StepProps) {
       </div>
 
       <div className="mt-2 min-h-[60px] transition-all duration-300">
-        
         {!isValid && (
-          <div className="p-3 border border-red-200 bg-red-50 rounded-lg flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
-            <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
-              <XCircle className="w-4 h-4" />
+          <div className="animate-in fade-in slide-in-from-top-1 flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 p-3 duration-300">
+            <div className="flex items-center gap-2 text-sm font-medium text-red-700">
+              <XCircle className="h-4 w-4" />
               <span>Completa los siguientes campos:</span>
             </div>
-            <ul className="list-disc list-inside text-xs text-red-600 pl-6">
-              {!isCheckinValid && <li>Selecciona la hora de llegada (Check-in).</li>}
-              {!isCheckoutValid && <li>Selecciona la hora de salida (Check-out).</li>}
-              {!isRulesValid && <li>Las reglas no cumplen la longitud mínima o están vacías.</li>}
+            <ul className="list-inside list-disc pl-6 text-xs text-red-600">
+              {!isCheckinValid && (
+                <li>Selecciona la hora de llegada (Check-in).</li>
+              )}
+              {!isCheckoutValid && (
+                <li>Selecciona la hora de salida (Check-out).</li>
+              )}
+              {!isRulesValid && (
+                <li>
+                  Las reglas no cumplen la longitud mínima o están vacías.
+                </li>
+              )}
             </ul>
           </div>
         )}
 
         {isValid && showSuccessMessage && (
-          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <p className="text-sm text-green-700 font-medium">
+          <div className="animate-in zoom-in fade-in flex items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-center duration-300">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <p className="text-sm font-medium text-green-700">
               ¡Reglas y horarios establecidos correctamente!
             </p>
           </div>

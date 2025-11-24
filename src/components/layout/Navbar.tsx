@@ -410,8 +410,8 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="w-full bg-blue-light-50 border-b border-blue-light-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-blue-light-50 border-blue-light-100 sticky top-0 z-50 w-full border-b">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Main Navbar */}
 
         <div className="flex items-center justify-between py-5 lg:py-6">
@@ -419,41 +419,41 @@ export default function Navbar() {
 
           <Link
             href="/"
-            className="flex items-center gap-3 flex-shrink-0 group"
+            className="group flex flex-shrink-0 items-center gap-3"
           >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-light-500 to-blue-light-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all group-hover:scale-105">
-              <Home className="w-6 h-6 text-white" />
+            <div className="from-blue-light-500 to-blue-light-600 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br shadow-md transition-all group-hover:scale-105 group-hover:shadow-lg">
+              <Home className="h-6 w-6 text-white" />
             </div>
 
-            <h1 className="text-2xl font-bold text-blue-light-700 hidden sm:block">
+            <h1 className="text-blue-light-700 hidden text-2xl font-bold sm:block">
               smart
             </h1>
           </Link>
 
           {/* Search Bar - Desktop */}
 
-          <div className="hidden lg:flex flex-1 max-w-3xl mx-10 items-center gap-4">
+          <div className="mx-10 hidden max-w-3xl flex-1 items-center gap-4 lg:flex">
             <div ref={searchBarRef} className="relative flex-1">
-              <div className="w-full flex items-stretch rounded-full border border-blue-light-200 hover:border-blue-light-300 transition-colors bg-white shadow-sm hover:shadow-md">
+              <div className="border-blue-light-200 hover:border-blue-light-300 flex w-full items-stretch rounded-full border bg-white shadow-sm transition-colors hover:shadow-md">
                 {/* Donde */}
 
                 <div
-                  className={`relative flex-1 flex items-center gap-3 px-6 py-4 min-w-0 ${
+                  className={`relative flex min-w-0 flex-1 items-center gap-3 px-6 py-4 ${
                     activeSearchPanel === "location" ? "bg-blue-light-50" : ""
                   }`}
                 >
-                  <MapPin className="w-5 h-5 text-blue-light-400 flex-shrink-0" />
+                  <MapPin className="text-blue-light-400 h-5 w-5 flex-shrink-0" />
 
                   <button
                     type="button"
                     onClick={() => toggleSearchPanel("location")}
-                    className="flex-1 min-w-0 text-left"
+                    className="min-w-0 flex-1 text-left"
                   >
-                    <span className="block text-md font-semibold tracking-wide text-gray-dark-600">
+                    <span className="text-md text-gray-dark-600 block font-semibold tracking-wide">
                       Dónde
                     </span>
                     <span
-                      className={`block text-sm font-semibold truncate ${
+                      className={`block truncate text-sm font-semibold ${
                         selectedLocation
                           ? "text-gray-dark-400"
                           : "text-gray-dark-400"
@@ -476,27 +476,27 @@ export default function Navbar() {
                   )}
                 </div>
 
-                <div className="w-px bg-blue-light-150 self-center h-12"></div>
+                <div className="bg-blue-light-150 h-12 w-px self-center"></div>
 
                 {/* Fechas */}
 
                 <div
-                  className={`relative flex-1 flex items-center gap-3 px-6 py-4 min-w-0 ${
+                  className={`relative flex min-w-0 flex-1 items-center gap-3 px-6 py-4 ${
                     activeSearchPanel === "dates" ? "bg-blue-light-50" : ""
                   }`}
                 >
-                  <Calendar className="w-5 h-5 text-blue-light-400 flex-shrink-0" />
+                  <Calendar className="text-blue-light-400 h-5 w-5 flex-shrink-0" />
 
                   <button
                     type="button"
                     onClick={() => toggleSearchPanel("dates")}
-                    className="flex-1 min-w-0 text-left"
+                    className="min-w-0 flex-1 text-left"
                   >
-                    <span className="block text-md font-semibold tracking-wide text-gray-dark-600">
+                    <span className="text-md text-gray-dark-600 block font-semibold tracking-wide">
                       Fechas
                     </span>
                     <span
-                      className={`block text-sm font-semibold truncate ${
+                      className={`block truncate text-sm font-semibold ${
                         checkInDate && checkOutDate
                           ? "text-gray-dark-400"
                           : "text-gray-dark-400"
@@ -511,27 +511,27 @@ export default function Navbar() {
                   </button>
                 </div>
 
-                <div className="w-px bg-blue-light-150 self-center h-12"></div>
+                <div className="bg-blue-light-150 h-12 w-px self-center"></div>
 
                 {/* Quien + Search Button */}
 
                 <div
-                  className={`relative flex items-center gap-2 pl-6 pr-3 py-3 ${
+                  className={`relative flex items-center gap-2 py-3 pr-3 pl-6 ${
                     activeSearchPanel === "guests" ? "bg-blue-light-50" : ""
                   }`}
                 >
-                  <Users className="w-5 h-5 text-blue-light-400 flex-shrink-0" />
+                  <Users className="text-blue-light-400 h-5 w-5 flex-shrink-0" />
 
                   <button
                     type="button"
                     onClick={() => toggleSearchPanel("guests")}
-                    className="flex-1 min-w-0 text-left"
+                    className="min-w-0 flex-1 text-left"
                   >
-                    <span className="block text-md font-semibold tracking-wide text-gray-dark-600">
+                    <span className="text-md text-gray-dark-600 block font-semibold tracking-wide">
                       Quién
                     </span>
                     <span
-                      className={`block text-sm font-semibold truncate ${
+                      className={`block truncate text-sm font-semibold ${
                         totalGuests > 0
                           ? "text-gray-dark-400"
                           : "text-gray-dark-400"
@@ -554,10 +554,10 @@ export default function Navbar() {
 
                   <button
                     onClick={handleSearch}
-                    className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 flex items-center justify-center text-white shadow-md hover:shadow-lg transition-all transform hover:scale-105 ml-3"
+                    className="from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 ml-3 flex h-14 w-14 transform items-center justify-center rounded-full bg-gradient-to-br text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
                     aria-label="Buscar"
                   >
-                    <Search className="w-5 h-5" />
+                    <Search className="h-5 w-5" />
                   </button>
                 </div>
               </div>
@@ -580,10 +580,10 @@ export default function Navbar() {
               <button
                 onClick={handleFilterToggle}
                 type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-blue-light-200 bg-white px-5 py-3 text-sm font-semibold text-gray-dark-600 shadow-sm transition-all hover:border-blue-light-300 hover:shadow-md"
+                className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 inline-flex items-center gap-2 rounded-full border bg-white px-5 py-3 text-sm font-semibold shadow-sm transition-all hover:shadow-md"
                 aria-label="Abrir filtros avanzados"
               >
-                <Settings className="h-5 w-5 text-blue-light-500" />
+                <Settings className="text-blue-light-500 h-5 w-5" />
                 Filtros
               </button>
             )}
@@ -591,27 +591,27 @@ export default function Navbar() {
 
           {/* Search Button - Mobile */}
 
-          <div className="lg:hidden flex items-center gap-2 mx-4">
+          <div className="mx-4 flex items-center gap-2 lg:hidden">
             {isSearchPage && (
               <button
                 onClick={handleFilterToggle}
                 type="button"
-                className="inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-full border border-blue-light-200 bg-white px-4 py-3 text-sm font-medium text-gray-dark-600 shadow-sm transition-all hover:border-blue-light-300 hover:shadow-md"
+                className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-full border bg-white px-4 py-3 text-sm font-medium shadow-sm transition-all hover:shadow-md"
                 aria-label="Abrir filtros avanzados"
               >
-                <Settings className="w-5 h-5 text-blue-light-600" />
+                <Settings className="text-blue-light-600 h-5 w-5" />
                 Filtros
               </button>
             )}
 
             <button
               onClick={handleSearch}
-              className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-blue-light-200 hover:border-blue-light-300 bg-white shadow-sm hover:shadow-md transition-all"
+              className="border-blue-light-200 hover:border-blue-light-300 flex flex-1 items-center justify-center gap-2 rounded-full border bg-white px-5 py-3 shadow-sm transition-all hover:shadow-md"
               aria-label="Buscar"
             >
-              <Search className="w-4 h-4 text-blue-light-600" />
+              <Search className="text-blue-light-600 h-4 w-4" />
 
-              <span className="text-sm font-medium text-gray-dark-600">
+              <span className="text-gray-dark-600 text-sm font-medium">
                 Buscar
               </span>
             </button>
@@ -619,20 +619,20 @@ export default function Navbar() {
 
           {/* Right Side */}
 
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-3">
             {/* Notifications Button */}
 
             <div className="relative" ref={notificationsContainerRef}>
               <button
                 onClick={handleNotificationsClick}
-                className={`relative p-3 rounded-full border bg-white shadow-sm transition-all ${
+                className={`relative rounded-full border bg-white p-3 shadow-sm transition-all ${
                   isNotificationsOpen
                     ? "border-blue-vivid-500 shadow-md"
                     : "border-blue-light-200 hover:border-blue-light-300 hover:shadow-md"
                 }`}
                 aria-label="Notificaciones"
               >
-                <Bell className="w-5 h-5 text-gray-dark-600" />
+                <Bell className="text-gray-dark-600 h-5 w-5" />
 
                 {hasNewNotifications && (
                   <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_0_2px] shadow-white" />
@@ -640,14 +640,14 @@ export default function Navbar() {
               </button>
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 z-50 mt-3 w-80 rounded-3xl border border-blue-light-150 bg-white shadow-xl">
-                  <div className="flex items-center justify-between border-b border-blue-light-100 px-4 py-3">
+                <div className="border-blue-light-150 absolute right-0 z-50 mt-3 w-80 rounded-3xl border bg-white shadow-xl">
+                  <div className="border-blue-light-100 flex items-center justify-between border-b px-4 py-3">
                     <div>
-                      <p className="text-sm font-semibold text-gray-dark-800">
+                      <p className="text-gray-dark-800 text-sm font-semibold">
                         Notificaciones
                       </p>
 
-                      <p className="text-xs text-gray-dark-500">
+                      <p className="text-gray-dark-500 text-xs">
                         {newNotificationCount > 0
                           ? `${newNotificationCount} nuevas para revisar`
                           : "No hay novedades pendientes"}
@@ -663,7 +663,7 @@ export default function Navbar() {
                           router.push("/account/notifications");
                         }
                       }}
-                      className="text-xs font-semibold text-blue-vivid-600 hover:text-blue-vivid-500"
+                      className="text-blue-vivid-600 hover:text-blue-vivid-500 text-xs font-semibold"
                     >
                       Ver todo
                     </button>
@@ -671,15 +671,15 @@ export default function Navbar() {
 
                   <div className="max-h-80 overflow-y-auto px-2 py-3">
                     {!isAuthenticated ? (
-                      <p className="px-3 py-6 text-center text-sm text-gray-dark-500">
+                      <p className="text-gray-dark-500 px-3 py-6 text-center text-sm">
                         Inicia sesión para consultar tus notificaciones.
                       </p>
                     ) : isFetchingNotifications ? (
-                      <div className="flex items-center justify-center py-6 text-blue-light-500">
+                      <div className="text-blue-light-500 flex items-center justify-center py-6">
                         <Loader2 className="h-5 w-5 animate-spin" />
                       </div>
                     ) : recentNotifications.length === 0 ? (
-                      <p className="px-3 py-6 text-center text-sm text-gray-dark-500">
+                      <p className="text-gray-dark-500 px-3 py-6 text-center text-sm">
                         No tienes notificaciones nuevas en este momento.
                       </p>
                     ) : (
@@ -693,37 +693,37 @@ export default function Navbar() {
                               onClick={() =>
                                 handleNotificationNavigate(notification)
                               }
-                              className="w-full rounded-2xl border border-blue-light-100 bg-blue-light-50 px-3 py-3 text-left transition hover:border-blue-light-200 hover:bg-blue-light-100"
+                              className="border-blue-light-100 bg-blue-light-50 hover:border-blue-light-200 hover:bg-blue-light-100 w-full rounded-2xl border px-3 py-3 text-left transition"
                             >
-                              <div className="mb-1 flex items-center justify-between text-xs text-gray-dark-500">
-                                <span className="font-semibold text-gray-dark-700">
+                              <div className="text-gray-dark-500 mb-1 flex items-center justify-between text-xs">
+                                <span className="text-gray-dark-700 font-semibold">
                                   #{notification.bookingId}
                                 </span>
 
-                                <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-light-600">
+                                <span className="text-blue-light-600 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
                                   {notification.role === "host"
                                     ? "Anfitrión"
                                     : "Huésped"}
                                 </span>
                               </div>
 
-                              <p className="text-sm font-semibold text-gray-dark-900 line-clamp-2">
+                              <p className="text-gray-dark-900 line-clamp-2 text-sm font-semibold">
                                 {notification.propertyTitle}
                               </p>
 
-                              <p className="mt-1 text-xs text-gray-dark-500">
+                              <p className="text-gray-dark-500 mt-1 text-xs">
                                 Estado:{" "}
                                 {statusLabels[notification.status] ??
                                   notification.status}
                               </p>
 
                               {notification.reminderType === "CHECKIN_24H" && (
-                                <p className="mt-1 inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600">
+                                <p className="mt-1 inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-rose-600 uppercase">
                                   Recordatorio de check-in
                                 </p>
                               )}
 
-                              <p className="mt-2 text-xs text-gray-dark-400">
+                              <p className="text-gray-dark-400 mt-2 text-xs">
                                 {formatNotificationDate(
                                   notification.eventAt ?? notification.createdAt
                                 )}
@@ -743,23 +743,23 @@ export default function Navbar() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={handleMenuToggle}
-                className="flex items-center gap-3 px-4 py-3 rounded-full border border-blue-light-200 hover:border-blue-light-300 bg-white shadow-sm hover:shadow-md transition-all"
+                className="border-blue-light-200 hover:border-blue-light-300 flex items-center gap-3 rounded-full border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md"
                 aria-label="Menu"
               >
-                <Menu className="w-5 h-5 text-gray-dark-600" />
+                <Menu className="text-gray-dark-600 h-5 w-5" />
 
                 {isAuthenticated && user?.image ? (
-                  <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-blue-light-200">
+                  <div className="ring-blue-light-200 h-9 w-9 overflow-hidden rounded-full shadow-sm ring-2">
                     <Image
                       src={user.image}
                       alt={user.name || "Avatar del usuario"}
                       width={36}
                       height={36}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-light-400 to-blue-light-500 flex items-center justify-center shadow-sm">
+                  <div className="from-blue-light-400 to-blue-light-500 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br shadow-sm">
                     <span className="text-sm font-semibold text-white">
                       {isAuthenticated && user?.name
                         ? user.name.charAt(0).toUpperCase()
@@ -785,20 +785,20 @@ export default function Navbar() {
 
         {/* Mobile Search Bar */}
 
-        <div className="lg:hidden pb-5">
-          <div className="flex flex-col gap-5 p-5 rounded-2xl border border-blue-light-200 bg-white shadow-sm">
+        <div className="pb-5 lg:hidden">
+          <div className="border-blue-light-200 flex flex-col gap-5 rounded-2xl border bg-white p-5 shadow-sm">
             {/* Donde */}
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-gray-dark-400 block text-[11px] font-bold tracking-wide uppercase">
                   Donde
                 </label>
                 {selectedLocation && (
                   <button
                     type="button"
                     onClick={clearLocation}
-                    className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+                    className="text-blue-light-600 hover:text-blue-light-700 text-xs font-medium"
                   >
                     Limpiar
                   </button>
@@ -806,7 +806,7 @@ export default function Navbar() {
               </div>
 
               <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-blue-light-500 flex-shrink-0" />
+                <MapPin className="text-blue-light-500 h-5 w-5 flex-shrink-0" />
 
                 <select
                   value={selectedLocation?.id ?? ""}
@@ -817,7 +817,7 @@ export default function Navbar() {
 
                     setSelectedLocation(option ?? null);
                   }}
-                  className="flex-1 rounded-xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-sm font-medium text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                  className="border-blue-light-150 bg-blue-light-50 text-gray-dark-700 focus:border-blue-light-400 focus:ring-blue-light-100 flex-1 rounded-xl border px-4 py-3 text-sm font-medium outline-none focus:ring-2"
                 >
                   <option value="">Explora destinos</option>
 
@@ -833,15 +833,15 @@ export default function Navbar() {
             {/* Fechas */}
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-[11px] font-bold text-gray-dark-400 uppercase tracking-wide">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-gray-dark-400 block text-[11px] font-bold tracking-wide uppercase">
                   Fechas
                 </label>
                 {(checkInDate || checkOutDate) && (
                   <button
                     type="button"
                     onClick={clearDates}
-                    className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+                    className="text-blue-light-600 hover:text-blue-light-700 text-xs font-medium"
                   >
                     Limpiar
                   </button>
@@ -850,7 +850,7 @@ export default function Navbar() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-blue-light-500 flex-shrink-0" />
+                  <Calendar className="text-blue-light-500 h-5 w-5 flex-shrink-0" />
 
                   <input
                     type="date"
@@ -858,12 +858,12 @@ export default function Navbar() {
                     onChange={(event) =>
                       setCheckInDate(event.target.value || undefined)
                     }
-                    className="flex-1 rounded-xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-sm font-medium text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    className="border-blue-light-150 bg-blue-light-50 text-gray-dark-700 focus:border-blue-light-400 focus:ring-blue-light-100 flex-1 rounded-xl border px-4 py-3 text-sm font-medium outline-none focus:ring-2"
                   />
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-blue-light-500 flex-shrink-0" />
+                  <Calendar className="text-blue-light-500 h-5 w-5 flex-shrink-0" />
 
                   <input
                     type="date"
@@ -871,7 +871,7 @@ export default function Navbar() {
                     onChange={(event) =>
                       setCheckOutDate(event.target.value || undefined)
                     }
-                    className="flex-1 rounded-xl border border-blue-light-150 bg-blue-light-50 px-4 py-3 text-sm font-medium text-gray-dark-700 outline-none focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                    className="border-blue-light-150 bg-blue-light-50 text-gray-dark-700 focus:border-blue-light-400 focus:ring-blue-light-100 flex-1 rounded-xl border px-4 py-3 text-sm font-medium outline-none focus:ring-2"
                   />
                 </div>
               </div>
@@ -880,15 +880,15 @@ export default function Navbar() {
             {/* Quien */}
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-gray-dark-400">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-gray-dark-400 text-[11px] font-bold tracking-wide uppercase">
                   Quien
                 </p>
                 {totalGuests > 0 && (
                   <button
                     type="button"
                     onClick={clearGuests}
-                    className="text-xs text-blue-light-600 hover:text-blue-light-700 font-medium"
+                    className="text-blue-light-600 hover:text-blue-light-700 text-xs font-medium"
                   >
                     Limpiar todo
                   </button>
@@ -899,14 +899,14 @@ export default function Navbar() {
                 {GUEST_FIELDS.map(({ key, label, description }) => (
                   <div
                     key={key}
-                    className="flex items-center justify-between rounded-xl border border-blue-light-150 bg-blue-light-50 px-4 py-3"
+                    className="border-blue-light-150 bg-blue-light-50 flex items-center justify-between rounded-xl border px-4 py-3"
                   >
                     <div>
-                      <p className="text-sm font-semibold text-gray-dark-700">
+                      <p className="text-gray-dark-700 text-sm font-semibold">
                         {label}
                       </p>
 
-                      <p className="text-xs text-gray-dark-500">
+                      <p className="text-gray-dark-500 text-xs">
                         {description}
                       </p>
                     </div>
@@ -915,21 +915,21 @@ export default function Navbar() {
                       <button
                         type="button"
                         onClick={() => adjustGuestCount(key, -1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-light-200 text-blue-light-600 transition-colors hover:border-blue-light-300 disabled:cursor-not-allowed disabled:border-blue-light-100 disabled:text-blue-light-200"
+                        className="border-blue-light-200 text-blue-light-600 hover:border-blue-light-300 disabled:border-blue-light-100 disabled:text-blue-light-200 flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed"
                         aria-label={`Disminuir ${label}`}
                         disabled={guestCounts[key] === 0}
                       >
                         -
                       </button>
 
-                      <span className="w-6 text-center text-sm font-semibold text-gray-dark-700">
+                      <span className="text-gray-dark-700 w-6 text-center text-sm font-semibold">
                         {guestCounts[key]}
                       </span>
 
                       <button
                         type="button"
                         onClick={() => adjustGuestCount(key, 1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-light-200 text-blue-light-600 transition-colors hover:border-blue-light-300"
+                        className="border-blue-light-200 text-blue-light-600 hover:border-blue-light-300 flex h-8 w-8 items-center justify-center rounded-full border transition-colors"
                         aria-label={`Incrementar ${label}`}
                       >
                         +
@@ -944,9 +944,9 @@ export default function Navbar() {
 
             <button
               onClick={handleSearch}
-              className="w-full py-4 rounded-xl bg-gradient-to-br from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 text-white font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              className="from-blue-vivid-500 to-blue-vivid-600 hover:from-blue-vivid-600 hover:to-blue-vivid-700 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br py-4 font-semibold text-white shadow-md transition-all hover:shadow-lg"
             >
-              <Search className="w-5 h-5" />
+              <Search className="h-5 w-5" />
               Buscar
             </button>
           </div>

@@ -2,6 +2,8 @@
 
 import { use } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/src/hooks/useAuth";
 import { usePropertyDetail } from "@/src/hooks/usePropertyDetail";
 import { GuestCounts } from "@/src/components/layout/search/GuestPopover";
 import {
@@ -35,7 +37,9 @@ interface BookingDates {
 
 export default function PropertyPage({ params }: PropertyPageProps) {
   const { id } = use(params);
+  const router = useRouter();
   const { property, isLoading, error } = usePropertyDetail(id);
+  const { isAuthenticated } = useAuth();
 
   // Estados para funcionalidades
 
@@ -110,8 +114,8 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     currencyCode === "PEN"
       ? "S/"
       : currencyCode === "USD"
-      ? "$"
-      : `${currencyCode} `;
+        ? "$"
+        : `${currencyCode} `;
 
   const formatCurrencyValue = (value: number) =>
     `${currencyPrefix}${value.toLocaleString("es-PE")}`;
@@ -137,6 +141,12 @@ export default function PropertyPage({ params }: PropertyPageProps) {
       return;
     }
 
+    if (!isAuthenticated) {
+      const callbackUrl = encodeURIComponent(window.location.href);
+      router.push(`/login?callbackUrl=${callbackUrl}`);
+      return;
+    }
+
     setShowCheckout(true);
     setShowSuccess(false);
   };
@@ -146,33 +156,29 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   };
 
   const handlePay = async (paymentDetails: CheckoutFormData) => {
-    try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          propertyId: parseInt(id),
-          checkIn: selectedDates.checkIn,
-          checkOut: selectedDates.checkOut,
-          guests: selectedDates.guests,
-          paymentDetails,
-        }),
-      });
+    // Propagar errores al modal en lugar de capturarlos aqui
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        propertyId: parseInt(id),
+        checkIn: selectedDates.checkIn,
+        checkOut: selectedDates.checkOut,
+        guests: selectedDates.guests,
+        paymentDetails,
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Error al procesar la reserva");
-      }
-
-      setShowCheckout(false);
-      setShowSuccess(true);
-    } catch (error) {
-      console.error("Error booking:", error);
-      alert(error instanceof Error ? error.message : "Error al procesar la reserva");
+    if (!response.ok) {
+      throw new Error(data.error || "Error al procesar la reserva");
     }
+
+    setShowCheckout(false);
+    setShowSuccess(true);
   };
 
   const handleCloseSuccess = () => {
@@ -182,7 +188,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   return (
     <>
       <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="mx-auto max-w-7xl px-4">
           {/* Informacion basica */}
 
           <PropertyBasicInfo
@@ -203,10 +209,10 @@ export default function PropertyPage({ params }: PropertyPageProps) {
             className="mb-8"
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Contenido principal */}
 
-            <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-8 lg:col-span-2">
               {/* Informacion del anfitrion */}
 
               <PropertyHostInfo

@@ -52,7 +52,10 @@ const checkoutFormSchema = z.object({
   cardNumber: z
     .string()
     .transform((val) => val.replace(/\s/g, ""))
-    .refine((val) => /^\d{16}$/.test(val), "El número de tarjeta debe tener 16 dígitos")
+    .refine(
+      (val) => /^\d{16}$/.test(val),
+      "El número de tarjeta debe tener 16 dígitos"
+    )
     .refine(validateLuhn, "Número de tarjeta inválido"),
 
   expiryDate: z
@@ -60,9 +63,7 @@ const checkoutFormSchema = z.object({
     .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Formato inválido (MM/AA)")
     .refine(isNotExpired, "La tarjeta está vencida"),
 
-  cvv: z
-    .string()
-    .regex(/^\d{3,4}$/, "El CVV debe tener 3 o 4 dígitos"),
+  cvv: z.string().regex(/^\d{3,4}$/, "El CVV debe tener 3 o 4 dígitos"),
 
   email: z.string().email("Correo electrónico inválido"),
 });
@@ -124,7 +125,7 @@ interface CheckoutModalProps {
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+    <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
       <AlertCircle className="h-3 w-3" />
       {message}
     </p>
@@ -166,6 +167,7 @@ export function CheckoutModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Bloquear scroll cuando el modal esta abierto
 
@@ -229,13 +231,14 @@ export function CheckoutModal({
   const getGuestSummary = () => {
     const { adults, children, babies, pets } = selectedDates.guests;
     const parts: string[] = [];
-    
-    if (adults > 0) parts.push(`${adults} adulto${adults !== 1 ? 's' : ''}`);
-    if (children > 0) parts.push(`${children} niño${children !== 1 ? 's' : ''}`);
-    if (babies > 0) parts.push(`${babies} bebé${babies !== 1 ? 's' : ''}`);
-    if (pets > 0) parts.push(`${pets} mascota${pets !== 1 ? 's' : ''}`);
-    
-    return parts.length > 0 ? parts.join(', ') : '1 adulto';
+
+    if (adults > 0) parts.push(`${adults} adulto${adults !== 1 ? "s" : ""}`);
+    if (children > 0)
+      parts.push(`${children} niño${children !== 1 ? "s" : ""}`);
+    if (babies > 0) parts.push(`${babies} bebé${babies !== 1 ? "s" : ""}`);
+    if (pets > 0) parts.push(`${pets} mascota${pets !== 1 ? "s" : ""}`);
+
+    return parts.length > 0 ? parts.join(", ") : "1 adulto";
   };
 
   const guestsLabel = getGuestSummary();
@@ -287,12 +290,18 @@ export function CheckoutModal({
         return newErrors;
       });
     }
+
+    // Limpiar error general
+    if (submitError) {
+      setSubmitError(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
+    setSubmitError(null);
 
     try {
       // Validar con Zod
@@ -309,6 +318,11 @@ export function CheckoutModal({
           }
         });
         setErrors(fieldErrors);
+      } else {
+        // Error general (ej: fallo en el pago)
+        setSubmitError(
+          error instanceof Error ? error.message : "Error al procesar el pago"
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -326,7 +340,7 @@ export function CheckoutModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:bg-gray-100 z-10"
+          className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:bg-gray-100"
           aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
@@ -335,9 +349,9 @@ export function CheckoutModal({
         <div className="grid grid-cols-1 gap-0 lg:grid-cols-2">
           {/* Resumen de la reserva */}
 
-          <section className="flex flex-col gap-6 bg-blue-light-50 p-8">
+          <section className="bg-blue-light-50 flex flex-col gap-6 p-8">
             <header className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-light-600">
+              <p className="text-blue-light-600 text-xs font-semibold tracking-wide uppercase">
                 Resumen de tu reserva
               </p>
 
@@ -358,7 +372,7 @@ export function CheckoutModal({
                   className="h-20 w-20 rounded-2xl object-cover"
                 />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-light-100 text-lg font-semibold text-blue-light-600">
+                <div className="bg-blue-light-100 text-blue-light-600 flex h-20 w-20 items-center justify-center rounded-2xl text-lg font-semibold">
                   <Home className="h-6 w-6" />
                 </div>
               )}
@@ -384,7 +398,7 @@ export function CheckoutModal({
 
             {/* Detalles de la reserva */}
 
-            <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm text-sm text-gray-700">
+            <div className="space-y-3 rounded-2xl bg-white p-4 text-sm text-gray-700 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-900">Fechas</span>
 
@@ -434,9 +448,9 @@ export function CheckoutModal({
 
           <section className="flex flex-col gap-6 p-8">
             <header className="space-y-2">
-              <div className="flex items-center gap-2 text-blue-light-600">
+              <div className="text-blue-light-600 flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                <span className="text-xs font-semibold uppercase tracking-wide">
+                <span className="text-xs font-semibold tracking-wide uppercase">
                   Simulacion de pago
                 </span>
               </div>
@@ -459,12 +473,14 @@ export function CheckoutModal({
                 <input
                   type="text"
                   value={formData.cardName}
-                  onChange={(e) => handleInputChange("cardName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("cardName", e.target.value)
+                  }
                   placeholder="Juan Perez"
-                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm transition-colors outline-none ${
                     errors.cardName
                       ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                      : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                      : "focus:border-blue-light-400 focus:ring-blue-light-100 border-gray-200 focus:ring-2"
                   }`}
                 />
                 <FieldError message={errors.cardName} />
@@ -478,12 +494,14 @@ export function CheckoutModal({
                 <input
                   type="text"
                   value={formData.cardNumber}
-                  onChange={(e) => handleInputChange("cardNumber", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("cardNumber", e.target.value)
+                  }
                   placeholder="1234 5678 9012 3456"
-                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm transition-colors outline-none ${
                     errors.cardNumber
                       ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                      : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                      : "focus:border-blue-light-400 focus:ring-blue-light-100 border-gray-200 focus:ring-2"
                   }`}
                 />
                 <FieldError message={errors.cardNumber} />
@@ -498,12 +516,14 @@ export function CheckoutModal({
                   <input
                     type="text"
                     value={formData.expiryDate}
-                    onChange={(e) => handleInputChange("expiryDate", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("expiryDate", e.target.value)
+                    }
                     placeholder="MM/AA"
-                    className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                    className={`w-full rounded-2xl border px-4 py-3 text-sm transition-colors outline-none ${
                       errors.expiryDate
                         ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                        : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                        : "focus:border-blue-light-400 focus:ring-blue-light-100 border-gray-200 focus:ring-2"
                     }`}
                   />
                   <FieldError message={errors.expiryDate} />
@@ -518,10 +538,10 @@ export function CheckoutModal({
                     value={formData.cvv}
                     onChange={(e) => handleInputChange("cvv", e.target.value)}
                     placeholder="123"
-                    className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                    className={`w-full rounded-2xl border px-4 py-3 text-sm transition-colors outline-none ${
                       errors.cvv
                         ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                        : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                        : "focus:border-blue-light-400 focus:ring-blue-light-100 border-gray-200 focus:ring-2"
                     }`}
                   />
                   <FieldError message={errors.cvv} />
@@ -538,10 +558,10 @@ export function CheckoutModal({
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="correo@ejemplo.com"
-                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-colors ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm transition-colors outline-none ${
                     errors.email
                       ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                      : "border-gray-200 focus:border-blue-light-400 focus:ring-2 focus:ring-blue-light-100"
+                      : "focus:border-blue-light-400 focus:ring-blue-light-100 border-gray-200 focus:ring-2"
                   }`}
                 />
                 <FieldError message={errors.email} />
@@ -549,6 +569,14 @@ export function CheckoutModal({
 
               {/* Botón de pago */}
               <div className="space-y-3 pt-2">
+                {/* Mensaje de error general */}
+                {submitError && (
+                  <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <p>{submitError}</p>
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full"

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PropertyService } from '@/src/services/property.service';
+import { NextRequest, NextResponse } from "next/server";
+import { PropertyService } from "@/src/services/property.service";
 import type {
   UpdatePropertyBody,
-  PropertyErrorResponse
-} from '@/src/types/dtos/properties.dto';
+  PropertyErrorResponse,
+} from "@/src/types/dtos/properties.dto";
 
 interface PropertyEditResponse {
   success: true;
@@ -25,7 +25,7 @@ export async function GET(
     // Validar que el ID sea un número válido
     if (isNaN(propertyId)) {
       return NextResponse.json(
-        { error: 'ID de propiedad inválido' },
+        { error: "ID de propiedad inválido" },
         { status: 400 }
       );
     }
@@ -35,18 +35,17 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: propertyData
+      data: propertyData,
     });
-
   } catch (error) {
-    console.error('Error al obtener la propiedad para edición:', error);
+    console.error("Error al obtener la propiedad para edición:", error);
 
     // Si es un error conocido del servicio
     if (error instanceof Error) {
       // Verificar si es el error de "Propiedad no encontrada"
-      if (error.message.includes('Propiedad no encontrada')) {
+      if (error.message.includes("Propiedad no encontrada")) {
         return NextResponse.json(
-          { error: 'Propiedad no encontrada' },
+          { error: "Propiedad no encontrada" },
           { status: 404 }
         );
       }
@@ -54,8 +53,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: 'Error interno del servidor',
-        details: error instanceof Error ? error.message : 'Error desconocido'
+        error: "Error interno del servidor",
+        details: error instanceof Error ? error.message : "Error desconocido",
       },
       { status: 500 }
     );

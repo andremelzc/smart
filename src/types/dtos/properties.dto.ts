@@ -42,7 +42,7 @@ export interface PropertyErrorResponse {
 export interface PropertyAvailabilityDay {
   date: string; // YYYY-MM-DD
   available: boolean;
-  reason: 'available' | 'booked' | 'blocked' | 'maintenance';
+  reason: "available" | "booked" | "blocked" | "maintenance";
 }
 
 // Tipo para resumen de disponibilidad
@@ -103,7 +103,7 @@ export interface PropertyFilterDto {
   pets?: number;
   startDate?: string;
   endDate?: string;
-  orderBy?: 'price' | 'rating';
+  orderBy?: "price" | "rating";
 }
 
 // Tipo para la información del host

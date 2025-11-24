@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { PropertyDetail } from '@/src/types/dtos/properties.dto';
+import { useState, useEffect, useCallback } from "react";
+import { PropertyDetail } from "@/src/types/dtos/properties.dto";
 
 interface UsePropertyDetailReturn {
   property: PropertyDetail | null;
@@ -10,14 +10,16 @@ interface UsePropertyDetailReturn {
   refetch: () => void;
 }
 
-export const usePropertyDetail = (propertyId: string | number): UsePropertyDetailReturn => {
+export const usePropertyDetail = (
+  propertyId: string | number
+): UsePropertyDetailReturn => {
   const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProperty = useCallback(async () => {
     if (!propertyId) {
-      setError('ID de propiedad no válido');
+      setError("ID de propiedad no válido");
       setIsLoading(false);
       return;
     }
@@ -27,27 +29,27 @@ export const usePropertyDetail = (propertyId: string | number): UsePropertyDetai
       setError(null);
 
       const response = await fetch(`/api/properties/${propertyId}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al cargar la propiedad');
+        throw new Error(errorData.error || "Error al cargar la propiedad");
       }
 
       const data = await response.json();
-      
+
       if (data.success && data.data) {
         setProperty(data.data);
       } else {
-        throw new Error('Formato de respuesta inválido');
+        throw new Error("Formato de respuesta inválido");
       }
     } catch (err) {
-      console.error('Error fetching property:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error("Error fetching property:", err);
+      setError(err instanceof Error ? err.message : "Error desconocido");
       setProperty(null);
     } finally {
       setIsLoading(false);

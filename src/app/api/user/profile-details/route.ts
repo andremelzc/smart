@@ -50,8 +50,8 @@ export async function GET() {
       const profileRows = await outBinds.p_profile_cursor.getRows(1);
       if (profileRows.length > 0) {
         const row = profileRows[0] as unknown[];
-        
-        // Procesar CLOB en la biografía  
+
+        // Procesar CLOB en la biografía
         let bio = null;
         if (row[2] && typeof row[2] === "object" && "getData" in row[2]) {
           try {
@@ -64,7 +64,7 @@ export async function GET() {
         } else {
           bio = row[2] as string | null;
         }
-        
+
         profileData = {
           firstName: row[0] as string | null,
           lastName: row[1] as string | null,
@@ -166,12 +166,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const userId = parseInt(session.user.id);
-    
+
     // Obtener datos del body
     const body = await request.json();
-    
+
     console.log("📥 Raw body received:", JSON.stringify(body, null, 2));
-    
+
     const {
       biography = "", // Valor por defecto si no viene
       interests = null,
@@ -253,9 +253,9 @@ export async function PUT(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { 
+        {
           error: "Error en la base de datos",
-          details: oracleError.message 
+          details: oracleError.message,
         },
         { status: 500 }
       );

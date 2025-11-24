@@ -13,7 +13,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { usePropertyAvailability } from "@/src/hooks/usePropertyAvailability";
-import { GuestPopover, GuestCounts } from "@/src/components/layout/search/GuestPopover";
+import {
+  GuestPopover,
+  GuestCounts,
+} from "@/src/components/layout/search/GuestPopover";
 
 interface BookingDates {
   checkIn: string;
@@ -80,15 +83,18 @@ export function PropertyBookingCard({
   // Cerrar guest popover al hacer click fuera
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (guestPopoverRef.current && !guestPopoverRef.current.contains(event.target as Node)) {
+      if (
+        guestPopoverRef.current &&
+        !guestPopoverRef.current.contains(event.target as Node)
+      ) {
         setGuestPopoverOpen(false);
       }
     };
 
     if (guestPopoverOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [guestPopoverOpen]);
@@ -178,17 +184,17 @@ export function PropertyBookingCard({
     onDatesChange({ ...selectedDates, guests: newGuests });
   };
 
-
   const getGuestSummary = () => {
     const { adults, children, babies, pets } = selectedDates.guests;
     const parts: string[] = [];
-    
-    if (adults > 0) parts.push(`${adults} adulto${adults !== 1 ? 's' : ''}`);
-    if (children > 0) parts.push(`${children} niño${children !== 1 ? 's' : ''}`);
-    if (babies > 0) parts.push(`${babies} bebé${babies !== 1 ? 's' : ''}`);
-    if (pets > 0) parts.push(`${pets} mascota${pets !== 1 ? 's' : ''}`);
-    
-    return parts.length > 0 ? parts.join(', ') : 'Agregar huéspedes';
+
+    if (adults > 0) parts.push(`${adults} adulto${adults !== 1 ? "s" : ""}`);
+    if (children > 0)
+      parts.push(`${children} niño${children !== 1 ? "s" : ""}`);
+    if (babies > 0) parts.push(`${babies} bebé${babies !== 1 ? "s" : ""}`);
+    if (pets > 0) parts.push(`${pets} mascota${pets !== 1 ? "s" : ""}`);
+
+    return parts.length > 0 ? parts.join(", ") : "Agregar huéspedes";
   };
 
   const canReserve =
@@ -264,11 +270,11 @@ export function PropertyBookingCard({
 
   return (
     <div className={`sticky top-24 ${className}`}>
-      <div className="border border-gray-300 rounded-xl p-6 shadow-lg bg-white">
+      <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-lg">
         {/* Precio y rating */}
 
         <div className="mb-6">
-          <div className="flex items-baseline gap-1 mb-2">
+          <div className="mb-2 flex items-baseline gap-1">
             <span className="text-2xl font-bold">
               {formatCurrencyValue(basePriceNight)}
             </span>
@@ -277,7 +283,7 @@ export function PropertyBookingCard({
           </div>
 
           <div className="flex items-center gap-1 text-sm">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
 
             <span className="font-medium">
               {typeof averageRating === "number"
@@ -292,39 +298,39 @@ export function PropertyBookingCard({
         </div>
 
         {/* Formulario de fechas */}
-        <div className="space-y-4 mb-6">
+        <div className="mb-6 space-y-4">
           {/* Calendario de rango */}
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
-              <button className="w-full border border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-left cursor-pointer">
+              <button className="w-full cursor-pointer rounded-lg border border-gray-300 text-left transition-colors hover:border-gray-400">
                 <div className="grid grid-cols-2 gap-0">
-                  <div className="p-3 border-r border-gray-300">
-                    <label className="block text-xs font-medium text-gray-700 mb-1 text-center cursor-pointer">
+                  <div className="border-r border-gray-300 p-3">
+                    <label className="mb-1 block cursor-pointer text-center text-xs font-medium text-gray-700">
                       LLEGADA
                     </label>
-                    <div className="flex items-center justify-center gap-2 text-sm cursor-pointer">
+                    <div className="flex cursor-pointer items-center justify-center gap-2 text-sm">
                       <CalendarIcon className="h-4 w-4" />
                       {selectedDates.checkIn
                         ? format(
-                          stringToDate(selectedDates.checkIn),
-                          "dd/MM/yyyy",
-                          { locale: es }
-                        )
+                            stringToDate(selectedDates.checkIn),
+                            "dd/MM/yyyy",
+                            { locale: es }
+                          )
                         : "Agregar fecha"}
                     </div>
                   </div>
                   <div className="p-3">
-                    <label className="block text-xs font-medium text-gray-700 mb-1 text-center cursor-pointer">
+                    <label className="mb-1 block cursor-pointer text-center text-xs font-medium text-gray-700">
                       SALIDA
                     </label>
-                    <div className="flex items-center justify-center gap-2 text-sm cursor-pointer">
+                    <div className="flex cursor-pointer items-center justify-center gap-2 text-sm">
                       <CalendarIcon className="h-4 w-4" />
                       {selectedDates.checkOut
                         ? format(
-                          stringToDate(selectedDates.checkOut),
-                          "dd/MM/yyyy",
-                          { locale: es }
-                        )
+                            stringToDate(selectedDates.checkOut),
+                            "dd/MM/yyyy",
+                            { locale: es }
+                          )
                         : "Agregar fecha"}
                     </div>
                   </div>
@@ -349,7 +355,7 @@ export function PropertyBookingCard({
                   locale={es}
                 />
                 {(selectedDates.checkIn || selectedDates.checkOut) && (
-                  <div className="p-3 border-t border-gray-200">
+                  <div className="border-t border-gray-200 p-3">
                     <button
                       onClick={() => {
                         onDatesChange({
@@ -358,7 +364,7 @@ export function PropertyBookingCard({
                           checkOut: "",
                         });
                       }}
-                      className="w-full text-sm text-gray-600 hover:text-gray-900 underline cursor-pointer"
+                      className="w-full cursor-pointer text-sm text-gray-600 underline hover:text-gray-900"
                     >
                       Limpiar fechas
                     </button>
@@ -372,12 +378,12 @@ export function PropertyBookingCard({
             <button
               type="button"
               onClick={() => setGuestPopoverOpen(!guestPopoverOpen)}
-              className="w-full border border-gray-300 rounded-lg p-3 hover:border-gray-400 transition-colors text-left cursor-pointer"
+              className="w-full cursor-pointer rounded-lg border border-gray-300 p-3 text-left transition-colors hover:border-gray-400"
             >
-              <label className="block text-xs font-medium text-gray-700 mb-1 cursor-pointer">
+              <label className="mb-1 block cursor-pointer text-xs font-medium text-gray-700">
                 HUÉSPEDES
               </label>
-              <div className="flex items-center gap-2 text-sm cursor-pointer">
+              <div className="flex cursor-pointer items-center gap-2 text-sm">
                 <Users className="h-4 w-4" />
                 <span>{getGuestSummary()}</span>
               </div>
@@ -391,7 +397,7 @@ export function PropertyBookingCard({
             )}
           </div>
           {(selectedDates.checkIn || selectedDates.checkOut) && (
-            <div className="p-3 border-t border-gray-200">
+            <div className="border-t border-gray-200 p-3">
               <button
                 onClick={() => {
                   onDatesChange({
@@ -400,7 +406,7 @@ export function PropertyBookingCard({
                     checkOut: "",
                   });
                 }}
-                className="w-full text-sm text-gray-600 hover:text-gray-900 underline cursor-pointer"
+                className="w-full cursor-pointer text-sm text-gray-600 underline hover:text-gray-900"
               >
                 Limpiar fechas
               </button>
@@ -411,7 +417,7 @@ export function PropertyBookingCard({
         {/* Boton de reserva */}
 
         <Button
-          className="w-full mb-4"
+          className="mb-4 w-full"
           size="lg"
           disabled={!canReserve}
           onClick={onReserve}
@@ -419,14 +425,14 @@ export function PropertyBookingCard({
           {canReserve ? "Reservar" : "Selecciona fechas"}
         </Button>
 
-        <p className="text-center text-sm text-gray-600 mb-4">
+        <p className="mb-4 text-center text-sm text-gray-600">
           No se realizara ningun cargo todavia
         </p>
 
         {/* Desglose de precios */}
 
         {canReserve && (
-          <div className="space-y-3 pt-4 border-t border-gray-200">
+          <div className="space-y-3 border-t border-gray-200 pt-4">
             <div className="flex justify-between">
               <span className="text-gray-600">
                 {formatCurrencyValue(basePriceNight)} x {nightsCount} noche
@@ -442,7 +448,7 @@ export function PropertyBookingCard({
               <span>{formatCurrencyValue(serviceFee)}</span>
             </div>
 
-            <div className="flex justify-between font-medium pt-3 border-t border-gray-200">
+            <div className="flex justify-between border-t border-gray-200 pt-3 font-medium">
               <span>Total</span>
 
               <span>{formatCurrencyValue(grandTotal)}</span>

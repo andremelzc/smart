@@ -1,6 +1,6 @@
-import { HomeHighlightsService } from '@/src/services/home-highlights.service';
-import type { CityHighlight } from '@/src/services/home-highlights.service';
-import { CityCarousel } from '@/src/components/features/properties/CityCarousel';
+import { HomeHighlightsService } from "@/src/services/home-highlights.service";
+import type { CityHighlight } from "@/src/services/home-highlights.service";
+import { CityCarousel } from "@/src/components/features/properties/CityCarousel";
 
 export default async function HomePage() {
   let highlights: CityHighlight[] = [];
@@ -8,11 +8,11 @@ export default async function HomePage() {
   try {
     highlights = await HomeHighlightsService.getCityHighlights();
   } catch (error) {
-    console.error('No se pudieron cargar los destacados de inicio:', error);
+    console.error("No se pudieron cargar los destacados de inicio:", error);
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
+    <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pt-20 pb-24 sm:px-6 lg:px-8">
       {/* <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
         <div className="space-y-6">
           <span className="inline-flex items-center rounded-full border border-blue-light-200 bg-blue-light-50 px-4 py-1 text-sm font-semibold text-blue-light-600">
@@ -62,8 +62,9 @@ export default async function HomePage() {
 
         <div className="space-y-12">
           {highlights.length === 0 ? (
-            <div className="rounded-3xl border border-blue-light-100 bg-blue-light-50 px-6 py-8 text-center text-gray-dark-500">
-              Aun no hay propiedades destacadas disponibles. Vuelve pronto para descubrir nuevos alojamientos.
+            <div className="border-blue-light-100 bg-blue-light-50 text-gray-dark-500 rounded-3xl border px-6 py-8 text-center">
+              Aun no hay propiedades destacadas disponibles. Vuelve pronto para
+              descubrir nuevos alojamientos.
             </div>
           ) : (
             highlights.map((group) => (
@@ -75,4 +76,3 @@ export default async function HomePage() {
     </main>
   );
 }
-

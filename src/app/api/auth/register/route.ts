@@ -19,25 +19,31 @@ export async function POST(request: NextRequest) {
     const { firstName, lastName, email, password } = validatedData;
 
     // Llamar al stored procedure de registro a través del servicio
-    console.log("Intentando registrar usuario:", { email, firstName, lastName });
-    
+    console.log("Intentando registrar usuario:", {
+      email,
+      firstName,
+      lastName,
+    });
+
     const result = await authStoredProcedures.registerWithCredentials(
-      email, 
-      password, 
-      firstName, 
+      email,
+      password,
+      firstName,
       lastName
     );
 
     console.log("Resultado del servicio de registro:", result);
 
     if (!result.success || !result.userId) {
-      const errorMessage = authStoredProcedures.getErrorMessage(result.errorCode || 'UNKNOWN_ERROR');
-      console.error("Error en registro:", { errorCode: result.errorCode, errorMessage });
-      
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: 400 }
+      const errorMessage = authStoredProcedures.getErrorMessage(
+        result.errorCode || "UNKNOWN_ERROR"
       );
+      console.error("Error en registro:", {
+        errorCode: result.errorCode,
+        errorMessage,
+      });
+
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
     const newUserId = result.userId;
@@ -51,22 +57,18 @@ export async function POST(request: NextRequest) {
           id: newUserId,
           email,
           firstName,
-          lastName
-        }
+          lastName,
+        },
       },
       { status: 201 }
     );
-
   } catch (error) {
     console.error("Error en registro:", error);
 
     // Manejar errores de validación de Zod
     if (error instanceof z.ZodError) {
       const firstError = error.issues[0];
-      return NextResponse.json(
-        { error: firstError.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: firstError.message }, { status: 400 });
     }
 
     // Error genérico

@@ -282,14 +282,13 @@ export const userService = {
         error instanceof Error ? error.message : "Error de conexión";
       throw new Error(errorMessage);
     }
-  }
+  },
   /**
    * Actualiza un campo específico del perfil
    * @param field - Campo a actualizar
    * @param value - Nuevo valor
    * @returns Promise con la respuesta
-   */,
-  updateField: async (
+   */ updateField: async (
     field: keyof UserProfile,
     value: string
   ): Promise<ApiResponse> => {

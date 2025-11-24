@@ -35,7 +35,7 @@ export interface HostReservation extends BaseReservation {
   contactPhone: string;
 }
 
-// Guest-specific reservation (from guest/account perspective)  
+// Guest-specific reservation (from guest/account perspective)
 export interface GuestReservation extends BaseReservation {
   hostName: string;
   price: string;
@@ -54,7 +54,7 @@ export interface StatusConfig {
 interface BaseReservationCardProps<T extends BaseReservation> {
   reservation: T;
   statusConfig: Record<string, StatusConfig>;
-  variant: 'host' | 'guest';
+  variant: "host" | "guest";
   onAction?: (reservation: T) => void;
   actionLabel?: string;
   actionIcon?: React.ComponentType<{ className?: string }>;
@@ -88,12 +88,16 @@ export function ReservationCard<T extends BaseReservation>({
   isSelected = false,
 }: BaseReservationCardProps<T>) {
   const statusInfo = statusConfig[reservation.status];
-  const isHostVariant = variant === 'host';
-  const isGuestVariant = variant === 'guest';
-  
+  const isHostVariant = variant === "host";
+  const isGuestVariant = variant === "guest";
+
   // Type guards to access variant-specific properties safely
-  const hostReservation = isHostVariant ? (reservation as unknown as HostReservation) : null;
-  const guestReservation = isGuestVariant ? (reservation as unknown as GuestReservation) : null;
+  const hostReservation = isHostVariant
+    ? (reservation as unknown as HostReservation)
+    : null;
+  const guestReservation = isGuestVariant
+    ? (reservation as unknown as GuestReservation)
+    : null;
 
   return (
     <article className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
@@ -111,7 +115,7 @@ export function ReservationCard<T extends BaseReservation>({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-blue-light-50 text-blue-light-500">
+                <div className="bg-blue-light-50 text-blue-light-500 flex h-full w-full items-center justify-center">
                   <Hotel className="h-10 w-10" />
                 </div>
               )}
@@ -126,17 +130,23 @@ export function ReservationCard<T extends BaseReservation>({
                   {reservation.propertyName}
                 </h2>
                 {isHostVariant && hostReservation?.roomId && (
-                  <p className="text-sm text-gray-500">{hostReservation.roomId}</p>
+                  <p className="text-sm text-gray-500">
+                    {hostReservation.roomId}
+                  </p>
                 )}
                 <p className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 text-blue-light-500" />
+                  <MapPin className="text-blue-light-500 h-4 w-4" />
                   {reservation.location}
                 </p>
               </div>
 
-              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.badge}`}>
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.badge}`}
+              >
                 {statusInfo.dot && (
-                  <span className={`h-2.5 w-2.5 rounded-full ${statusInfo.dot}`} />
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${statusInfo.dot}`}
+                  />
                 )}
                 {statusInfo.label}
               </span>
@@ -150,21 +160,24 @@ export function ReservationCard<T extends BaseReservation>({
               </span>
               <span className="inline-flex items-center gap-2">
                 <Users className="h-4 w-4 text-gray-500" />
-                {reservation.guests} {reservation.guests === 1 ? "huésped" : "huéspedes"}
+                {reservation.guests}{" "}
+                {reservation.guests === 1 ? "huésped" : "huéspedes"}
               </span>
               <span className="inline-flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-500" />
-                {isHostVariant ? (
-                  `Entrada ${formatDay(reservation.checkIn)}`
-                ) : (
-                  `Check-in: ${new Date(reservation.checkIn).toLocaleTimeString("es-PE", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })} / Check-out: ${new Date(reservation.checkOut).toLocaleTimeString("es-PE", {
-                    hour: "2-digit", 
-                    minute: "2-digit",
-                  })}`
-                )}
+                {isHostVariant
+                  ? `Entrada ${formatDay(reservation.checkIn)}`
+                  : `Check-in: ${new Date(
+                      reservation.checkIn
+                    ).toLocaleTimeString("es-PE", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })} / Check-out: ${new Date(
+                      reservation.checkOut
+                    ).toLocaleTimeString("es-PE", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`}
               </span>
             </div>
 
@@ -174,23 +187,32 @@ export function ReservationCard<T extends BaseReservation>({
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-emerald-500" />
                   <span>
-                    Anfitrión: <span className="font-medium text-gray-900">{guestReservation.hostName}</span>
+                    Anfitrión:{" "}
+                    <span className="font-medium text-gray-900">
+                      {guestReservation.hostName}
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4 text-blue-light-500" />
+                  <XCircle className="text-blue-light-500 h-4 w-4" />
                   <span>
-                    Código de reserva: <span className="font-medium text-gray-900">{reservation.id}</span>
+                    Código de reserva:{" "}
+                    <span className="font-medium text-gray-900">
+                      {reservation.id}
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ChevronRight className="h-4 w-4 text-blue-light-500" />
+                  <ChevronRight className="text-blue-light-500 h-4 w-4" />
                   <span>
-                    Total pagado: <span className="font-semibold text-gray-900">{guestReservation.price}</span>
+                    Total pagado:{" "}
+                    <span className="font-semibold text-gray-900">
+                      {guestReservation.price}
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Clock className="mt-0.5 h-4 w-4 text-blue-light-500" />
+                  <Clock className="text-blue-light-500 mt-0.5 h-4 w-4" />
                   <span>{guestReservation.notes}</span>
                 </div>
               </div>
@@ -202,12 +224,14 @@ export function ReservationCard<T extends BaseReservation>({
         {isHostVariant && hostReservation && (
           <div className="flex flex-col items-start gap-2 text-right">
             <span className="text-sm text-gray-500">Total</span>
-            <p className="text-xl font-semibold text-gray-900">{hostReservation.total}</p>
+            <p className="text-xl font-semibold text-gray-900">
+              {hostReservation.total}
+            </p>
             {onAction && (
               <Button
                 variant="ghost"
                 onClick={() => onAction(reservation)}
-                className="mt-2 text-blue-light-600 hover:text-blue-light-700"
+                className="text-blue-light-600 hover:text-blue-light-700 mt-2"
               >
                 {actionLabel || (isSelected ? "Cerrar" : "Ver detalle")}
                 <ActionIcon className="ml-1 h-4 w-4" />
@@ -220,10 +244,7 @@ export function ReservationCard<T extends BaseReservation>({
       {/* Action buttons for guest variant */}
       {isGuestVariant && onAction && (
         <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => onAction(reservation)}
-          >
+          <Button variant="ghost" onClick={() => onAction(reservation)}>
             <ActionIcon className="mr-2 h-4 w-4" />
             {actionLabel || "Acción"}
           </Button>
