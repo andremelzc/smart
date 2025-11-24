@@ -1,7 +1,13 @@
 // src/components/host/crear-recinto/Paso7_Precio.tsx
 
 import { StepHeader } from "./StepHeader";
-import { Lightbulb, TrendingUp, Info, CheckCircle, XCircle } from "lucide-react";
+import {
+  Lightbulb,
+  TrendingUp,
+  Info,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { useState, useEffect, startTransition } from "react";
 
 interface StepProps {
@@ -22,7 +28,7 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
   );
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  
+
   const isPriceEmpty = localPriceString === "";
   const isValid = !isPriceEmpty && data.basePriceNight >= MIN_PRICE;
 
@@ -44,7 +50,8 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
   }, [isValid]);
 
   useEffect(() => {
-    const newStr = data.basePriceNight > 0 ? data.basePriceNight.toString() : "";
+    const newStr =
+      data.basePriceNight > 0 ? data.basePriceNight.toString() : "";
     if (newStr !== localPriceString) {
       startTransition(() => setLocalPriceString(newStr));
     }
@@ -91,22 +98,22 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
         helpText="El precio que definas aquí es la tarifa base. Los huéspedes pagarán esto más las comisiones de la plataforma. Puedes ajustarlo en cualquier momento."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
           <div>
             <label
               htmlFor="price"
-              className="text-base font-semibold text-slate-800 block mb-2"
+              className="mb-2 block text-base font-semibold text-slate-800"
             >
               Precio base por noche
             </label>
 
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="mb-4 text-sm text-slate-600">
               Este es el precio que cobras por una noche de alojamiento.
             </p>
 
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-semibold text-slate-600">
+              <span className="absolute top-1/2 left-4 -translate-y-1/2 text-2xl font-semibold text-slate-600">
                 {currencySymbol}
               </span>
 
@@ -118,35 +125,33 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
                 value={localPriceString}
                 onChange={handlePriceChange}
                 placeholder="120"
-                className={`w-full rounded-xl border-2 bg-white 
-                           py-3 pl-12 pr-24 text-3xl font-bold text-slate-700 outline-none transition-colors
-                           ${!isValid 
-                             ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" 
-                             : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}
+                className={`w-full rounded-xl border-2 bg-white py-3 pr-24 pl-12 text-3xl font-bold text-slate-700 transition-colors outline-none ${
+                  !isValid
+                    ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                    : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                }`}
               />
 
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500 font-medium">
+              <span className="absolute top-1/2 right-4 -translate-y-1/2 text-sm font-medium text-slate-500">
                 / noche
               </span>
             </div>
           </div>
 
           <div className="rounded-xl border-2 border-slate-200 bg-white p-5">
-            <h3 className="text-base font-semibold text-slate-800 mb-4">
+            <h3 className="mb-4 text-base font-semibold text-slate-800">
               Desglose de ganancia
             </h3>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-600">
-                  Precio base por noche
-                </span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">Precio base por noche</span>
                 <span className="font-semibold text-slate-800">
                   {formatCurrency(basePrice)}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center justify-between text-sm">
                 <span
                   className="flex items-center gap-1.5 text-slate-600"
                   title="Esta es la tarifa que cobra la plataforma por usar el servicio."
@@ -155,7 +160,7 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
                   <span className="font-medium">
                     ({PLATFORM_FEE_PERCENT * 100}%)
                   </span>
-                  <Info className="w-3.5 h-3.5 text-slate-400 cursor-help" />
+                  <Info className="h-3.5 w-3.5 cursor-help text-slate-400" />
                 </span>
                 <span className="font-semibold text-red-600">
                   - {formatCurrency(serviceFee)}
@@ -164,7 +169,7 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
 
               <hr className="border-t border-slate-200" />
 
-              <div className="flex justify-between items-center text-base pt-1">
+              <div className="flex items-center justify-between pt-1 text-base">
                 <span className="font-semibold text-slate-800">
                   Ganancia estimada por noche
                 </span>
@@ -176,19 +181,20 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
           </div>
         </div>
 
-        <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-5 h-fit">
-          <div className="flex items-center gap-2 mb-3">
-            <Lightbulb className="w-6 h-6 text-blue-600" />
+        <div className="h-fit rounded-xl border-2 border-blue-200 bg-blue-50 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Lightbulb className="h-6 w-6 text-blue-600" />
             <h3 className="text-base font-semibold text-slate-800">
               Recomendación de precio
             </h3>
           </div>
 
-          <p className="text-sm text-slate-600 mb-4">
-            Para recintos similares en tu zona, el precio promedio por noche es de:
+          <p className="mb-4 text-sm text-slate-600">
+            Para recintos similares en tu zona, el precio promedio por noche es
+            de:
           </p>
 
-          <div className="text-center my-5">
+          <div className="my-5 text-center">
             <span className="text-4xl font-bold text-slate-800">
               {formatCurrency(SUGGESTED_PRICE)}
             </span>
@@ -196,38 +202,35 @@ export function Paso7_Precio({ data, updateData }: StepProps) {
 
           <button
             onClick={handleUseSuggestion}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-2xl 
-            bg-gradient-to-r from-blue-light-500 to-blue-vivid-500 px-4 py-2.5 text-sm font-semibold text-white 
-            shadow-sm transition-all hover:bg-blue-700 
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="from-blue-light-500 to-blue-vivid-500 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
           >
-            <TrendingUp className="w-4 h-4" />
+            <TrendingUp className="h-4 w-4" />
             Usar precio sugerido
           </button>
 
-          <p className="text-xs text-slate-500 mt-3 text-center">
-            Esta es solo una sugerencia. Eres libre de establecer el precio que quieras.
+          <p className="mt-3 text-center text-xs text-slate-500">
+            Esta es solo una sugerencia. Eres libre de establecer el precio que
+            quieras.
           </p>
         </div>
       </div>
 
       <div className="mt-2 min-h-[60px] transition-all duration-300">
-        
         {!isValid && (
-          <div className="p-3 border border-red-200 bg-red-50 rounded-lg flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
-            <XCircle className="w-5 h-5 text-red-600" />
-            <p className="text-sm text-red-700 font-medium">
-              {isPriceEmpty 
-                ? "Debes establecer un precio por noche para continuar." 
+          <div className="animate-in fade-in slide-in-from-top-1 flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 duration-300">
+            <XCircle className="h-5 w-5 text-red-600" />
+            <p className="text-sm font-medium text-red-700">
+              {isPriceEmpty
+                ? "Debes establecer un precio por noche para continuar."
                 : `El precio mínimo debe ser ${formatCurrency(MIN_PRICE)}.`}
             </p>
           </div>
         )}
 
         {isValid && showSuccessMessage && (
-          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <p className="text-sm text-green-700 font-medium">
+          <div className="animate-in zoom-in fade-in flex items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-center duration-300">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <p className="text-sm font-medium text-green-700">
               ¡Precio válido establecido!
             </p>
           </div>

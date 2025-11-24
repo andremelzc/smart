@@ -33,8 +33,8 @@ import {
   Accessibility,
   BellOff,
   WashingMachine,
-  ChevronDown, 
-  ChevronUp,  
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface StepProps {
@@ -45,41 +45,41 @@ interface StepProps {
 }
 
 const amenityIcons: Record<string, React.ReactNode> = {
-  "27.AC": <Wind className="w-5 h-5" />,
-  "28.WIFI": <Wifi className="w-5 h-5" />,
-  "29.TV": <Tv className="w-5 h-5" />,
-  "30.KITCHEN": <Utensils className="w-5 h-5" />,
-  "31.GYM": <Dumbbell className="w-5 h-5" />,
-  "32.POOL": <Waves className="w-5 h-5" />,
-  "33.WASHER": <WashingMachine className="w-5 h-5" />,
-  "34.DRYER": <Sparkles className="w-5 h-5" />,
-  "35.HEATING": <Thermometer className="w-5 h-5" />,
-  "36.WORKSPACE": <Briefcase className="w-5 h-5" />,
-  "37.HAIR_DRYER": <Sparkles className="w-5 h-5" />,
-  "38.IRON": <Anvil className="w-5 h-5" />,
-  "39.JACUZZI": <Bath className="w-5 h-5" />,
-  "40.PARKING": <Car className="w-5 h-5" />,
-  "41.EV_CHARGER": <BatteryCharging className="w-5 h-5" />,
-  "42.CRIB": <Baby className="w-5 h-5" />,
-  "43.KING_BED": <BedDouble className="w-5 h-5" />,
-  "44.BBQ": <Flame className="w-5 h-5" />,
-  "45.BREAKFAST": <Croissant className="w-5 h-5" />,
-  "46.FIREPLACE": <FlameKindling className="w-5 h-5" />,
-  "47.SMOKING": <Cigarette className="w-5 h-5" />,
-  "48.BEACHFRONT": <Sun className="w-5 h-5" />,
-  "49.COAST": <Waves className="w-5 h-5" />,
-  "50.SKI_ACCESS": <Snowflake className="w-5 h-5" />,
-  "51.SMOKE_DETECTOR": <Siren className="w-5 h-5" />,
-  "52.CO_DETECTOR": <ShieldCheck className="w-5 h-5" />,
-  "53.PETS_ALLOWED": <Dog className="w-5 h-5" />,
-  "54.SMOKING_ALLOWED": <Cigarette className="w-5 h-5" />,
-  "55.PARTIES_ALLOWED": <PartyPopper className="w-5 h-5" />,
-  "56.FAMILY_FRIENDLY": <Users className="w-5 h-5" />,
-  "57.BABY_FRIENDLY": <Baby className="w-5 h-5" />,
-  "58.WHEELCHAIR_ACCESSIBLE": <Accessibility className="w-5 h-5" />,
-  "59.PARKING_AVAILABLE": <Car className="w-5 h-5" />,
-  "60.QUIET_HOURS": <BellOff className="w-5 h-5" />,
-  default: <HelpCircle className="w-5 h-5" />,
+  "27.AC": <Wind className="h-5 w-5" />,
+  "28.WIFI": <Wifi className="h-5 w-5" />,
+  "29.TV": <Tv className="h-5 w-5" />,
+  "30.KITCHEN": <Utensils className="h-5 w-5" />,
+  "31.GYM": <Dumbbell className="h-5 w-5" />,
+  "32.POOL": <Waves className="h-5 w-5" />,
+  "33.WASHER": <WashingMachine className="h-5 w-5" />,
+  "34.DRYER": <Sparkles className="h-5 w-5" />,
+  "35.HEATING": <Thermometer className="h-5 w-5" />,
+  "36.WORKSPACE": <Briefcase className="h-5 w-5" />,
+  "37.HAIR_DRYER": <Sparkles className="h-5 w-5" />,
+  "38.IRON": <Anvil className="h-5 w-5" />,
+  "39.JACUZZI": <Bath className="h-5 w-5" />,
+  "40.PARKING": <Car className="h-5 w-5" />,
+  "41.EV_CHARGER": <BatteryCharging className="h-5 w-5" />,
+  "42.CRIB": <Baby className="h-5 w-5" />,
+  "43.KING_BED": <BedDouble className="h-5 w-5" />,
+  "44.BBQ": <Flame className="h-5 w-5" />,
+  "45.BREAKFAST": <Croissant className="h-5 w-5" />,
+  "46.FIREPLACE": <FlameKindling className="h-5 w-5" />,
+  "47.SMOKING": <Cigarette className="h-5 w-5" />,
+  "48.BEACHFRONT": <Sun className="h-5 w-5" />,
+  "49.COAST": <Waves className="h-5 w-5" />,
+  "50.SKI_ACCESS": <Snowflake className="h-5 w-5" />,
+  "51.SMOKE_DETECTOR": <Siren className="h-5 w-5" />,
+  "52.CO_DETECTOR": <ShieldCheck className="h-5 w-5" />,
+  "53.PETS_ALLOWED": <Dog className="h-5 w-5" />,
+  "54.SMOKING_ALLOWED": <Cigarette className="h-5 w-5" />,
+  "55.PARTIES_ALLOWED": <PartyPopper className="h-5 w-5" />,
+  "56.FAMILY_FRIENDLY": <Users className="h-5 w-5" />,
+  "57.BABY_FRIENDLY": <Baby className="h-5 w-5" />,
+  "58.WHEELCHAIR_ACCESSIBLE": <Accessibility className="h-5 w-5" />,
+  "59.PARKING_AVAILABLE": <Car className="h-5 w-5" />,
+  "60.QUIET_HOURS": <BellOff className="h-5 w-5" />,
+  default: <HelpCircle className="h-5 w-5" />,
 };
 
 const amenityGroups = [
@@ -154,9 +154,7 @@ export function Paso4_Servicios({ data, updateData }: StepProps) {
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) =>
-      prev.includes(title)
-        ? prev.filter((t) => t !== title) 
-        : [...prev, title] 
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
     );
   };
 
@@ -184,7 +182,7 @@ export function Paso4_Servicios({ data, updateData }: StepProps) {
       <div className="flex flex-col gap-4">
         {amenityGroups.map((group) => {
           const isExpanded = expandedGroups.includes(group.title);
-          
+
           const selectedCount = group.amenities.filter((a) =>
             data.amenities.includes(a.id)
           ).length;
@@ -192,16 +190,16 @@ export function Paso4_Servicios({ data, updateData }: StepProps) {
           return (
             <div
               key={group.title}
-              className={`border rounded-2xl transition-all duration-300 ${
+              className={`rounded-2xl border transition-all duration-300 ${
                 isExpanded
                   ? "border-blue-200 bg-white"
-                  : "border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
               }`}
             >
               <button
                 type="button"
                 onClick={() => toggleGroup(group.title)}
-                className="w-full flex items-center justify-between p-5 text-left outline-none"
+                className="flex w-full items-center justify-between p-5 text-left outline-none"
               >
                 <div className="flex items-center gap-3">
                   <h2 className="text-base font-semibold text-slate-800">
@@ -209,21 +207,21 @@ export function Paso4_Servicios({ data, updateData }: StepProps) {
                   </h2>
 
                   {selectedCount > 0 && (
-                    <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">
                       {selectedCount} seleccionados
                     </span>
                   )}
                 </div>
                 {isExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-slate-400" />
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-400" />
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
                 )}
               </button>
 
               {isExpanded && (
-                <div className="p-5 pt-0 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="animate-in fade-in slide-in-from-top-2 p-5 pt-0 duration-200">
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
                     {group.amenities.map((amenity) => {
                       const isSelected = data.amenities.includes(amenity.id);
 
@@ -245,10 +243,15 @@ export function Paso4_Servicios({ data, updateData }: StepProps) {
                             isSelected ? selectedStyle : unselectedStyle
                           }`}
                         >
-                          <div className={isSelected ? "text-white" : "text-slate-600"}>
-                             {amenityIcons[amenity.id] || amenityIcons["default"]}
+                          <div
+                            className={
+                              isSelected ? "text-white" : "text-slate-600"
+                            }
+                          >
+                            {amenityIcons[amenity.id] ||
+                              amenityIcons["default"]}
                           </div>
-                          <span className="text-sm font-medium text-center leading-tight">
+                          <span className="text-center text-sm leading-tight font-medium">
                             {amenity.name}
                           </span>
                         </button>

@@ -138,9 +138,9 @@ export default function ProfilePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="text-center py-20">
-        <div className="w-16 h-16 bg-blue-light-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-blue-light-500" />
+      <div className="py-20 text-center">
+        <div className="bg-blue-light-100 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+          <User className="text-blue-light-500 h-8 w-8" />
         </div>
 
         <p className="text-gray-dark-600 text-lg">
@@ -155,7 +155,7 @@ export default function ProfilePage() {
       {/* Header */}
 
       <div>
-        <h1 className="text-3xl font-semibold text-gray-dark-900 mb-2">
+        <h1 className="text-gray-dark-900 mb-2 text-3xl font-semibold">
           Mi perfil público
         </h1>
 
@@ -167,18 +167,18 @@ export default function ProfilePage() {
 
       {/* Main Profile Section */}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-dark-900">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-200 p-6">
+          <h2 className="text-gray-dark-900 text-xl font-semibold">
             Acerca de mí
           </h2>
 
           {!isEditing && (
             <button
               onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-dark-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              className="border-gray-dark-300 flex items-center gap-2 rounded-lg border px-4 py-2 font-medium transition-colors hover:bg-gray-50"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="h-4 w-4" />
               Editar perfil
             </button>
           )}
@@ -192,14 +192,14 @@ export default function ProfilePage() {
               {/* Bio */}
 
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-dark-700">
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-gray-dark-700 block text-sm font-medium">
                     Biografía
                   </label>
                   <span
                     className={`text-xs ${
                       editableBio.length > 500
-                        ? "text-red-600 font-semibold"
+                        ? "font-semibold text-red-600"
                         : "text-gray-medium-500"
                     }`}
                   >
@@ -216,14 +216,14 @@ export default function ProfilePage() {
                   }}
                   rows={4}
                   maxLength={500}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                   placeholder="Cuentanos algo sobre ti..."
                 />
               </div>
 
               {/* Preferencias dinamicas */}
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid gap-6 md:grid-cols-2">
                 {preferences?.map((preference) => {
                   const currentValue =
                     editablePreferences[preference.preferenceId] || "";
@@ -231,14 +231,14 @@ export default function ProfilePage() {
 
                   return (
                     <div key={preference.preferenceId}>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-dark-700">
+                      <div className="mb-2 flex items-center justify-between">
+                        <label className="text-gray-dark-700 block text-sm font-medium">
                           {preference.name}
                         </label>
                         <span
                           className={`text-xs ${
                             currentValue.length > maxLength
-                              ? "text-red-600 font-semibold"
+                              ? "font-semibold text-red-600"
                               : "text-gray-medium-500"
                           }`}
                         >
@@ -258,7 +258,7 @@ export default function ProfilePage() {
                           }
                         }}
                         maxLength={maxLength}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                         placeholder={preference.description}
                       />
                     </div>
@@ -272,16 +272,16 @@ export default function ProfilePage() {
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-light-500 hover:bg-blue-light-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-light-500 hover:bg-blue-light-600 focus:ring-blue-light-500 inline-flex items-center rounded border border-transparent px-3 py-1.5 text-xs font-medium text-white focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
                     <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                      <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-white"></div>
                       Guardando...
                     </>
                   ) : (
                     <>
-                      <Check className="h-3 w-3 mr-1" />
+                      <Check className="mr-1 h-3 w-3" />
                       Guardar
                     </>
                   )}
@@ -290,9 +290,9 @@ export default function ProfilePage() {
                 <button
                   onClick={handleCancel}
                   disabled={loading}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-medium-200 text-xs font-medium rounded text-gray-dark-500 bg-white hover:bg-gray-medium-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="border-gray-medium-200 text-gray-dark-500 hover:bg-gray-medium-50 focus:ring-blue-light-500 inline-flex items-center rounded border bg-white px-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <X className="h-3 w-3 mr-1" />
+                  <X className="mr-1 h-3 w-3" />
                   Cancelar
                 </button>
               </div>
@@ -300,10 +300,10 @@ export default function ProfilePage() {
           ) : (
             // Display Mode
 
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col gap-8 lg:flex-row">
               {/* Avatar Card */}
 
-              <div className="lg:w-80 flex-shrink-0">
+              <div className="flex-shrink-0 lg:w-80">
                 <div className="text-center">
                   {user?.image ? (
                     <Image
@@ -311,10 +311,10 @@ export default function ProfilePage() {
                       alt={spProfileData?.firstName || user?.name || "Usuario"}
                       width={128}
                       height={128}
-                      className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-gray-100"
+                      className="mx-auto mb-4 h-32 w-32 rounded-full border-4 border-gray-100 object-cover"
                     />
                   ) : (
-                    <div className="w-32 h-32 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="mx-auto mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-gray-900">
                       <span className="text-5xl font-bold text-white">
                         {(spProfileData?.firstName || user?.name || "U").charAt(
                           0
@@ -323,7 +323,7 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  <h3 className="text-2xl font-bold text-gray-dark-900 mb-1">
+                  <h3 className="text-gray-dark-900 mb-1 text-2xl font-bold">
                     {spProfileData?.firstName
                       ? formatFullName(
                           spProfileData.firstName,
@@ -338,17 +338,17 @@ export default function ProfilePage() {
 
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-gray-dark-900">8</p>
+                      <p className="text-gray-dark-900 text-2xl font-bold">8</p>
 
-                      <p className="text-sm text-gray-dark-500">Viajes</p>
+                      <p className="text-gray-dark-500 text-sm">Viajes</p>
                     </div>
 
                     <div>
-                      <p className="text-2xl font-bold text-gray-dark-900">
+                      <p className="text-gray-dark-900 text-2xl font-bold">
                         4.9
                       </p>
 
-                      <p className="text-sm text-gray-dark-500">Calificación</p>
+                      <p className="text-gray-dark-500 text-sm">Calificación</p>
                     </div>
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export default function ProfilePage() {
 
                 {(spProfileData?.bio || profileData.bio) && (
                   <div className="flex items-start gap-4">
-                    <MessageSquare className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                    <MessageSquare className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
 
                     <div>
                       <p className="text-gray-dark-900 leading-relaxed">
@@ -375,9 +375,9 @@ export default function ProfilePage() {
 
                 {loading ? (
                   <div className="flex items-center gap-4">
-                    <div className="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-6 w-6 animate-pulse rounded bg-gray-300"></div>
 
-                    <div className="h-4 bg-gray-300 rounded w-48 animate-pulse"></div>
+                    <div className="h-4 w-48 animate-pulse rounded bg-gray-300"></div>
                   </div>
                 ) : (
                   preferences?.map((preference) => {
@@ -391,37 +391,37 @@ export default function ProfilePage() {
                       switch (code) {
                         case "WORK":
                           return (
-                            <Briefcase className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <Briefcase className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
 
                         case "LOCATION":
                           return (
-                            <HomeIcon className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <HomeIcon className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
 
                         case "INTERESTS":
                           return (
-                            <Clock className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <Clock className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
 
                         case "PETS":
                           return (
-                            <PawPrint className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <PawPrint className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
 
                         case "LANGUAGE":
                           return (
-                            <Globe className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <Globe className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
 
                         case "SCHOOL":
                           return (
-                            <User className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <User className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
 
                         default:
                           return (
-                            <AlertCircle className="w-6 h-6 text-gray-dark-700 mt-0.5 flex-shrink-0" />
+                            <AlertCircle className="text-gray-dark-700 mt-0.5 h-6 w-6 flex-shrink-0" />
                           );
                       }
                     };
@@ -450,12 +450,12 @@ export default function ProfilePage() {
 
       {/* Privacy Notice */}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-start gap-3">
-          <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <User className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
 
           <div>
-            <h4 className="font-medium text-blue-900 mb-1">
+            <h4 className="mb-1 font-medium text-blue-900">
               Tu perfil público
             </h4>
 
@@ -472,22 +472,22 @@ export default function ProfilePage() {
 
       {message && (
         <div
-          className={`border-l-4 rounded-lg p-4 shadow-sm ${
+          className={`rounded-lg border-l-4 p-4 shadow-sm ${
             message.type === "error"
-              ? "bg-red-50 border-red-400"
-              : "bg-green-50 border-green-400"
+              ? "border-red-400 bg-red-50"
+              : "border-green-400 bg-green-50"
           }`}
         >
           <div className="flex items-start gap-3">
             <AlertCircle
-              className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+              className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
                 message.type === "error" ? "text-red-600" : "text-green-600"
               }`}
             />
 
             <div>
               <h3
-                className={`text-sm font-semibold mb-1 ${
+                className={`mb-1 text-sm font-semibold ${
                   message.type === "error" ? "text-red-900" : "text-green-900"
                 }`}
               >

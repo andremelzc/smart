@@ -8,15 +8,15 @@
  */
 export function formatDateForDisplay(dateString: string | null): string {
   if (!dateString) return "No proporcionado";
-  
+
   // WORKAROUND: Sumar un día para compensar el problema de timezone
   const date = new Date(dateString);
   date.setDate(date.getDate() + 1);
-  
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+
+  return date.toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
@@ -26,12 +26,12 @@ export function formatDateForDisplay(dateString: string | null): string {
  */
 export function formatDateForInput(dateString: string | null): string {
   if (!dateString) return "";
-  
+
   // WORKAROUND: Sumar un día para compensar el problema de timezone al editar
   const date = new Date(dateString);
   date.setDate(date.getDate() + 1);
-  
-  return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+  return date.toISOString().split("T")[0]; // Formato YYYY-MM-DD
 }
 
 /**
@@ -47,19 +47,19 @@ export function formatDateForBackend(dateString: string): string {
  */
 export function isValidBirthDate(dateString: string): boolean {
   if (!dateString) return false;
-  
+
   const date = new Date(dateString);
   const today = new Date();
-  
+
   // Verificar que sea una fecha válida
   if (isNaN(date.getTime())) return false;
-  
+
   // Verificar que no sea futura
   if (date > today) return false;
-  
+
   // Verificar que sea después de 1900
   if (date.getFullYear() < 1900) return false;
-  
+
   return true;
 }
 
@@ -68,16 +68,19 @@ export function isValidBirthDate(dateString: string): boolean {
  */
 export function calculateAge(dateString: string | null): number | null {
   if (!dateString) return null;
-  
+
   const birthDate = new Date(dateString);
   const today = new Date();
-  
+
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
-  
+
   return age;
 }

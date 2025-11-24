@@ -25,7 +25,9 @@ export function usePropertySearch() {
         body: JSON.stringify(filters ?? {}),
       });
 
-      const payload: PropertySearchPayload = await response.json().catch(() => ({}));
+      const payload: PropertySearchPayload = await response
+        .json()
+        .catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(payload?.message || "Error al buscar propiedades");
@@ -84,10 +86,14 @@ export function usePropertySearch() {
         };
 
         const asAscComparable = (value?: number) =>
-          typeof value === "number" && Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+          typeof value === "number" && Number.isFinite(value)
+            ? value
+            : Number.POSITIVE_INFINITY;
 
         const asDescComparable = (value?: number) =>
-          typeof value === "number" && Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY;
+          typeof value === "number" && Number.isFinite(value)
+            ? value
+            : Number.NEGATIVE_INFINITY;
 
         const itemsWithMeta = items.map((entry, index) => ({
           entry,
@@ -97,12 +103,16 @@ export function usePropertySearch() {
 
         if (filters.orderBy === "price") {
           itemsWithMeta.sort((a, b) => {
-            const diff = asAscComparable(a.metrics.price) - asAscComparable(b.metrics.price);
+            const diff =
+              asAscComparable(a.metrics.price) -
+              asAscComparable(b.metrics.price);
             return diff !== 0 ? diff : a.index - b.index;
           });
         } else if (filters.orderBy === "rating") {
           itemsWithMeta.sort((a, b) => {
-            const diff = asDescComparable(b.metrics.rating) - asDescComparable(a.metrics.rating);
+            const diff =
+              asDescComparable(b.metrics.rating) -
+              asDescComparable(a.metrics.rating);
             return diff !== 0 ? diff : a.index - b.index;
           });
         }

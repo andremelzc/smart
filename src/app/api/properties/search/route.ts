@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { PropertyFilterService } from '@/src/services/property-filter.service';
-import { PropertyFilterDto } from '@/src/types/dtos/properties.dto';
+import { NextResponse } from "next/server";
+import { PropertyFilterService } from "@/src/services/property-filter.service";
+import { PropertyFilterDto } from "@/src/types/dtos/properties.dto";
 
 export async function GET() {
   // 🧩 Filtros de ejemplo (puedes luego recibirlos dinámicamente desde query o body)
@@ -32,10 +32,10 @@ export async function GET() {
       count: results.length,
       data: results,
     });
-
   } catch (error: unknown) {
-    console.error('❌ Error en GET /api/properties/search:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor';
+    console.error("❌ Error en GET /api/properties/search:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Error interno del servidor";
     return NextResponse.json(
       { success: false, message: errorMessage },
       { status: 500 }
@@ -51,10 +51,10 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const parseOptionalNumber = (value: unknown): number | undefined => {
-      if (typeof value === 'number' && Number.isFinite(value)) {
+      if (typeof value === "number" && Number.isFinite(value)) {
         return value;
       }
-      if (typeof value === 'string' && value.trim().length > 0) {
+      if (typeof value === "string" && value.trim().length > 0) {
         const parsed = Number(value);
         if (Number.isFinite(parsed)) {
           return parsed;
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
     // Normaliza los filtros para mantener tipos consistentes
     const filters: PropertyFilterDto = {
-      city: typeof body.city === 'string' ? body.city : undefined,
+      city: typeof body.city === "string" ? body.city : undefined,
       minPrice: parseOptionalNumber(body.minPrice),
       maxPrice: parseOptionalNumber(body.maxPrice),
       rooms: parseOptionalNumber(body.rooms),
@@ -75,8 +75,9 @@ export async function POST(req: Request) {
       latMax: parseOptionalNumber(body.latMax),
       lngMin: parseOptionalNumber(body.lngMin),
       lngMax: parseOptionalNumber(body.lngMax),
-      startDate: typeof body.startDate === 'string' ? body.startDate : undefined,
-      endDate: typeof body.endDate === 'string' ? body.endDate : undefined,
+      startDate:
+        typeof body.startDate === "string" ? body.startDate : undefined,
+      endDate: typeof body.endDate === "string" ? body.endDate : undefined,
       adults: parseOptionalNumber(body.adults),
       children: parseOptionalNumber(body.children),
       babies: parseOptionalNumber(body.babies),
@@ -87,12 +88,16 @@ export async function POST(req: Request) {
             .filter((value: number) => Number.isFinite(value))
         : undefined,
       orderBy: (() => {
-        const raw = Array.isArray(body.orderBy) ? body.orderBy[0] : body.orderBy;
-        if (typeof raw !== 'string') {
+        const raw = Array.isArray(body.orderBy)
+          ? body.orderBy[0]
+          : body.orderBy;
+        if (typeof raw !== "string") {
           return undefined;
         }
         const normalized = raw.trim().toLowerCase();
-        return normalized === 'price' || normalized === 'rating' ? normalized : undefined;
+        return normalized === "price" || normalized === "rating"
+          ? normalized
+          : undefined;
       })(),
     };
 
@@ -104,12 +109,12 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       count: results.length,
-      data: results
+      data: results,
     });
-
   } catch (error: unknown) {
-    console.error('❌ Error en /api/properties/search:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor';
+    console.error("❌ Error en /api/properties/search:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Error interno del servidor";
     return NextResponse.json(
       { success: false, message: errorMessage },
       { status: 500 }

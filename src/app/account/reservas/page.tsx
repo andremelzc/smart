@@ -109,8 +109,6 @@ type FormattedReservation = GuestReservation & {
 
 const CHAT_STORAGE_KEY = "smart-guest-chats";
 
-
-
 export default function ReservationsPage() {
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | ReservationStatus
@@ -224,7 +222,7 @@ export default function ReservationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
 
         <span className="ml-2 text-gray-600">Cargando reservas...</span>
       </div>
@@ -233,9 +231,9 @@ export default function ReservationsPage() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
         <div className="flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600" />
+          <AlertCircle className="h-5 w-5 text-red-600" />
 
           <div>
             <h3 className="font-semibold text-red-900">
@@ -246,7 +244,7 @@ export default function ReservationsPage() {
 
             <button
               onClick={refreshBookings}
-              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
             >
               Intentar nuevamente
             </button>
@@ -276,9 +274,9 @@ export default function ReservationsPage() {
 
       <section className="space-y-4">
         {reservations.length === 0 ? (
-          <ReservationEmptyState 
-            variant="guest" 
-            filterType={selectedFilter === "all" ? "all" : "filtered"} 
+          <ReservationEmptyState
+            variant="guest"
+            filterType={selectedFilter === "all" ? "all" : "filtered"}
           />
         ) : (
           reservations.map((reservation) => {
@@ -291,7 +289,9 @@ export default function ReservationsPage() {
                 key={reservation.id}
                 reservation={reservation}
                 statusConfig={statusStyles}
-                onChatWithHost={(res) => handleChatClick(res as FormattedReservation)}
+                onChatWithHost={(res) =>
+                  handleChatClick(res as FormattedReservation)
+                }
                 canStartChat={canStartChat}
               />
             );

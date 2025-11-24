@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
 
     const tenantId = parseInt(session.user.id);
     const body = await request.json();
-    
-    const { 
-      propertyId, 
-      checkIn, 
-      checkOut, 
+
+    const {
+      propertyId,
+      checkIn,
+      checkOut,
       guests, // GuestCounts object
-      paymentDetails 
+      paymentDetails,
     } = body;
 
     // Validación básica
@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
       {
         propertyId,
         tenantId,
-        checkIn: checkIn.split('T')[0], // Asegurar formato YYYY-MM-DD
-        checkOut: checkOut.split('T')[0],
+        checkIn: checkIn.split("T")[0], // Asegurar formato YYYY-MM-DD
+        checkOut: checkOut.split("T")[0],
         guestCount,
         currencyCode,
         nightCount,
@@ -115,12 +115,13 @@ export async function POST(request: NextRequest) {
         serviceFee,
         taxes,
         totalAmount,
-        bookingId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+        bookingId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
       },
       { autoCommit: false } // Haremos commit al final
     );
 
-    const bookingId = (bookingResult.outBinds as { bookingId: number[] }).bookingId[0];
+    const bookingId = (bookingResult.outBinds as { bookingId: number[] })
+      .bookingId[0];
 
     // 5. Insertar Pago (Simulado)
     if (paymentDetails) {
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
         {
           bookingId,
           amount: totalAmount,
-          currencyCode
+          currencyCode,
         },
         { autoCommit: false }
       );
@@ -148,12 +149,11 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         bookingId,
-        status: 'accepted',
+        status: "accepted",
         totalAmount,
-        currencyCode
-      }
+        currencyCode,
+      },
     });
-
   } catch (error) {
     console.error("Error creating booking:", error);
     if (connection) {

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PropertyService } from '@/src/services/property.service';
+import { NextRequest, NextResponse } from "next/server";
+import { PropertyService } from "@/src/services/property.service";
 import type {
   UpdatePropertyBody,
   UpdatePropertyResponse,
   PropertyErrorResponse,
-  PropertyDetailResponse
-} from '@/src/types/dtos/properties.dto';
+  PropertyDetailResponse,
+} from "@/src/types/dtos/properties.dto";
 
 /**
  * GET /api/properties/:id
@@ -22,7 +22,7 @@ export async function GET(
     // Validar que el ID sea un número válido
     if (isNaN(propertyId)) {
       return NextResponse.json(
-        { error: 'ID de propiedad inválido' },
+        { error: "ID de propiedad inválido" },
         { status: 400 }
       );
     }
@@ -32,18 +32,17 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: propertyDetail
+      data: propertyDetail,
     });
-
   } catch (error) {
-    console.error('Error al obtener la propiedad:', error);
+    console.error("Error al obtener la propiedad:", error);
 
     // Si es un error conocido del servicio
     if (error instanceof Error) {
       // Verificar si es el error de "Propiedad no encontrada"
-      if (error.message.includes('Propiedad no encontrada')) {
+      if (error.message.includes("Propiedad no encontrada")) {
         return NextResponse.json(
-          { error: 'Propiedad no encontrada' },
+          { error: "Propiedad no encontrada" },
           { status: 404 }
         );
       }
@@ -51,8 +50,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: 'Error interno del servidor',
-        details: error instanceof Error ? error.message : 'Error desconocido'
+        error: "Error interno del servidor",
+        details: error instanceof Error ? error.message : "Error desconocido",
       },
       { status: 500 }
     );
@@ -74,7 +73,7 @@ export async function PATCH(
     // Validar que el ID sea un número válido
     if (isNaN(propertyId)) {
       return NextResponse.json(
-        { error: 'ID de propiedad inválido' },
+        { error: "ID de propiedad inválido" },
         { status: 400 }
       );
     }
@@ -89,23 +88,22 @@ export async function PATCH(
     return NextResponse.json(
       {
         success: true,
-        message: 'Propiedad actualizada exitosamente',
-        propertyId
+        message: "Propiedad actualizada exitosamente",
+        propertyId,
       },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error('Error al actualizar la propiedad:', error);
+    console.error("Error al actualizar la propiedad:", error);
 
     // Si es un error conocido del SP
     if (error instanceof Error) {
       // Verificar si es el error de "Propiedad no encontrada"
-      if (error.message.includes('Propiedad no encontrada')) {
+      if (error.message.includes("Propiedad no encontrada")) {
         return NextResponse.json(
           {
-            error: 'Propiedad no encontrada',
-            details: error.message
+            error: "Propiedad no encontrada",
+            details: error.message,
           },
           { status: 404 }
         );
@@ -114,8 +112,8 @@ export async function PATCH(
       // Otros errores de negocio
       return NextResponse.json(
         {
-          error: 'Error al actualizar la propiedad',
-          details: error.message
+          error: "Error al actualizar la propiedad",
+          details: error.message,
         },
         { status: 400 }
       );
@@ -124,11 +122,10 @@ export async function PATCH(
     // Error genérico del servidor
     return NextResponse.json(
       {
-        error: 'Error interno del servidor',
-        details: 'Ocurrió un error inesperado'
+        error: "Error interno del servidor",
+        details: "Ocurrió un error inesperado",
       },
       { status: 500 }
     );
   }
 }
-

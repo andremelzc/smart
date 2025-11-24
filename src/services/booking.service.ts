@@ -260,7 +260,9 @@ export const bookingService = {
    * @param bookingId - ID de la reserva
    * @returns Promise con la información detallada de la reserva
    */
-  getDetailedBookingInfo: async (bookingId: number): Promise<DetailedBookingInfo> => {
+  getDetailedBookingInfo: async (
+    bookingId: number
+  ): Promise<DetailedBookingInfo> => {
     try {
       const response = await fetch(`/api/bookings/detail/${bookingId}`, {
         method: "GET",
@@ -273,7 +275,9 @@ export const bookingService = {
       console.log("🔍 Detalle de reserva obtenido:", data);
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al obtener los detalles de la reserva");
+        throw new Error(
+          data.error || "Error al obtener los detalles de la reserva"
+        );
       }
 
       if (!data.data) {
@@ -283,7 +287,8 @@ export const bookingService = {
       return data.data;
     } catch (error: unknown) {
       console.error("❌ Error en getDetailedBookingInfo:", error);
-      const errorMessage = error instanceof Error ? error.message : "Error de conexión";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error de conexión";
       throw new Error(errorMessage);
     }
   },
@@ -301,25 +306,30 @@ export const bookingService = {
       checkIn: bookingInfo.checkinDate,
       checkOut: bookingInfo.checkoutDate,
       guestCount: bookingInfo.guestCount,
-      status: bookingInfo.status.toLowerCase() as "pending" | "confirmed" | "completed" | "declined" | "cancelled",
+      status: bookingInfo.status.toLowerCase() as
+        | "pending"
+        | "confirmed"
+        | "completed"
+        | "declined"
+        | "cancelled",
       roomId: bookingInfo.propertyId.toString(),
-      
+
       // Información financiera
       basePrice: bookingInfo.basePrice || undefined,
       serviceFee: bookingInfo.serviceFee || undefined,
       totalAmount: bookingInfo.totalAmount,
-      
+
       // Información de contacto (solo para confirmed/completed)
       contactEmail: bookingInfo.guestEmail || undefined,
       contactPhone: bookingInfo.guestPhone || undefined,
-      
+
       // Información adicional
       propertyAddress: bookingInfo.propertyAddress || undefined,
       hostNote: bookingInfo.hostNote || undefined,
       checkinCode: bookingInfo.checkinCode || undefined,
       createdAt: bookingInfo.createdAt,
       completedAt: bookingInfo.completedAt || undefined,
-      
+
       // Mensajes y reseñas
       guestMessage: bookingInfo.guestMessage || undefined,
       paymentStatus: bookingInfo.paymentStatus || undefined,

@@ -148,11 +148,11 @@ export default function PropertiesPage() {
 
       {/* Search and Filters */}
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
+          <div className="relative flex-1">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-400"
               size={20}
             />
             <input
@@ -160,7 +160,7 @@ export default function PropertiesPage() {
               placeholder="Buscar propiedades..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-light-500 focus:border-blue-light-500 transition-colors"
+              className="focus:ring-blue-light-500 focus:border-blue-light-500 w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 transition-colors focus:ring-2"
             />
           </div>
         </div>
@@ -168,14 +168,14 @@ export default function PropertiesPage() {
 
       {/* Properties Grid */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {filteredProperties.map((property) => (
           <div
             key={property.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+            className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
             {/* Property Image Placeholder */}
-            <div className="h-48 bg-linear-to-br from-blue-light-100 to-blue-light-200 flex items-center justify-center">
+            <div className="from-blue-light-100 to-blue-light-200 flex h-48 items-center justify-center bg-linear-to-br">
               <div className="text-blue-light-600 text-lg font-medium">
                 Imagen de la Propiedad
               </div>
@@ -184,12 +184,12 @@ export default function PropertiesPage() {
             {/* Property Content */}
 
             <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+              <div className="mb-3 flex items-start justify-between">
+                <h3 className="line-clamp-2 text-lg font-semibold text-gray-900">
                   {property.title}
                 </h3>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                  className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
                     property.status
                   )}`}
                 >
@@ -197,9 +197,9 @@ export default function PropertiesPage() {
                 </span>
               </div>
 
-              <p className="text-gray-600 text-sm mb-4">{property.location}</p>
+              <p className="mb-4 text-sm text-gray-600">{property.location}</p>
 
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex items-center justify-between">
                 <div className="text-2xl font-bold text-gray-900">
                   ${property.price}
                   <span className="text-sm font-normal text-gray-600">
@@ -239,7 +239,7 @@ export default function PropertiesPage() {
                   iconOnly
                   leftIcon={Trash2}
                   onClick={() => handleDeleteProperty(property.id)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
                 />
               </div>
             </div>
@@ -250,16 +250,16 @@ export default function PropertiesPage() {
       {/* Empty State */}
 
       {filteredProperties.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
+        <div className="py-12 text-center">
+          <div className="mb-4 text-gray-400">
             <Plus size={48} className="mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
             {searchTerm
               ? "No se encontraron propiedades"
               : "No tienes propiedades aun"}
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="mb-6 text-gray-600">
             {searchTerm
               ? "Intenta con otros terminos de busqueda"
               : "Comienza publicando tu primera propiedad para empezar a recibir huespedes"}

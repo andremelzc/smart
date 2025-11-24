@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { bookingService } from '@/src/services/booking.service';
-import type { TenantBooking } from '@/src/services/booking.service';
+import { useState, useEffect } from "react";
+import { bookingService } from "@/src/services/booking.service";
+import type { TenantBooking } from "@/src/services/booking.service";
 
 interface UseTenantBookingsReturn {
   bookings: TenantBooking[];
@@ -21,7 +21,8 @@ export function useTenantBookings(): UseTenantBookingsReturn {
       const data = await bookingService.getTenantBookings();
       setBookings(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar las reservas';
+      const errorMessage =
+        err instanceof Error ? err.message : "Error al cargar las reservas";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -40,6 +41,6 @@ export function useTenantBookings(): UseTenantBookingsReturn {
     bookings,
     loading,
     error,
-    refreshBookings
+    refreshBookings,
   };
 }

@@ -9,13 +9,20 @@ import {
   type HostReservation,
   type FilterSegment,
 } from "@/src/components/features/reservations";
-import GuestRequestModal, { type DetailedReservation } from "@/src/components/features/host/GuestRequestModal";
+import GuestRequestModal, {
+  type DetailedReservation,
+} from "@/src/components/features/host/GuestRequestModal";
 import DeclineReasonModal from "@/src/components/features/host/DeclineReasonModal";
 import AcceptReasonModal from "@/src/components/features/host/AcceptReasonModal";
 import { useHostBookings } from "@/src/hooks/useHostBookings";
 import { bookingService } from "@/src/services/booking.service";
 
-type HostReservationStatus = "pending" | "confirmed" | "completed" | "declined" | "cancelled";
+type HostReservationStatus =
+  | "pending"
+  | "confirmed"
+  | "completed"
+  | "declined"
+  | "cancelled";
 type TimeFilter = "present" | "upcoming" | "past" | "all";
 
 const statusConfig: Record<
@@ -65,8 +72,6 @@ const normalizeDate = (value: string | Date) => {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 };
 
-
-
 const formatDay = (value: string) =>
   new Intl.DateTimeFormat("es-PE", {
     weekday: "short",
@@ -75,20 +80,22 @@ const formatDay = (value: string) =>
   }).format(new Date(value));
 
 export default function HostReservationsPage() {
-  const [statusFilter, setStatusFilter] =
-    useState<"all" | HostReservationStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | HostReservationStatus
+  >("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("present");
   const [selectedReservationId, setSelectedReservationId] = useState<
     string | null
   >(null);
-  const [selectedReservation, setSelectedReservation] = useState<DetailedReservation | null>(null);
+  const [selectedReservation, setSelectedReservation] =
+    useState<DetailedReservation | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [pendingDeclineId, setPendingDeclineId] = useState<string | null>(null);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { bookings, loading, error, refreshBookings } = useHostBookings();
 
   const today = normalizeDate(new Date());
@@ -125,7 +132,7 @@ export default function HostReservationsPage() {
       status: getReservationStatus(booking.status),
       guestName: bookingService.getTenantFullName(booking),
       total: bookingService.formatCurrency(booking.totalAmount),
-      roomId: `ROOM-${booking.bookingId.toString().padStart(3, '0')}`,
+      roomId: `ROOM-${booking.bookingId.toString().padStart(3, "0")}`,
       requestDescription: "Solicitud de reserva pendiente de revisión.",
       contactEmail: "guest@example.com", // TODO: agregar email a la BD
       contactPhone: "+51 900 000 000", // TODO: agregar teléfono a la BD
@@ -153,12 +160,12 @@ export default function HostReservationsPage() {
   }, [formattedReservations, statusFilter, timeFilter, today]);
 
   const sampleUpcomingReservation = filteredReservations.find(
-    (reservation) => normalizeDate(reservation.checkIn) > today,
+    (reservation) => normalizeDate(reservation.checkIn) > today
   );
 
   const upcomingExampleText = sampleUpcomingReservation
     ? `Ejemplo: usa el filtro "Proximas" para ver reservas como "${sampleUpcomingReservation.propertyName}" con check-in el ${formatDay(
-        sampleUpcomingReservation.checkIn,
+        sampleUpcomingReservation.checkIn
       )}.`
     : 'Ejemplo: usa el filtro "Proximas" para mostrar reservas con check-in posterior a hoy.';
 
@@ -182,62 +189,67 @@ export default function HostReservationsPage() {
   }, [filteredReservations]);
 
   // Función para cargar detalles de reserva cuando se selecciona una
-  const loadReservationDetails = useCallback(async (reservationId: string) => {
-    try {
-      setLoadingDetail(true);
-      
-      // Extraer booking ID del formato "RES-123"
-      const bookingId = parseInt(reservationId.replace('RES-', ''));
-      
-      // Obtener detalles completos de la reserva
-      const detailedInfo = await bookingService.getDetailedBookingInfo(bookingId);
-      
-      // Mapear a formato del modal
-      const detailedReservation = bookingService.mapToDetailedReservation(detailedInfo);
-      
-      setSelectedReservation(detailedReservation);
-    } catch (error) {
-      console.error('Error al cargar detalles de reserva:', error);
-      // En caso de error, usar datos básicos disponibles
-      const reservation = formattedReservations.find(
-        (item) => item.id === reservationId,
-      );
-      if (reservation) {
-        const originalBooking = bookings.find(
-          booking => `RES-${booking.bookingId}` === reservation.id
+  const loadReservationDetails = useCallback(
+    async (reservationId: string) => {
+      try {
+        setLoadingDetail(true);
+
+        // Extraer booking ID del formato "RES-123"
+        const bookingId = parseInt(reservationId.replace("RES-", ""));
+
+        // Obtener detalles completos de la reserva
+        const detailedInfo =
+          await bookingService.getDetailedBookingInfo(bookingId);
+
+        // Mapear a formato del modal
+        const detailedReservation =
+          bookingService.mapToDetailedReservation(detailedInfo);
+
+        setSelectedReservation(detailedReservation);
+      } catch (error) {
+        console.error("Error al cargar detalles de reserva:", error);
+        // En caso de error, usar datos básicos disponibles
+        const reservation = formattedReservations.find(
+          (item) => item.id === reservationId
         );
-        
-        setSelectedReservation({
-          id: reservation.id,
-          guestName: reservation.guestName,
-          propertyName: reservation.propertyName,
-          checkIn: reservation.checkIn,
-          checkOut: reservation.checkOut,
-          guestCount: reservation.guests,
-          status: reservation.status as DetailedReservation['status'],
-          roomId: reservation.roomId,
-          totalAmount: originalBooking?.totalAmount || 0,
-          createdAt: reservation.checkIn,
-          // Campos básicos por defecto
-          basePrice: undefined,
-          serviceFee: undefined,
-          contactEmail: undefined,
-          contactPhone: undefined,
-          propertyAddress: undefined,
-          hostNote: undefined,
-          checkinCode: undefined,
-          completedAt: undefined,
-          guestMessage: undefined,
-          paymentStatus: undefined,
-          paymentMessage: undefined,
-          hasHostReview: false,
-          hasGuestReview: false,
-        });
+        if (reservation) {
+          const originalBooking = bookings.find(
+            (booking) => `RES-${booking.bookingId}` === reservation.id
+          );
+
+          setSelectedReservation({
+            id: reservation.id,
+            guestName: reservation.guestName,
+            propertyName: reservation.propertyName,
+            checkIn: reservation.checkIn,
+            checkOut: reservation.checkOut,
+            guestCount: reservation.guests,
+            status: reservation.status as DetailedReservation["status"],
+            roomId: reservation.roomId,
+            totalAmount: originalBooking?.totalAmount || 0,
+            createdAt: reservation.checkIn,
+            // Campos básicos por defecto
+            basePrice: undefined,
+            serviceFee: undefined,
+            contactEmail: undefined,
+            contactPhone: undefined,
+            propertyAddress: undefined,
+            hostNote: undefined,
+            checkinCode: undefined,
+            completedAt: undefined,
+            guestMessage: undefined,
+            paymentStatus: undefined,
+            paymentMessage: undefined,
+            hasHostReview: false,
+            hasGuestReview: false,
+          });
+        }
+      } finally {
+        setLoadingDetail(false);
       }
-    } finally {
-      setLoadingDetail(false);
-    }
-  }, [bookings, formattedReservations]);
+    },
+    [bookings, formattedReservations]
+  );
 
   // Effect para cargar detalles cuando se selecciona una reserva
   useEffect(() => {
@@ -258,10 +270,10 @@ export default function HostReservationsPage() {
     if (!pendingAcceptId) return;
 
     // Extraer el bookingId numérico del requestId (formato: RES-123)
-    const bookingId = parseInt(pendingAcceptId.replace('RES-', ''), 10);
-    
+    const bookingId = parseInt(pendingAcceptId.replace("RES-", ""), 10);
+
     if (isNaN(bookingId)) {
-      console.error('ID de reserva inválido:', pendingAcceptId);
+      console.error("ID de reserva inválido:", pendingAcceptId);
       return;
     }
 
@@ -269,19 +281,21 @@ export default function HostReservationsPage() {
 
     try {
       await bookingService.acceptBooking(bookingId, note || undefined);
-      
+
       // Cerrar modales y limpiar estado
       setShowAcceptModal(false);
       setSelectedReservationId(null);
       setPendingAcceptId(null);
-      
+
       // Refrescar la lista de reservas
       await refreshBookings();
-      
-      console.log('✅ Reserva aceptada exitosamente');
+
+      console.log("✅ Reserva aceptada exitosamente");
     } catch (error) {
-      console.error('❌ Error al aceptar reserva:', error);
-      alert(error instanceof Error ? error.message : 'Error al aceptar la reserva');
+      console.error("❌ Error al aceptar reserva:", error);
+      alert(
+        error instanceof Error ? error.message : "Error al aceptar la reserva"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -296,10 +310,10 @@ export default function HostReservationsPage() {
     if (!pendingDeclineId) return;
 
     // Extraer el bookingId numérico del requestId (formato: RES-123)
-    const bookingId = parseInt(pendingDeclineId.replace('RES-', ''), 10);
-    
+    const bookingId = parseInt(pendingDeclineId.replace("RES-", ""), 10);
+
     if (isNaN(bookingId)) {
-      console.error('ID de reserva inválido:', pendingDeclineId);
+      console.error("ID de reserva inválido:", pendingDeclineId);
       return;
     }
 
@@ -307,58 +321,60 @@ export default function HostReservationsPage() {
 
     try {
       await bookingService.declineBooking(bookingId, reason || undefined);
-      
+
       // Cerrar modales y limpiar estado
       setShowDeclineModal(false);
       setSelectedReservationId(null);
       setPendingDeclineId(null);
-      
+
       // Refrescar la lista de reservas
       await refreshBookings();
-      
-      console.log('✅ Reserva rechazada exitosamente');
+
+      console.log("✅ Reserva rechazada exitosamente");
     } catch (error) {
-      console.error('❌ Error al rechazar reserva:', error);
-      alert(error instanceof Error ? error.message : 'Error al rechazar la reserva');
+      console.error("❌ Error al rechazar reserva:", error);
+      alert(
+        error instanceof Error ? error.message : "Error al rechazar la reserva"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCancelReservation = (requestId: string) => {
-    if (confirm('¿Estás seguro de que quieres cancelar esta reserva?')) {
-      console.log('Cancelar reserva:', requestId);
+    if (confirm("¿Estás seguro de que quieres cancelar esta reserva?")) {
+      console.log("Cancelar reserva:", requestId);
       // TODO: Implementar lógica de cancelar reserva
       setSelectedReservationId(null);
     }
   };
 
   const handleSendMessage = (requestId: string) => {
-    console.log('Enviar mensaje:', requestId);
+    console.log("Enviar mensaje:", requestId);
     // TODO: Redirigir a la página de mensajes
     setSelectedReservationId(null);
   };
 
   const handleWriteReview = (requestId: string) => {
-    console.log('Escribir reseña:', requestId);
+    console.log("Escribir reseña:", requestId);
     // TODO: Abrir modal de reseña
     setSelectedReservationId(null);
   };
 
   const handleViewReviews = (requestId: string) => {
-    console.log('Ver reseñas:', requestId);
+    console.log("Ver reseñas:", requestId);
     // TODO: Mostrar modal de reseñas
     setSelectedReservationId(null);
   };
 
   const handleViewMessages = (requestId: string) => {
-    console.log('Ver mensajes:', requestId);
+    console.log("Ver mensajes:", requestId);
     // TODO: Redirigir a historial de mensajes
     setSelectedReservationId(null);
   };
 
   const handleModifyReservation = (requestId: string) => {
-    console.log('Modificar reserva:', requestId);
+    console.log("Modificar reserva:", requestId);
     // TODO: Abrir modal de modificación
     setSelectedReservationId(null);
   };
@@ -366,7 +382,7 @@ export default function HostReservationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         <span className="ml-2 text-gray-600">Cargando reservas...</span>
       </div>
     );
@@ -374,9 +390,9 @@ export default function HostReservationsPage() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
         <div className="flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600" />
+          <AlertCircle className="h-5 w-5 text-red-600" />
           <div>
             <h3 className="font-semibold text-red-900">
               Error al cargar reservas
@@ -384,7 +400,7 @@ export default function HostReservationsPage() {
             <p className="text-sm text-red-700">{error}</p>
             <button
               onClick={refreshBookings}
-              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
             >
               Intentar nuevamente
             </button>
@@ -395,13 +411,13 @@ export default function HostReservationsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-gray-900">
             Reservas de mis espacios
           </h1>
-          <p className="text-gray-600 max-w-3xl">
+          <p className="max-w-3xl text-gray-600">
             Revisa el estado de tus reservas actuales, identifica las proximas
             llegadas y navega rapidamente al detalle para aceptar o rechazar
             solicitudes pendientes.
@@ -421,14 +437,18 @@ export default function HostReservationsPage() {
 
         <section className="space-y-4">
           {hostReservations.length === 0 ? (
-            <ReservationEmptyState 
-              variant="host" 
-              filterType={statusFilter === "all" && timeFilter === "all" ? "all" : "filtered"} 
+            <ReservationEmptyState
+              variant="host"
+              filterType={
+                statusFilter === "all" && timeFilter === "all"
+                  ? "all"
+                  : "filtered"
+              }
             />
           ) : (
             hostReservations.map((reservation) => {
               const isSelected = selectedReservationId === reservation.id;
-              
+
               return (
                 <HostReservationCard
                   key={reservation.id}
@@ -489,10 +509,10 @@ export default function HostReservationsPage() {
 
       {/* Modal de carga para detalles */}
       {loadingDetail && selectedReservationId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-dark-500/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <div className="bg-gray-dark-500/60 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
+            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-600" />
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
               Cargando detalles
             </h3>
             <p className="text-gray-600">

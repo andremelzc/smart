@@ -1,6 +1,12 @@
 // src/components/host/crear-recinto/Paso1_TipoRecinto.tsx
 
-import { Home, Building, MountainSnow, BedDouble, CheckCircle } from "lucide-react";
+import {
+  Home,
+  Building,
+  MountainSnow,
+  BedDouble,
+  CheckCircle,
+} from "lucide-react";
 import { StepHeader } from "./StepHeader";
 import { useEffect, useState } from "react";
 
@@ -9,25 +15,25 @@ const PROPERTY_TYPES = [
     id: "casa",
     label: "Casa",
     description: "Una propiedad completa.",
-    icon: <Home className="w-8 h-8" />,
+    icon: <Home className="h-8 w-8" />,
   },
   {
     id: "departamento",
     label: "Departamento",
     description: "Un espacio en un edificio.",
-    icon: <Building className="w-8 h-8" />,
+    icon: <Building className="h-8 w-8" />,
   },
   {
     id: "cabana",
     label: "Cabaña",
     description: "Una casa rústica.",
-    icon: <MountainSnow className="w-8 h-8" />,
+    icon: <MountainSnow className="h-8 w-8" />,
   },
   {
     id: "habitacion",
     label: "Habitación privada",
     description: "Una habitación en un espacio compartido.",
-    icon: <BedDouble className="w-8 h-8" />,
+    icon: <BedDouble className="h-8 w-8" />,
   },
 ];
 
@@ -77,7 +83,7 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
         helpText="Haga click en una de las tarjetas para seleccionar el tipo de propiedad. Al finalizar, presione 'Siguiente'."
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {PROPERTY_TYPES.map((prop) => {
           const isSelected = data.propertyType === prop.id;
 
@@ -87,8 +93,7 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
           const unselectedStyle =
             "bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-500 hover:shadow-md hover:scale-[1.02]";
 
-          const selectedStyle =
-            "bg-blue-600 text-white shadow-lg scale-[1.02]";
+          const selectedStyle = "bg-blue-600 text-white shadow-lg scale-[1.02]";
 
           return (
             <button
@@ -99,11 +104,13 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
                 isSelected ? selectedStyle : unselectedStyle
               }`}
             >
-              <div className="w-8 h-8 flex items-center justify-center">
+              <div className="flex h-8 w-8 items-center justify-center">
                 {prop.icon}
               </div>
               <span className="text-base font-semibold">{prop.label}</span>
-              <span className={`text-xs leading-tight ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+              <span
+                className={`text-xs leading-tight ${isSelected ? "text-blue-100" : "text-slate-500"}`}
+              >
                 {prop.description}
               </span>
             </button>
@@ -113,17 +120,18 @@ export function Paso1_TipoRecinto({ data, updateData }: StepProps) {
 
       <div className="mt-2 min-h-[50px] transition-all duration-300">
         {!data.propertyType && (
-          <div className="p-3 border border-red-200 bg-red-50 rounded-lg text-center animate-in fade-in slide-in-from-top-1 duration-300">
-            <p className="text-sm text-red-700 font-medium">
-              Para continuar con el siguiente paso, seleccione una de los tipos de recinto.
+          <div className="animate-in fade-in slide-in-from-top-1 rounded-lg border border-red-200 bg-red-50 p-3 text-center duration-300">
+            <p className="text-sm font-medium text-red-700">
+              Para continuar con el siguiente paso, seleccione una de los tipos
+              de recinto.
             </p>
           </div>
         )}
 
         {data.propertyType && showSuccess && (
-          <div className="p-3 border border-green-200 bg-green-50 rounded-lg text-center flex items-center justify-center gap-2 animate-in zoom-in fade-in duration-300">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <p className="text-sm text-green-700 font-medium">
+          <div className="animate-in zoom-in fade-in flex items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-center duration-300">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <p className="text-sm font-medium text-green-700">
               ¡Opción seleccionada correctamente!
             </p>
           </div>
