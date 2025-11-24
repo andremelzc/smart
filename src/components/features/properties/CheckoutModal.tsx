@@ -67,7 +67,7 @@ const checkoutFormSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
 });
 
-type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
+export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 
 interface PropertyImage {
   url: string;
@@ -97,7 +97,7 @@ interface CheckoutModalProps {
 
   onClose: () => void;
 
-  onPay: () => void;
+  onPay: (paymentDetails: CheckoutFormData) => Promise<void> | void;
 
   property: CheckoutProperty;
 
@@ -299,7 +299,7 @@ export function CheckoutModal({
       checkoutFormSchema.parse(formData);
 
       // Si la validación pasa, proceder con el pago
-      onPay();
+      await onPay(formData);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};

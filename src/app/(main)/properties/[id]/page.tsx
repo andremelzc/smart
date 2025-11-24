@@ -15,6 +15,7 @@ import {
   PropertyBookingCard,
   CheckoutModal,
   SuccessModal,
+  type CheckoutFormData,
 } from "@/src/components/features/properties";
 import {
   PropertyLoadingState,
@@ -144,10 +145,34 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     setShowCheckout(false);
   };
 
-  const handlePay = () => {
-    setShowCheckout(false);
+  const handlePay = async (paymentDetails: CheckoutFormData) => {
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId: parseInt(id),
+          checkIn: selectedDates.checkIn,
+          checkOut: selectedDates.checkOut,
+          guests: selectedDates.guests,
+          paymentDetails,
+        }),
+      });
 
-    setShowSuccess(true);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al procesar la reserva");
+      }
+
+      setShowCheckout(false);
+      setShowSuccess(true);
+    } catch (error) {
+      console.error("Error booking:", error);
+      alert(error instanceof Error ? error.message : "Error al procesar la reserva");
+    }
   };
 
   const handleCloseSuccess = () => {

@@ -7,7 +7,7 @@ export { PropertyDescription } from './PropertyDescription';
 export { PropertyAmenities } from './PropertyAmenities';
 export { PropertyHouseRules } from './PropertyHouseRules';
 export { PropertyBookingCard } from './PropertyBookingCard';
-export { CheckoutModal } from './CheckoutModal';
+export { CheckoutModal, type CheckoutFormData } from './CheckoutModal';
 export { SuccessModal } from './SuccessModal';
 export { 
   PropertyLoadingState,
