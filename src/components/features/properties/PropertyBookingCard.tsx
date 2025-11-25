@@ -35,6 +35,7 @@ interface PropertyBookingCardProps {
   onDatesChange: (dates: BookingDates) => void;
   onReserve: () => void;
   className?: string;
+  propertyOccupied: boolean;
 }
 
 export function PropertyBookingCard({
@@ -48,6 +49,7 @@ export function PropertyBookingCard({
   onDatesChange,
   onReserve,
   className = "",
+  propertyOccupied,
 }: PropertyBookingCardProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [guestPopoverOpen, setGuestPopoverOpen] = useState(false);
@@ -373,6 +375,15 @@ export function PropertyBookingCard({
               </div>
             </PopoverContent>
           </Popover>
+
+          {propertyOccupied && (
+            <div>
+              <p className="text-sm text-red-600">
+                Este recinto ya está ocupado en las fechas seleccionadas, por
+                favor, elija otras fechas.
+              </p>
+            </div>
+          )}
 
           <div className="relative" ref={guestPopoverRef}>
             <button

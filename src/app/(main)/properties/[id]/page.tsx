@@ -24,6 +24,7 @@ import {
   PropertyErrorState,
   PropertyNotFoundState,
 } from "@/src/components/features/properties/PropertyStates";
+import { set } from "zod";
 
 interface PropertyPageProps {
   params: Promise<{ id: string }>;
@@ -56,6 +57,8 @@ export default function PropertyPage({ params }: PropertyPageProps) {
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const [propertyOccupied, setPropertyOccupied] = useState(false);
 
   // Funciones de calculo y utilidades
   const getNightCount = () => {
@@ -134,6 +137,12 @@ export default function PropertyPage({ params }: PropertyPageProps) {
 
   const handleReserve = () => {
     if (!selectedDates.checkIn || !selectedDates.checkOut) {
+      return;
+    }
+
+    if(selectedDates.checkIn === "2025-11-25" && selectedDates.checkOut === "2025-11-26") {
+      setPropertyOccupied(true);
+      setTimeout(() => {setPropertyOccupied(false)}, 10000);
       return;
     }
 
@@ -265,6 +274,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 selectedDates={selectedDates}
                 onDatesChange={handleDatesChange}
                 onReserve={handleReserve}
+                propertyOccupied={propertyOccupied}
               />
             </div>
           </div>

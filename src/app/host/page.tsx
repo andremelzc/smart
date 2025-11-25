@@ -75,7 +75,7 @@ export default function HostPage() {
             <div>
               <p className="text-sm font-medium text-gray-600">Propiedades</p>
 
-              <p className="mt-1 text-2xl font-bold text-gray-900">3</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">12</p>
 
               <p className="mt-1 text-sm text-purple-600">Todas activas</p>
             </div>
@@ -113,7 +113,7 @@ export default function HostPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/host/properties/create"
-            className="group flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:bg-blue-50"
+            className="group flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-300 hover:bg-blue-50 bg-gray-50"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200">
               <Plus className="h-5 w-5 text-blue-600" />
@@ -130,7 +130,7 @@ export default function HostPage() {
 
           <Link
             href="/host/reservas"
-            className="group flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-all hover:border-green-300 hover:bg-green-50"
+            className="group flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-all hover:border-green-300 hover:bg-green-50 bg-gray-50"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 group-hover:bg-green-200">
               <Calendar className="h-5 w-5 text-green-600" />
@@ -145,22 +145,7 @@ export default function HostPage() {
             <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-green-600" />
           </Link>
 
-          <Link
-            href="/host/analytics"
-            className="group flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-all hover:border-purple-300 hover:bg-purple-50"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 group-hover:bg-purple-200">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
-            </div>
 
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900">Ver analisis</h3>
-
-              <p className="text-sm text-gray-600">Metricas y estadisticas</p>
-            </div>
-
-            <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600" />
-          </Link>
         </div>
       </div>
 
