@@ -62,7 +62,7 @@ export default function BecomeHostModal({
         // Forzar actualización de la sesión para reflejar isHost = true
         console.log("🔄 Actualizando sesión después de convertirse en host...");
         await updateSession();
-        
+
         console.log("✅ Proceso completado, cerrando modal y redirigiendo...");
         onClose();
         router.push("/host/dashboard");
@@ -124,13 +124,13 @@ export default function BecomeHostModal({
   ];
 
   console.log("🎭 BecomeHostModal creando modalContent...");
-  
+
   // FIX: Handler separado para el backdrop
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     console.log("🖱️ Backdrop clickeado", {
       target: e.target,
       currentTarget: e.currentTarget,
-      isBackdrop: e.target === e.currentTarget
+      isBackdrop: e.target === e.currentTarget,
     });
     // Solo cerrar si el click fue directamente en el backdrop
     if (e.target === e.currentTarget) {
@@ -162,14 +162,14 @@ export default function BecomeHostModal({
       type: e.type,
       target: e.target,
       currentTarget: e.currentTarget,
-      button: e.button
+      button: e.button,
     });
-    
+
     e.preventDefault();
     e.stopPropagation();
-    
+
     console.log("⏸️ Propagación detenida");
-    
+
     if (!isLoading) {
       console.log("✅ No está cargando, llamando a handleSubmit...");
       await handleSubmit();
@@ -177,14 +177,14 @@ export default function BecomeHostModal({
       console.log("⏳ Ya está cargando, ignorando click");
     }
   };
-  
+
   const modalContent = (
     <div
       className="animate-fadeIn fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={handleBackdropClick}
-      onMouseDown={(e) => console.log("🌑 MouseDown en BACKDROP")}
-      onMouseUp={(e) => console.log("🌑 MouseUp en BACKDROP")}
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+      onMouseDown={(_e) => console.log("🌑 MouseDown en BACKDROP")}
+      onMouseUp={(_e) => console.log("🌑 MouseUp en BACKDROP")}
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
     >
       <div
         className="animate-slideUp relative mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
@@ -195,7 +195,7 @@ export default function BecomeHostModal({
         onClickCapture={(e) => {
           console.log("🎯 Click CAPTURE en modal content", {
             target: e.target,
-            type: (e.target as HTMLElement).tagName
+            type: (e.target as HTMLElement).tagName,
           });
         }}
       >
@@ -330,7 +330,9 @@ export default function BecomeHostModal({
             type="button"
             className="from-blue-light-500 to-blue-vivid-500 hover:from-blue-light-600 hover:to-blue-vivid-600 disabled:from-blue-light-300 disabled:to-blue-vivid-300 flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed"
             onMouseDown={(e) => {
-              console.log("🖱️ MouseDown en botón 'Comenzar ahora'", { disabled: isLoading });
+              console.log("🖱️ MouseDown en botón 'Comenzar ahora'", {
+                disabled: isLoading,
+              });
               e.stopPropagation(); // ¡CRÍTICO! Evita que llegue al backdrop
             }}
             onMouseUp={(e) => {
@@ -386,7 +388,7 @@ export default function BecomeHostModal({
   );
 
   console.log("🚪 BecomeHostModal creando portal en document.body");
-  
+
   try {
     const portal = createPortal(modalContent, document.body);
     console.log("✅ Portal creado exitosamente");

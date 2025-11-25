@@ -74,7 +74,7 @@ export default function UserMenu({
   const handleOpenModal = (e: React.MouseEvent) => {
     console.log("🚀 handleOpenModal clickeado!");
     e.stopPropagation();
-    
+
     console.log("📝 Estado antes:", { isModalOpen });
     setIsModalOpen(true);
     console.log("📝 setIsModalOpen(true) llamado");
@@ -94,7 +94,6 @@ export default function UserMenu({
           animation: "fadeInDown 0.2s ease-out forwards",
         }}
       >
-        
         {isAuthenticated ? (
           role === "tenant" ? (
             // --- MENU TENANT/HUESPED ---
@@ -188,7 +187,9 @@ export default function UserMenu({
                 /* Si no es host, puede convertirse en uno */
                 <button
                   onClick={(e) => {
-                    console.log("🖱️ Botón 'Conviértete en anfitrión' clickeado");
+                    console.log(
+                      "🖱️ Botón 'Conviértete en anfitrión' clickeado"
+                    );
                     handleOpenModal(e);
                   }}
                   className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
@@ -365,7 +366,9 @@ export default function UserMenu({
 
             <button
               onClick={(e) => {
-                console.log("🖱️ Botón 'Conviértete en anfitrión' (invitado) clickeado");
+                console.log(
+                  "🖱️ Botón 'Conviértete en anfitrión' (invitado) clickeado"
+                );
                 handleOpenModal(e);
               }}
               className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"

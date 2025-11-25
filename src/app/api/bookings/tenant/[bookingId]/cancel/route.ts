@@ -4,7 +4,6 @@ import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import { getConnection } from "@/src/lib/database";
 import oracledb from "oracledb";
 
-const STATUS_ACCEPTED = "ACCEPTED";
 const STATUS_CANCELLED = "CANCELLED";
 
 export async function POST(
@@ -71,15 +70,19 @@ export async function POST(
     }
 
     // Log para debuggear
-    console.log(`Cancelation attempt - BookingId: ${bookingId}, Status: ${bookingRow.STATUS}, CheckIn: ${bookingRow.CHECKIN_DATE}`);
+    console.log(
+      `Cancelation attempt - BookingId: ${bookingId}, Status: ${bookingRow.STATUS}, CheckIn: ${bookingRow.CHECKIN_DATE}`
+    );
 
     const currentStatus = (bookingRow.STATUS || "").toUpperCase();
     const allowedStatuses = ["ACCEPTED", "CONFIRMED", "PENDING"];
-    
+
     if (!allowedStatuses.includes(currentStatus)) {
       console.log(`Status not allowed for cancellation: ${currentStatus}`);
       return NextResponse.json(
-        { error: `No se puede cancelar una reserva en estado ${currentStatus.toLowerCase()}` },
+        {
+          error: `No se puede cancelar una reserva en estado ${currentStatus.toLowerCase()}`,
+        },
         { status: 409 }
       );
     }
@@ -87,9 +90,9 @@ export async function POST(
     const checkinDate = new Date(bookingRow.CHECKIN_DATE);
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Permitir cancelación hasta el final del día
-    
+
     console.log(`Date comparison - CheckIn: ${checkinDate}, Today: ${today}`);
-    
+
     if (checkinDate < today) {
       return NextResponse.json(
         { error: "No se puede cancelar después de la fecha de check-in" },

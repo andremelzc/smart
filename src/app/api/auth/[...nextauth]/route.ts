@@ -326,8 +326,11 @@ export const authOptions: NextAuthOptions = {
       // Si es una actualización de sesión (update trigger), refrescamos los datos del usuario
       if (trigger === "update" && token.id) {
         try {
-          console.log("🔄 Actualizando datos de usuario en token para ID:", token.id);
-          
+          console.log(
+            "🔄 Actualizando datos de usuario en token para ID:",
+            token.id
+          );
+
           // Consultamos la BD para obtener los datos actualizados del usuario
           const getUserSql = `
             SELECT 
@@ -340,24 +343,36 @@ export const authOptions: NextAuthOptions = {
             LEFT JOIN HOSTS h ON u.USER_ID = h.HOST_ID
             WHERE u.USER_ID = :userId
           `;
-          
-          const result = await executeQuery(getUserSql, { userId: token.id }) as OracleResult;
+
+          const result = (await executeQuery(getUserSql, {
+            userId: token.id,
+          })) as OracleResult;
           console.log("📊 Resultado de consulta SQL:", result);
-          
+
           if (result.rows && result.rows.length > 0) {
-            const userData = (result.rows[0] as unknown) as Record<string, unknown>;
+            const userData = result.rows[0] as unknown as Record<
+              string,
+              unknown
+            >;
             console.log("📦 userData row:", userData);
-            
+
             // IS_HOST está en el índice 4 (0: USER_ID, 1: EMAIL, 2: NAME, 3: AVATAR_URL, 4: IS_HOST, 5: IS_VERIFIED, 6: CREATED_AT)
             const isHost = Number(userData.IS_HOST) === 1;
-            
-            console.log("✅ Datos actualizados del usuario:", { userId: token.id, isHost, rawValue: userData[4] });
-            
+
+            console.log("✅ Datos actualizados del usuario:", {
+              userId: token.id,
+              isHost,
+              rawValue: userData[4],
+            });
+
             // Actualizamos el token con los nuevos valores
             (token as Record<string, unknown>).isHost = isHost;
             (token as Record<string, unknown>).isTenant = true; // Asumimos que todos son tenants
           } else {
-            console.warn("⚠️ No se encontraron datos para el usuario:", token.id);
+            console.warn(
+              "⚠️ No se encontraron datos para el usuario:",
+              token.id
+            );
           }
         } catch (error) {
           console.error("❌ Error actualizando datos de usuario:", error);

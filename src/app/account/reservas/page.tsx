@@ -40,13 +40,13 @@ const getBookingStatus = (
   switch (normalizedStatus) {
     case "CANCELLED":
       return "cancelled";
-    
+
     case "COMPLETED":
       return "past";
-    
+
     case "DECLINED":
       return "cancelled"; // Tratamos declined como cancelado para UI
-    
+
     case "PENDING":
       // Si está pendiente, verificar fechas para mostrar estado apropiado
       if (checkin > today) {
@@ -56,7 +56,7 @@ const getBookingStatus = (
       } else {
         return "past";
       }
-    
+
     case "ACCEPTED":
       // Si está aceptado, verificar fechas para mostrar estado apropiado
       if (today >= checkin && today < checkout) {
@@ -66,7 +66,7 @@ const getBookingStatus = (
       } else {
         return "past"; // Reserva aceptada pero ya pasada (debería ser COMPLETED)
       }
-    
+
     default:
       // Fallback: usar lógica de fechas para estados desconocidos
       if (today >= checkin && today < checkout) {
@@ -222,29 +222,32 @@ export default function ReservationsPage() {
   );
 
   // Funciones para cancelación
-  const handleCancelReservation = useCallback((reservation: GuestReservation) => {
-    const bookingId = parseInt(reservation.id.replace("RES-", ""), 10);
-    const booking = bookings.find(b => b.bookingId === bookingId);
-    
-    if (booking) {
-      setCancelModal({
-        isOpen: true,
-        bookingId: booking.bookingId,
-        totalAmount: booking.totalAmount,
-        checkInDate: booking.checkinDate,
-        policyType: "flexible", // Por defecto flexible
-      });
-    }
-  }, [bookings]);
+  const handleCancelReservation = useCallback(
+    (reservation: GuestReservation) => {
+      const bookingId = parseInt(reservation.id.replace("RES-", ""), 10);
+      const booking = bookings.find((b) => b.bookingId === bookingId);
+
+      if (booking) {
+        setCancelModal({
+          isOpen: true,
+          bookingId: booking.bookingId,
+          totalAmount: booking.totalAmount,
+          checkInDate: booking.checkinDate,
+          policyType: "flexible", // Por defecto flexible
+        });
+      }
+    },
+    [bookings]
+  );
 
   const handleConfirmCancel = useCallback(async () => {
     if (!cancelModal.bookingId) return;
 
     try {
       await bookingService.cancelBookingAsTenant(cancelModal.bookingId);
-      setCancelModal(prev => ({ ...prev, isOpen: false }));
+      setCancelModal((prev) => ({ ...prev, isOpen: false }));
       refreshBookings();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error cancelando:", error);
       // El error se maneja en el modal, así que lo re-lanzamos
       throw error;
@@ -254,7 +257,7 @@ export default function ReservationsPage() {
   // Funciones para reseñas
   const handleLeaveReview = useCallback((reservation: GuestReservation) => {
     const bookingId = parseInt(reservation.id.replace("RES-", ""), 10);
-    
+
     setReviewModal({
       isOpen: true,
       bookingId: bookingId,
@@ -263,15 +266,22 @@ export default function ReservationsPage() {
     });
   }, []);
 
-  const handleSubmitReview = useCallback(async (rating: number, comment: string) => {
-    if (!reviewModal.bookingId) return;
-    
-    console.log("📝 Enviando reseña:", { bookingId: reviewModal.bookingId, rating, comment });
-    // TODO: Implementar servicio de reseñas
-    // await reviewService.create({ bookingId: reviewModal.bookingId, rating, comment });
-    
-    setReviewModal(prev => ({ ...prev, isOpen: false }));
-  }, [reviewModal.bookingId]);
+  const handleSubmitReview = useCallback(
+    async (rating: number, comment: string) => {
+      if (!reviewModal.bookingId) return;
+
+      console.log("📝 Enviando reseña:", {
+        bookingId: reviewModal.bookingId,
+        rating,
+        comment,
+      });
+      // TODO: Implementar servicio de reseñas
+      // await reviewService.create({ bookingId: reviewModal.bookingId, rating, comment });
+
+      setReviewModal((prev) => ({ ...prev, isOpen: false }));
+    },
+    [reviewModal.bookingId]
+  );
 
   // Convertir los bookings de la BD al formato de la UI
   const reservations = useMemo<GuestReservation[]>(() => {
@@ -395,16 +405,16 @@ export default function ReservationsPage() {
       {/* Modales */}
       <LeaveReviewModal
         isOpen={reviewModal.isOpen}
-        onClose={() => setReviewModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setReviewModal((prev) => ({ ...prev, isOpen: false }))}
         onSubmit={handleSubmitReview}
         reviewRole="guest"
         targetName={reviewModal.targetName}
         targetImage={reviewModal.targetImage}
       />
 
-      <PreCancellationModal 
+      <PreCancellationModal
         isOpen={cancelModal.isOpen}
-        onClose={() => setCancelModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setCancelModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirmCancel={handleConfirmCancel}
         totalAmount={cancelModal.totalAmount}
         policyType={cancelModal.policyType}

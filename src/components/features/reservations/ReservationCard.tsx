@@ -106,7 +106,7 @@ const canReviewReservation = (
 
   const statusToCheck = dbStatus || status;
   const normalizedStatus = statusToCheck.trim().toUpperCase();
-  
+
   // Solo se puede reseñar si la reserva está completada
   return normalizedStatus === "COMPLETED";
 };
@@ -261,27 +261,27 @@ export function ReservationCard<T extends BaseReservation>({
             <p className="text-xl font-semibold text-gray-900">
               {hostReservation.total}
             </p>
-            
-            <div className="flex gap-2 mt-2 w-full sm:w-auto">
+
+            <div className="mt-2 flex w-full gap-2 sm:w-auto">
               {/* Botón Reseñar Huésped (Mismo tamaño) */}
               {showReviewButton && onReview && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onReview(reservation)}
-                  className="flex-1 justify-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 min-w-[140px]"
+                  className="min-w-[140px] flex-1 justify-center gap-2 border-purple-200 text-purple-600 hover:border-purple-300 hover:bg-purple-50"
                 >
                   <MessageSquarePlus className="h-4 w-4" />
                   Calificar
                 </Button>
               )}
-              
+
               {/* Botón Ver Detalle (Mismo tamaño) */}
               {onAction && (
                 <Button
                   variant="ghost"
                   onClick={() => onAction(reservation)}
-                  className="flex-1 justify-center text-blue-light-600 hover:text-blue-light-700 min-w-[140px]"
+                  className="text-blue-light-600 hover:text-blue-light-700 min-w-[140px] flex-1 justify-center"
                 >
                   {actionLabel || (isSelected ? "Cerrar" : "Ver detalle")}
                   <ActionIcon className="ml-1 h-4 w-4" />
@@ -294,13 +294,13 @@ export function ReservationCard<T extends BaseReservation>({
 
       {/* Botones de Acción (Guest) - Uniformes */}
       {isGuestVariant && (
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:flex md:justify-end gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:flex md:justify-end">
           {/* Botón Chat */}
           {onAction && (
-            <Button 
+            <Button
               variant="ghost"
               onClick={() => onAction(reservation)}
-              className="flex-1 md:flex-none justify-center min-w-[160px]"
+              className="min-w-[160px] flex-1 justify-center md:flex-none"
             >
               <ActionIcon className="mr-2 h-4 w-4" />
               {actionLabel || "Chat"}
@@ -312,7 +312,7 @@ export function ReservationCard<T extends BaseReservation>({
             <Button
               variant="ghost"
               onClick={() => onCancel!(reservation)}
-              className="flex-1 md:flex-none justify-center gap-2 border border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 min-w-[160px]"
+              className="min-w-[160px] flex-1 justify-center gap-2 border border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 md:flex-none"
             >
               <Ban className="h-4 w-4" />
               Cancelar reserva
@@ -324,7 +324,7 @@ export function ReservationCard<T extends BaseReservation>({
             <Button
               variant="ghost"
               onClick={() => onReview!(reservation)}
-              className="flex-1 md:flex-none justify-center gap-2 border border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50 min-w-[160px]"
+              className="min-w-[160px] flex-1 justify-center gap-2 border border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50 md:flex-none"
             >
               <MessageSquarePlus className="h-4 w-4" />
               Escribir reseña

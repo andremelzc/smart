@@ -99,12 +99,12 @@ export function TenantBookingsList() {
 
     try {
       console.log("🚫 Confirmando cancelación para:", cancelModal.bookingId);
-      
+
       // Llamada real al servicio de cancelación
       await bookingService.cancelBookingAsTenant(cancelModal.bookingId);
-      
+
       // Cerrar modal y refrescar lista
-      setCancelModal(prev => ({ ...prev, isOpen: false }));
+      setCancelModal((prev) => ({ ...prev, isOpen: false }));
       refreshBookings(); // Recarga la lista para ver el estado 'CANCELLED'
 
       // Simulación de éxito
@@ -170,11 +170,17 @@ export function TenantBookingsList() {
           const status = booking.status.toUpperCase(); // Normalizar
           const isCompleted = status === "ACCEPTED" || status === "COMPLETED";
           // Solo se puede cancelar si está confirmada o pendiente, y es futura
-          const canCancel = (status === "CONFIRMED" || status === "PENDING" || status === "ACCEPTED" || status === "APPROVED");
-          const canReview = isCompleted; 
-          
+          const canCancel =
+            status === "CONFIRMED" ||
+            status === "PENDING" ||
+            status === "ACCEPTED" ||
+            status === "APPROVED";
+          const canReview = isCompleted;
+
           // Debug para ver estados
-          console.log(`Booking ${booking.bookingId}: status=${booking.status}, canCancel=${canCancel}`); 
+          console.log(
+            `Booking ${booking.bookingId}: status=${booking.status}, canCancel=${canCancel}`
+          );
 
           return (
             <div
@@ -242,19 +248,19 @@ export function TenantBookingsList() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  
                   {/* DEBUG: Mostrar estado actual */}
                   <span className="text-xs text-gray-400">
-                    Status: {booking.status} | Can cancel: {canCancel ? 'YES' : 'NO'}
+                    Status: {booking.status} | Can cancel:{" "}
+                    {canCancel ? "YES" : "NO"}
                   </span>
-                  
+
                   {/* BOTÓN 1: CANCELAR (Solo si está activa) */}
                   {canCancel && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleClickCancel(booking)} // 👈 Dispara el modal
-                      className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700 border border-red-200 hover:border-red-300"
+                      className="gap-2 border border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
                     >
                       <Ban className="h-4 w-4" />
                       Cancelar reserva

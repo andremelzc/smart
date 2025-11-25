@@ -134,7 +134,7 @@ export default function GuestRequestModal({
           showFinancial: true,
           showPrivacy: false,
         };
-        
+
       case "completed":
         return {
           title: "Reserva Completada",
