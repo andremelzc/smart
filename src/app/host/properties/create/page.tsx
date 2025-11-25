@@ -92,12 +92,12 @@ export default function PaginaCrearRecinto() {
     propertyType: "",
     basePriceNight: 50,
     currencyCode: "PEN",
-    addressText: "Av. Larco 123",
-    formattedAddress: "Av. Larco 123, Miraflores, Lima 15074, Peru",
-    city: "Miraflores",
-    stateRegion: "Lima",
-    country: "Peru",
-    postalCode: "15074",
+    addressText: "",
+    formattedAddress: "",
+    city: "",
+    stateRegion: "",
+    country: "",
+    postalCode: "",
     latitude: -12.1218,
     longitude: -77.0309,
     descriptionLong: "",
@@ -110,7 +110,7 @@ export default function PaginaCrearRecinto() {
     bathrooms: 1,
     areaM2: 40,
     images: [],
-    amenities: ["28.WIFI", "27.AC"],
+    amenities: [],
   });
 
   const goToStep = (step: number) => {
@@ -146,6 +146,15 @@ export default function PaginaCrearRecinto() {
     if (currentStep === 1 && propertyData.propertyType === "") {
       return true;
     }
+    if (
+      currentStep === 2 &&
+      propertyData.addressText === "" &&
+      propertyData.city === "" &&
+      propertyData.country === "" &&
+      propertyData.postalCode === ""
+    ) {
+      return true;
+    } 
     if (currentStep === 5 && propertyData.images.length === 0) {
       return true;
     }
