@@ -12,7 +12,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pt-20 pb-24 sm:px-6 lg:px-8">
+    <main className="mx-auto flex max-w-[1600px] flex-col gap-10 px-6 pt-10 pb-16 sm:px-8 lg:px-12">
       {/* <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
         <div className="space-y-6">
           <span className="inline-flex items-center rounded-full border border-blue-light-200 bg-blue-light-50 px-4 py-1 text-sm font-semibold text-blue-light-600">

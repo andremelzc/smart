@@ -28,7 +28,7 @@ const formatRating = (value: number | null) => {
   return value.toFixed(2);
 };
 
-const VISIBLE_COUNT = 4;
+const VISIBLE_COUNT = 5;
 const CAROUSEL_INTERVAL_MS = 5000;
 
 export function CityCarousel({ city, country, properties }: CityHighlight) {
@@ -153,28 +153,35 @@ export function CityCarousel({ city, country, properties }: CityHighlight) {
         </Link>
       </div>
       <div
-        className="relative px-6"
+        className="relative"
         onMouseEnter={handlePause}
         onMouseLeave={handleResume}
       >
-        <div className="grid auto-cols-[minmax(16rem,18rem)] grid-flow-col gap-4 overflow-hidden pb-2">
-          {displayItems.map(({ property, sourceIndex }) => {
+        <div className="grid grid-cols-1 gap-6 pb-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {displayItems.map(({ property, sourceIndex }, index) => {
             const ratingLabel = formatRating(property.averageRating ?? null);
             const propertyUrl = `/properties/${property.propertyId}`;
+
+            // Ocultar elementos que no caben en la fila actual para evitar wrap
+            let visibilityClass = "block";
+            if (index === 1) visibilityClass = "hidden sm:block";
+            if (index === 2) visibilityClass = "hidden md:block";
+            if (index === 3) visibilityClass = "hidden lg:block";
+            if (index === 4) visibilityClass = "hidden xl:block";
 
             return (
               <Link
                 key={getItemKey(property, sourceIndex)}
                 href={propertyUrl}
-                className="relative flex h-full flex-col gap-3 rounded-3xl bg-white shadow-[0_8px_30px_rgb(31_41_55_/_12%)] transition-transform hover:-translate-y-1"
+                className={`relative flex h-full flex-col gap-3 rounded-3xl bg-white shadow-[0_8px_30px_rgb(31_41_55_/_12%)] transition-transform hover:-translate-y-1 ${visibilityClass}`}
               >
-                <div className="relative h-40 w-full overflow-hidden rounded-3xl">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl">
                   {property.mainImageUrl ? (
                     <Image
                       src={property.mainImageUrl}
                       alt={property.title}
                       fill
-                      sizes="(max-width: 1280px) 50vw, 25vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                       className="object-cover"
                       priority={sourceIndex < visibleCount}
                     />
@@ -210,7 +217,7 @@ export function CityCarousel({ city, country, properties }: CityHighlight) {
             <button
               type="button"
               onClick={handlePreviousClick}
-              className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 hover:text-blue-light-600 absolute top-1/2 left-0 -translate-y-1/2 rounded-full border bg-white/90 p-2 shadow-sm transition"
+              className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 hover:text-blue-light-600 absolute top-1/2 left-4 z-10 -translate-y-1/2 rounded-full border bg-white/90 p-2 shadow-sm transition"
               aria-label="Ver propiedad anterior"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -218,7 +225,7 @@ export function CityCarousel({ city, country, properties }: CityHighlight) {
             <button
               type="button"
               onClick={handleNextClick}
-              className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 hover:text-blue-light-600 absolute top-1/2 right-0 -translate-y-1/2 rounded-full border bg-white/90 p-2 shadow-sm transition"
+              className="border-blue-light-200 text-gray-dark-600 hover:border-blue-light-300 hover:text-blue-light-600 absolute top-1/2 right-4 z-10 -translate-y-1/2 rounded-full border bg-white/90 p-2 shadow-sm transition"
               aria-label="Ver siguiente propiedad"
             >
               <ChevronRight className="h-5 w-5" />
