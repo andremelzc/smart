@@ -262,11 +262,11 @@ export const authOptions: NextAuthOptions = {
     },
 
     /**
-     * 2. Se ejecuta después de 'signIn'.
-     * Toma el ID de la BD (que adjuntamos) y lo guarda en el token de sesión.
+     * 2. Se ejecuta después de 'signIn' y también en actualizaciones de sesión.
+     * Toma el ID de la BD y actualiza el token de sesión.
      */
     async jwt({ token, user, trigger }) {
-      // Solo hacemos esto la primera vez que se crea el token (al iniciar sesión)
+      // En signIn inicial, configuramos el token básico
       if (trigger === "signIn" && user) {
         // Guardamos el USER_ID en el token
         const typedUser = user as ExtendedUser;
@@ -322,6 +322,49 @@ export const authOptions: NextAuthOptions = {
           (token as Record<string, unknown>).isHost = userWithRoles.dbIsHost;
         }
       }
+
+      // Si es una actualización de sesión (update trigger), refrescamos los datos del usuario
+      if (trigger === "update" && token.id) {
+        try {
+          console.log("🔄 Actualizando datos de usuario en token para ID:", token.id);
+          
+          // Consultamos la BD para obtener los datos actualizados del usuario
+          const getUserSql = `
+            SELECT 
+              u.USER_ID,
+              u.EMAIL,
+              u.FIRST_NAME || ' ' || u.LAST_NAME AS NAME,
+              CASE WHEN h.HOST_ID IS NOT NULL THEN 1 ELSE 0 END AS IS_HOST,
+              u.CREATED_AT
+            FROM USERS u
+            LEFT JOIN HOSTS h ON u.USER_ID = h.HOST_ID
+            WHERE u.USER_ID = :userId
+          `;
+          
+          const result = await executeQuery(getUserSql, { userId: token.id }) as OracleResult;
+          console.log("📊 Resultado de consulta SQL:", result);
+          
+          if (result.rows && result.rows.length > 0) {
+            const userData = (result.rows[0] as unknown) as Record<string, unknown>;
+            console.log("📦 userData row:", userData);
+            
+            // IS_HOST está en el índice 4 (0: USER_ID, 1: EMAIL, 2: NAME, 3: AVATAR_URL, 4: IS_HOST, 5: IS_VERIFIED, 6: CREATED_AT)
+            const isHost = Number(userData.IS_HOST) === 1;
+            
+            console.log("✅ Datos actualizados del usuario:", { userId: token.id, isHost, rawValue: userData[4] });
+            
+            // Actualizamos el token con los nuevos valores
+            (token as Record<string, unknown>).isHost = isHost;
+            (token as Record<string, unknown>).isTenant = true; // Asumimos que todos son tenants
+          } else {
+            console.warn("⚠️ No se encontraron datos para el usuario:", token.id);
+          }
+        } catch (error) {
+          console.error("❌ Error actualizando datos de usuario:", error);
+          // No bloqueamos, continuamos con el token existente
+        }
+      }
+
       return token;
     },
 

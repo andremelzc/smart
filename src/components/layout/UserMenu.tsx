@@ -52,6 +52,10 @@ export default function UserMenu({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Debug para verificar estado de host
+  console.log("👤 UserMenu - isHost:", user?.isHost, "role:", role);
+  console.log("🎭 Modal state:", { isModalOpen });
+
   // Funcion wrapper para que al hacer clic en un link, se cierre el menu
 
   const handleClickLink = () => {
@@ -67,11 +71,13 @@ export default function UserMenu({
   };
 
   // Funcion para abrir el modal SIN cerrar el menu
-
   const handleOpenModal = (e: React.MouseEvent) => {
+    console.log("🚀 handleOpenModal clickeado!");
     e.stopPropagation();
-
+    
+    console.log("📝 Estado antes:", { isModalOpen });
     setIsModalOpen(true);
+    console.log("📝 setIsModalOpen(true) llamado");
 
     // NO llamar a onClose() aqui
   };
@@ -88,6 +94,7 @@ export default function UserMenu({
           animation: "fadeInDown 0.2s ease-out forwards",
         }}
       >
+        
         {isAuthenticated ? (
           role === "tenant" ? (
             // --- MENU TENANT/HUESPED ---
@@ -166,6 +173,7 @@ export default function UserMenu({
 
               <div className="my-2 border-t border-gray-200"></div>
 
+              {/* Si el usuario ya es host, puede cambiar al modo anfitrión */}
               {user?.isHost ? (
                 <Link
                   href="/host/dashboard"
@@ -174,17 +182,21 @@ export default function UserMenu({
                   role="menuitem"
                 >
                   <Building2 className="h-5 w-5" />
-                  Cambia a anfitrion
+                  Cambiar a modo anfitrión
                 </Link>
               ) : (
+                /* Si no es host, puede convertirse en uno */
                 <button
-                  onClick={handleOpenModal}
+                  onClick={(e) => {
+                    console.log("🖱️ Botón 'Conviértete en anfitrión' clickeado");
+                    handleOpenModal(e);
+                  }}
                   className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
                   role="menuitem"
                   type="button"
                 >
                   <Building2 className="h-5 w-5" />
-                  Conviertete en anfitrion
+                  Conviértete en anfitrión
                 </button>
               )}
 
@@ -300,7 +312,7 @@ export default function UserMenu({
                 role="menuitem"
               >
                 <Users className="h-5 w-5" />
-                Cambia a huesped
+                Cambiar a modo huésped
               </Link>
 
               <div className="my-2 border-t border-gray-200"></div>
@@ -352,12 +364,15 @@ export default function UserMenu({
             <div className="my-2 border-t border-gray-200"></div>
 
             <button
-              onClick={handleOpenModal}
+              onClick={(e) => {
+                console.log("🖱️ Botón 'Conviértete en anfitrión' (invitado) clickeado");
+                handleOpenModal(e);
+              }}
               className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
               role="menuitem"
               type="button"
             >
-              <Building2 className="h-5 w-5" /> Conviertete en anfitrion
+              <Building2 className="h-5 w-5" /> Conviértete en anfitrión
             </button>
 
             <div className="my-2 border-t border-gray-200"></div>
@@ -391,16 +406,9 @@ export default function UserMenu({
       </div>
 
       {/* Modal FUERA del menu - se renderiza con Portal */}
-
-      {console.log(" Rendering BecomeHostModal with isOpen:", isModalOpen)}
-
       <BecomeHostModal
         isOpen={isModalOpen}
-        onClose={() => {
-          console.log(" Modal onClose called");
-
-          setIsModalOpen(false); //  CORRECTO
-        }}
+        onClose={() => setIsModalOpen(false)}
       />
     </>
   );

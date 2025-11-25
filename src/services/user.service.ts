@@ -69,7 +69,9 @@ export const userService = {
    * @returns Promise con el resultado de la operación
    */
   becomeHost: async () => {
+    console.log("🌐 userService.becomeHost - Iniciando llamada a API...");
     try {
+      console.log("📡 Haciendo fetch a /api/user/become-host");
       const response = await fetch("/api/user/become-host", {
         method: "POST",
         headers: {
@@ -77,19 +79,23 @@ export const userService = {
         },
       });
 
+      console.log("📡 Response status:", response.status, response.statusText);
       const data = await response.json();
+      console.log("📦 Response data:", data);
 
       if (!response.ok) {
+        console.error("❌ Response not OK:", data.error);
         throw new Error(data.error || "Error al convertirse en anfitrión");
       }
 
+      console.log("✅ becomeHost exitoso:", data);
       return {
         success: true,
         hostId: data.hostId,
         message: data.message,
       };
     } catch (error: unknown) {
-      console.error("Error en becomeHost:", error);
+      console.error("💥 Error en becomeHost:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
       return {

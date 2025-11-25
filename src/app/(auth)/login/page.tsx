@@ -100,11 +100,11 @@ export default function LoginPage() {
           </Link>
 
           <h2 className="text-gray-dark-800 mb-2 text-2xl font-bold">
-            Bienvenido de vuelta!
+            ¡Bienvenido de vuelta!
           </h2>
 
           <p className="text-gray-medium-500">
-            Inicia sesion para continuar tu aventura
+            Inicia sesión para continuar tu aventura
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="text-gray-dark-700 mb-2 block text-sm font-semibold"
               >
-                Correo electronico
+                Correo electrónico
               </label>
 
               <div className="relative">
@@ -172,7 +172,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="text-gray-dark-700 mb-2 block text-sm font-semibold"
               >
-                Contrasena
+                Contraseña
               </label>
 
               <div className="relative">
@@ -239,20 +239,20 @@ export default function LoginPage() {
                 href="/forgot-password"
                 className="text-blue-light-600 hover:text-blue-light-700 text-sm font-medium transition-colors"
               >
-                Olvidaste tu contrasena?
+                ¿Olvidaste tu contraseña?
               </Link>
             </div>
 
             <div className="text-center">
               <span className="text-gray-medium-500 text-sm">
-                No tienes una cuenta?{" "}
+                ¿No tienes una cuenta?{" "}
               </span>
 
               <Link
                 href="/register"
                 className="text-blue-light-600 hover:text-blue-light-700 text-sm font-semibold transition-colors"
               >
-                Registrate aqui
+                Regístrate aquí
               </Link>
             </div>
           </div>
@@ -264,14 +264,14 @@ export default function LoginPage() {
           <p className="text-gray-medium-400 text-xs">
             Al continuar, aceptas nuestros{" "}
             <Link href="/terms" className="text-blue-light-600 hover:underline">
-              Terminos de Servicio
+              Términos de Servicio
             </Link>{" "}
             y{" "}
             <Link
               href="/privacy"
               className="text-blue-light-600 hover:underline"
             >
-              Politica de Privacidad
+              Política de Privacidad
             </Link>
           </p>
         </div>

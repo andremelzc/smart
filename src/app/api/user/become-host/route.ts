@@ -10,9 +10,14 @@ import { executeQuery, oracledb } from "@/src/lib/database";
  */
 export async function POST(req: NextRequest) {
   try {
+    console.log("🔧 /api/user/become-host - Iniciando...");
+    
     // 1. Verificar autenticación
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    console.log("🔑 Token obtenido:", { id: token?.id, isHost: token?.isHost });
+    
     if (!token || !token.id) {
+      console.log("❌ Token inválido o sin ID");
       return NextResponse.json(
         { success: false, error: "No autenticado" },
         { status: 401 }
@@ -20,9 +25,11 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = Number(token.id);
+    console.log("👤 userId:", userId);
 
     // 2. Verificar que no sea ya host
     if (token.isHost) {
+      console.log("⚠️ Usuario ya es host:", token.isHost);
       return NextResponse.json(
         { success: false, error: "Ya eres anfitrión" },
         { status: 400 }

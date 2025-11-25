@@ -90,7 +90,7 @@ export default function HostNavbar() {
 
               {isMenuOpen && (
                 <UserMenu
-                  role={user?.roles?.includes("host") ? "host" : "tenant"}
+                  role={"host"}
                   isAuthenticated={isAuthenticated}
                   onLogout={() => authService.signOut()}
                   onClose={() => setIsMenuOpen(false)}
