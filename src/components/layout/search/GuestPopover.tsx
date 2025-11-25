@@ -34,7 +34,8 @@ export function GuestPopover({
   maxGuests,
 }: GuestPopoverProps) {
   const update = (key: keyof GuestCounts, delta: number) => {
-    const nextValue = Math.max(0, counts[key] + delta);
+    const minValue = key === "adults" ? 1 : 0;
+    const nextValue = Math.max(minValue, counts[key] + delta);
 
     // Validar que adultos + niños no excedan maxGuests
     if (maxGuests && (key === "adults" || key === "children")) {
@@ -86,9 +87,9 @@ export function GuestPopover({
               <button
                 type="button"
                 onClick={() => update(key, -1)}
-                className="border-blue-light-200 text-blue-light-600 hover:border-blue-light-300 disabled:border-blue-light-100 disabled:text-blue-light-200 flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed"
-                aria-label={`Disminuir ${label}`}
-                disabled={counts[key] === 0}
+                  className="border-blue-light-200 text-blue-light-600 hover:border-blue-light-300 disabled:border-blue-light-100 disabled:text-blue-light-200 flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed"
+                  aria-label={`Disminuir ${label}`}
+                  disabled={key === "adults" ? counts[key] <= 1 : counts[key] === 0}
               >
                 -
               </button>

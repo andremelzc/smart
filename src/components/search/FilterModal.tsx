@@ -61,7 +61,7 @@ export function FilterModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-20 pb-10 sm:pt-28">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-6 pb-10 sm:pt-10">
       <div
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
@@ -73,9 +73,9 @@ export function FilterModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="filters-modal-title"
-        className="relative z-[70] mt-7 w-full max-w-full sm:max-w-3xl"
+        className="relative z-[70] w-full max-w-full sm:max-w-3xl"
       >
-        <div className="flex max-h-[calc(100vh-5rem)] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
           <header className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
             <div className="space-y-1">
               <h2

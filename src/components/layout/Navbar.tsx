@@ -57,7 +57,7 @@ export default function Navbar() {
   );
 
   const [guestCounts, setGuestCounts] = useState({
-    adults: 0,
+    adults: 1,
     children: 0,
     babies: 0,
     pets: 0,
@@ -76,7 +76,7 @@ export default function Navbar() {
 
   const clearGuests = () => {
     setGuestCounts({
-      adults: 0,
+      adults: 1,
       children: 0,
       babies: 0,
       pets: 0,
@@ -532,12 +532,16 @@ export default function Navbar() {
                 {/* Quien + Search Button */}
 
                 <div
-                  className={`relative flex flex-[1.3] cursor-pointer items-center gap-2 rounded-full py-2 pr-2 pl-6 transition-all duration-300 ${
+                  className={`relative flex flex-[1.3] items-center gap-2 rounded-full py-2 pr-2 pl-6 transition-all duration-300 ${
                     activeSearchPanel === "guests"
                       ? "z-10 bg-white shadow-lg ring-1 ring-black/5"
-                      : "hover:bg-gray-100"
+                      : "hover:bg-gray-100 cursor-pointer"
                   }`}
-                  onClick={() => toggleSearchPanel("guests")}
+                  onClick={(e) => {
+                    if (activeSearchPanel !== "guests") {
+                      toggleSearchPanel("guests");
+                    }
+                  }}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Users className="h-5 w-5 flex-shrink-0 text-gray-500" />
