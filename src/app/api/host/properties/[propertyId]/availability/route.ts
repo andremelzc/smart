@@ -178,8 +178,10 @@ export async function POST(
   }
 
   try {
-    const body = await request.json();
-    const { startDate, endDate, kind, pricePerNight } = body;
+  const body = await request.json();
+  // Log body for debugging server-side 500 errors
+  console.log("Incoming POST /availability body:", JSON.stringify(body));
+  const { startDate, endDate, kind, pricePerNight } = body;
 
     if (!startDate || !endDate || !kind) {
       return NextResponse.json(
@@ -205,6 +207,23 @@ export async function POST(
       );
     }
 
+    // Prepare binds for SP call (log them for debugging)
+    const binds = {
+      propertyId: propertyIdNum,
+      startDate: startDate,
+      endDate: endDate,
+      kind: kind,
+      pricePerNight: pricePerNight || null,
+      errorCode: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+    };
+    console.log("Calling PROPERTY_PKG.SET_AVAILABILITY with binds:", {
+      propertyId: binds.propertyId,
+      startDate: binds.startDate,
+      endDate: binds.endDate,
+      kind: binds.kind,
+      pricePerNight: binds.pricePerNight,
+    });
+
     const result = (await executeQuery(
       `BEGIN
         PROPERTY_PKG.SET_AVAILABILITY(
@@ -216,16 +235,11 @@ export async function POST(
           P_ERROR_CODE => :errorCode
         );
       END;`,
-      {
-        propertyId: propertyIdNum,
-        startDate: startDate,
-        endDate: endDate,
-        kind: kind,
-        pricePerNight: pricePerNight || null,
-        errorCode: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-      }
+      binds
       // ✅ CASTING: Le decimos a TS la forma de 'outBinds'
     )) as oracledb.Result<SetAvailabilityResult>;
+
+    console.log("SET_AVAILABILITY result outBinds:", result.outBinds);
 
     // Ahora TS sabe que 'result.outBinds' es 'SetAvailabilityResult | undefined'
     const errorCode = result.outBinds?.errorCode;

@@ -6,6 +6,13 @@ import { es } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/src/components/ui/Button";
+import dynamic from "next/dynamic";
+const ConfirmDialog = dynamic(
+  () => import("@/src/components/ui/ConfirmDialog"),
+  { ssr: false }
+);
+import ErrorBoundary from "@/src/components/ui/ErrorBoundary";
+import Toast from "@/src/components/ui/Toast";
 import { Loader2 } from "lucide-react";
 
 // Importa tu servicio de disponibilidad
@@ -32,8 +39,14 @@ type SetAvailabilityResponse = {
   message?: string;
 };
 
-// Helper para convertir Date a string YYYY-MM-DD
-const toISODate = (date: Date): string => date.toISOString().split("T")[0];
+// Helper para convertir Date a string YYYY-MM-DD usando la fecha LOCAL
+// Evita problemas de zona horaria que ocurren con toISOString()
+const toISODate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
 export function AvailabilityCalendar({ propertyId }: Props) {
   const queryClient = useQueryClient();
@@ -45,27 +58,37 @@ export function AvailabilityCalendar({ propertyId }: Props) {
   const { data: calendarDays, isLoading: isLoadingCalendar } = useQuery<
     CalendarDay[]
   >({
+    // Include month and numberOfMonths in the key so the cache is specific
     queryKey: [
       "hostCalendar",
       propertyId,
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
+      2,
     ],
     queryFn: async () => {
-      const result = await hostAvailabilityService.getCalendar(
-        propertyId,
-        currentMonth.getMonth(), // 0-11
-        currentMonth.getFullYear()
-      );
+      // Fetch availability for the current month and the next month (we render 2 months)
+      const monthA = currentMonth.getMonth();
+      const yearA = currentMonth.getFullYear();
+
+      const nextMonthDate = new Date(currentMonth);
+      nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+      const monthB = nextMonthDate.getMonth();
+      const yearB = nextMonthDate.getFullYear();
+
+      const [resA, resB] = await Promise.all([
+        hostAvailabilityService.getCalendar(propertyId, monthA, yearA),
+        hostAvailabilityService.getCalendar(propertyId, monthB, yearB),
+      ]);
+
+      const combined = [...(resA || []), ...(resB || [])];
 
       // Mapear HostCalendarDay a CalendarDay
-      return (result || []).map(
-        (day: HostCalendarDay): CalendarDay => ({
-          date: day.date,
-          status: day.reason, // 'available' | 'booked' | 'blocked' | 'maintenance'
-          pricePerNight: day.price ?? undefined,
-        })
-      );
+      return combined.map((day: HostCalendarDay): CalendarDay => ({
+        date: day.date,
+        status: day.reason,
+        pricePerNight: day.price ?? undefined,
+      }));
     },
   });
 
@@ -90,13 +113,14 @@ export function AvailabilityCalendar({ propertyId }: Props) {
           queryKey: ["hostCalendar", propertyId],
         });
         setSelectedRange(undefined);
-        alert("¡Calendario actualizado correctamente!");
+        // show toast
+        setToast({ message: "¡Calendario actualizado correctamente!", type: "success" });
       } else {
         throw new Error("Error desconocido al guardar");
       }
     },
     onError: (error: Error) => {
-      alert(`Error al guardar: ${error.message}`);
+      setToast({ message: `Error al guardar: ${error.message}`, type: "error" });
     },
   });
 
@@ -121,13 +145,13 @@ export function AvailabilityCalendar({ propertyId }: Props) {
           queryKey: ["hostCalendar", propertyId],
         });
         setSelectedRange(undefined);
-        alert("¡Ajuste eliminado correctamente!");
+        setToast({ message: "¡Ajuste eliminado correctamente!", type: "success" });
       } else {
         throw new Error("Error desconocido al eliminar");
       }
     },
     onError: (error: Error) => {
-      alert(`Error al eliminar: ${error.message}`);
+      setToast({ message: `Error al eliminar: ${error.message}`, type: "error" });
     },
   });
 
@@ -159,33 +183,19 @@ export function AvailabilityCalendar({ propertyId }: Props) {
   };
 
   // --- Handlers para guardar cambios ---
-  const handleSave = (kind: "blocked" | "maintenance" | "special"): void => {
+  const [pendingAction, setPendingAction] = React.useState<
+    | { type: "save"; kind: "blocked" | "maintenance" | "special" }
+    | { type: "remove" }
+    | null
+  >(null);
+
+  const handleSave = (kind: "blocked" | "maintenance" | "special") => {
     if (!selectedRange?.from || !selectedRange?.to) {
       alert("Por favor selecciona un rango de fechas");
       return;
     }
 
-    let price: number | null = null;
-
-    // Si es precio especial, pedir el monto
-    if (kind === "special") {
-      const priceInput = prompt("Ingresa el precio por noche (ej: 150.50):");
-      if (!priceInput) return; // Usuario canceló
-
-      price = parseFloat(priceInput);
-      if (isNaN(price) || price <= 0) {
-        alert("Precio inválido. Debe ser un número mayor a 0");
-        return;
-      }
-    }
-
-    // Ejecutar la mutación
-    setAvailability({
-      startDate: toISODate(selectedRange.from),
-      endDate: toISODate(selectedRange.to),
-      kind: kind,
-      pricePerNight: price,
-    });
+    setPendingAction({ type: "save", kind });
   };
 
   // Manejador para eliminar ajuste de disponibilidad
@@ -195,22 +205,15 @@ export function AvailabilityCalendar({ propertyId }: Props) {
       return;
     }
 
-    if (
-      !confirm(
-        "¿Estás seguro de que quieres eliminar este ajuste de disponibilidad?"
-      )
-    ) {
-      return;
-    }
-
-    // Ejecutar la mutación
-    removeAvailability({
-      startDate: toISODate(selectedRange.from),
-      endDate: toISODate(selectedRange.to),
-    });
+    setPendingAction({ type: "remove" });
   };
 
   const isLoading = isLoadingCalendar || isSaving || isRemoving;
+
+  const [toast, setToast] = React.useState<
+    | { message: string; type: "success" | "error" | "info" }
+    | null
+  >(null);
 
   return (
     <div className="space-y-6">
@@ -257,20 +260,83 @@ export function AvailabilityCalendar({ propertyId }: Props) {
         </div>
       </div>
 
-      {/* Calendario */}
-      <div className="flex justify-center">
-        <DayPicker
-          locale={es}
-          mode="range"
-          numberOfMonths={2}
-          month={currentMonth}
-          onMonthChange={setCurrentMonth}
-          selected={selectedRange}
-          onSelect={setSelectedRange}
-          modifiers={modifiers}
-          modifiersClassNames={modifiersClassNames}
-          disabled={isLoading}
+        {/* Confirm dialog for save/remove actions */}
+        <ConfirmDialog
+          open={pendingAction !== null}
+          title={
+            pendingAction?.type === "remove"
+              ? "Eliminar ajuste de disponibilidad"
+              : pendingAction?.type === "save" && pendingAction.kind === "special"
+              ? "Confirmar precio especial"
+              : "Confirmar ajuste de disponibilidad"
+          }
+          description={
+            pendingAction?.type === "remove"
+              ? "¿Estás seguro de que quieres eliminar este ajuste de disponibilidad?"
+              : pendingAction?.type === "save"
+              ? `Vas a ${
+                  pendingAction.kind === "blocked"
+                    ? "bloquear"
+                    : pendingAction.kind === "maintenance"
+                    ? "marcar como mantenimiento"
+                    : "asignar un precio especial"
+                } el rango seleccionado.`
+              : undefined
+          }
+          requirePrice={pendingAction?.type === "save" && pendingAction.kind === "special"}
+          confirmLabel={pendingAction?.type === "remove" ? "Eliminar" : "Guardar"}
+          cancelLabel="Cancelar"
+          onCancel={() => setPendingAction(null)}
+          onConfirm={(data) => {
+            if (!selectedRange || !selectedRange.from || !selectedRange.to) {
+              setPendingAction(null);
+              return;
+            }
+
+            if (pendingAction?.type === "remove") {
+              removeAvailability({
+                startDate: toISODate(selectedRange.from),
+                endDate: toISODate(selectedRange.to),
+              });
+            } else if (pendingAction?.type === "save") {
+              const price = data?.price ?? null;
+              setAvailability({
+                startDate: toISODate(selectedRange.from),
+                endDate: toISODate(selectedRange.to),
+                kind: pendingAction.kind,
+                pricePerNight: pendingAction.kind === "special" ? price : null,
+              });
+            }
+
+            setPendingAction(null);
+          }}
         />
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Calendario (envuelto en ErrorBoundary para detectar fallos de render) */}
+      <div className="flex justify-center">
+        <ErrorBoundary>
+          <DayPicker
+            locale={es}
+            mode="range"
+            numberOfMonths={2}
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            selected={selectedRange}
+            onSelect={setSelectedRange}
+            modifiers={modifiers}
+            modifiersClassNames={modifiersClassNames}
+            disabled={isLoading}
+          />
+        </ErrorBoundary>
       </div>
 
       {/* Panel de acciones cuando hay fechas seleccionadas */}
