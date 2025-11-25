@@ -26,38 +26,57 @@ const getBookingStatus = (
   dbStatus: string
 ): ReservationStatus => {
   const today = new Date();
-
   today.setHours(0, 0, 0, 0);
 
   const checkin = new Date(checkinDate);
-
   checkin.setHours(0, 0, 0, 0);
 
   const checkout = new Date(checkoutDate);
-
   checkout.setHours(0, 0, 0, 0);
 
-  // Si esta cancelado en la BD, es cancelado
+  const normalizedStatus = dbStatus.toUpperCase();
 
-  if (dbStatus.toLowerCase() === "cancelled") {
-    return "cancelled";
+  // Primero verificar estados de BD que tienen prioridad
+  switch (normalizedStatus) {
+    case "CANCELLED":
+      return "cancelled";
+    
+    case "COMPLETED":
+      return "past";
+    
+    case "DECLINED":
+      return "cancelled"; // Tratamos declined como cancelado para UI
+    
+    case "PENDING":
+      // Si está pendiente, verificar fechas para mostrar estado apropiado
+      if (checkin > today) {
+        return "upcoming";
+      } else if (today >= checkin && today < checkout) {
+        return "current";
+      } else {
+        return "past";
+      }
+    
+    case "ACCEPTED":
+      // Si está aceptado, verificar fechas para mostrar estado apropiado
+      if (today >= checkin && today < checkout) {
+        return "current";
+      } else if (checkin > today) {
+        return "upcoming";
+      } else {
+        return "past"; // Reserva aceptada pero ya pasada (debería ser COMPLETED)
+      }
+    
+    default:
+      // Fallback: usar lógica de fechas para estados desconocidos
+      if (today >= checkin && today < checkout) {
+        return "current";
+      } else if (checkin > today) {
+        return "upcoming";
+      } else {
+        return "past";
+      }
   }
-
-  // Si hoy esta entre checkin y checkout, esta en curso
-
-  if (today >= checkin && today < checkout) {
-    return "current";
-  }
-
-  // Si checkin es futuro, es proxima
-
-  if (checkin > today) {
-    return "upcoming";
-  }
-
-  // Si checkout es pasado, es finalizada
-
-  return "past";
 };
 
 const statusStyles: Record<

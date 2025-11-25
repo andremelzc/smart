@@ -107,11 +107,8 @@ const canReviewReservation = (
   const statusToCheck = dbStatus || status;
   const normalizedStatus = statusToCheck.trim().toUpperCase();
   
-  // Lógica: Debe estar completada
-  return (
-    normalizedStatus === "COMPLETED" ||
-    (normalizedStatus === "ACCEPTED" && new Date() > new Date()) // Fallback por fechas
-  );
+  // Solo se puede reseñar si la reserva está completada
+  return normalizedStatus === "COMPLETED";
 };
 
 // Helper: Evitar cancelar reservas pasadas
