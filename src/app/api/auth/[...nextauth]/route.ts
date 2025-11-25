@@ -205,7 +205,7 @@ export const authOptions: NextAuthOptions = {
             // Obtener roles del usuario desde USER_PKG.SP_GET_USER_ROLES
             try {
               const schema = process.env.DB_SCHEMA?.trim();
-              const userPkg = process.env.DB_USER_PACKAGE?.trim() || "USER_PKG";
+              const userPkg = "USER_PKG";
               let qualifiedName = `${userPkg}.SP_GET_USER_ROLES`;
               if (schema && schema.length > 0) {
                 qualifiedName = `${schema}.${qualifiedName}`;

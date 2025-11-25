@@ -52,10 +52,6 @@ export default function UserMenu({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Debug para verificar estado de host
-  console.log("👤 UserMenu - isHost:", user?.isHost, "role:", role);
-  console.log("🎭 Modal state:", { isModalOpen });
-
   // Funcion wrapper para que al hacer clic en un link, se cierre el menu
 
   const handleClickLink = () => {
@@ -81,6 +77,10 @@ export default function UserMenu({
 
     // NO llamar a onClose() aqui
   };
+
+  // Debug para verificar estado de host
+  console.log("👤 UserMenu - isHost:", user?.isHost, "role:", role);
+  console.log("🎭 Modal state:", { isModalOpen });
 
   return (
     <>
