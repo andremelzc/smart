@@ -500,6 +500,245 @@ export class PropertyService {
       }
     }
   }
+
+  /**
+   * Crea una nueva propiedad usando el stored procedure SP_CREATE_PROPERTY
+   * @param hostId - ID del host que crea la propiedad
+   * @param data - Datos de la propiedad a crear
+   * @returns Promise con el ID de la propiedad creada o lanza un error
+   */
+  static async createProperty(
+    hostId: number,
+    data: Partial<PropertyDetail>
+  ): Promise<{ propertyId: number }> {
+    let connection: oracledb.Connection | undefined;
+
+    try {
+      // Obtener conexión del pool
+      const pool = oracledb.getPool();
+      connection = await pool.getConnection();
+
+      // Preparar los parámetros para el SP
+      const bindParams = {
+        P_HOST_ID: {
+          val: hostId,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_PROPERTY_TYPE: {
+          val: data.propertyType ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_TITLE: {
+          val: data.title ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_BASE_PRICE_NIGHT: {
+          val: data.basePriceNight ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_CURRENCY_CODE: {
+          val: data.currencyCode ?? "USD",
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_ADDRESS_TEXT: {
+          val: data.addressText ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_CITY: {
+          val: data.city ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_STATE_REGION: {
+          val: data.stateRegion ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_COUNTRY: {
+          val: data.country ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_POSTAL_CODE: {
+          val: data.postalCode ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_LATITUDE: {
+          val: data.latitude ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_LONGITUDE: {
+          val: data.longitude ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_DESCRIPTION_LONG: {
+          val: data.descriptionLong ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_HOUSE_RULES: {
+          val: data.houseRules ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_CHECKIN_TIME: {
+          val: data.checkinTime ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_CHECKOUT_TIME: {
+          val: data.checkoutTime ?? null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_CAPACITY: {
+          val: data.capacity ?? 1,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_BEDROOMS: {
+          val: data.bedrooms ?? 0,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_BATHROOMS: {
+          val: data.bathrooms ?? 0,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_BEDS: {
+          val: data.beds ?? 0,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_AREA: {
+          val: data.area ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_FLOOR_NUMBER: {
+          val: data.floorNumber ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_MAX_ADULTS: {
+          val: data.maxAdults ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_MAX_CHILDREN: {
+          val: data.maxChildren ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_MAX_BABY: {
+          val: data.maxBaby ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_MAX_PETS: {
+          val: data.maxPets ?? null,
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_IN,
+        },
+        P_IMAGES: {
+          val: data.images && data.images.length > 0 ? JSON.stringify(data.images) : null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        P_AMENITIES: {
+          val: data.amenities && data.amenities.length > 0 ? JSON.stringify(data.amenities) : null,
+          type: oracledb.STRING,
+          dir: oracledb.BIND_IN,
+        },
+        OUT_PROPERTY_ID: {
+          type: oracledb.NUMBER,
+          dir: oracledb.BIND_OUT,
+        },
+        OUT_ERROR_CODE: {
+          type: oracledb.STRING,
+          dir: oracledb.BIND_OUT,
+          maxSize: 4000,
+        },
+      };
+
+      // Ejecutar el stored procedure
+      const result = await connection.execute(
+        `BEGIN 
+          PROPERTY_PKG.SP_CREATE_PROPERTY(
+            P_HOST_ID => :P_HOST_ID,
+            P_PROPERTY_TYPE => :P_PROPERTY_TYPE,
+            P_TITLE => :P_TITLE,
+            P_BASE_PRICE_NIGHT => :P_BASE_PRICE_NIGHT,
+            P_CURRENCY_CODE => :P_CURRENCY_CODE,
+            P_ADDRESS_TEXT => :P_ADDRESS_TEXT,
+            P_CITY => :P_CITY,
+            P_STATE_REGION => :P_STATE_REGION,
+            P_COUNTRY => :P_COUNTRY,
+            P_POSTAL_CODE => :P_POSTAL_CODE,
+            P_LATITUDE => :P_LATITUDE,
+            P_LONGITUDE => :P_LONGITUDE,
+            P_DESCRIPTION_LONG => :P_DESCRIPTION_LONG,
+            P_HOUSE_RULES => :P_HOUSE_RULES,
+            P_CHECKIN_TIME => :P_CHECKIN_TIME,
+            P_CHECKOUT_TIME => :P_CHECKOUT_TIME,
+            P_CAPACITY => :P_CAPACITY,
+            P_BEDROOMS => :P_BEDROOMS,
+            P_BATHROOMS => :P_BATHROOMS,
+            P_BEDS => :P_BEDS,
+            P_AREA => :P_AREA,
+            P_FLOOR_NUMBER => :P_FLOOR_NUMBER,
+            P_MAX_ADULTS => :P_MAX_ADULTS,
+            P_MAX_CHILDREN => :P_MAX_CHILDREN,
+            P_MAX_BABY => :P_MAX_BABY,
+            P_MAX_PETS => :P_MAX_PETS,
+            P_IMAGES => :P_IMAGES,
+            P_AMENITIES => :P_AMENITIES,
+            OUT_PROPERTY_ID => :OUT_PROPERTY_ID,
+            OUT_ERROR_CODE => :OUT_ERROR_CODE
+          );
+        END;`,
+        bindParams,
+        { autoCommit: true }
+      );
+
+      // Verificar si hubo un error
+      const outBinds = result.outBinds as {
+        OUT_PROPERTY_ID?: number;
+        OUT_ERROR_CODE?: string;
+      };
+
+      if (outBinds?.OUT_ERROR_CODE) {
+        throw new Error(`Error del procedimiento: ${outBinds.OUT_ERROR_CODE}`);
+      }
+
+      if (!outBinds?.OUT_PROPERTY_ID) {
+        throw new Error("No se pudo crear la propiedad");
+      }
+
+      return { propertyId: outBinds.OUT_PROPERTY_ID };
+    } catch (err) {
+      console.error("Error al crear la propiedad:", err);
+      throw new Error("No se pudo crear la propiedad.");
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error("Error al cerrar la conexión:", err);
+        }
+      }
+    }
+  }
   /**
    * Actualiza una propiedad usando el stored procedure SP_UPDATE_PROPERTY
    * @param propertyId - ID de la propiedad a actualizar

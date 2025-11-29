@@ -174,6 +174,12 @@ export interface PropertyDetail {
   bedrooms: number;
   bathrooms: number;
   beds: number;
+  area?: number;
+  floorNumber?: number;
+  maxAdults?: number;
+  maxChildren?: number;
+  maxBaby?: number;
+  maxPets?: number;
   // Related data
   host: HostInfo;
   amenities: PropertyAmenity[];
