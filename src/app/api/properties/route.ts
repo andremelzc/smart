@@ -26,13 +26,13 @@ export async function POST(
 ): Promise<NextResponse<PropertyCreateResponse | PropertyErrorResponse>> {
   try {
     // Verificar autenticación
-    // const session = await getServerSession(authOptions);
-    // if (!session?.user?.id) {
-    //   return NextResponse.json(
-    //     { error: "No autorizado" },
-    //     { status: 401 }
-    //   );
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "No autorizado" },
+        { status: 401 }
+      );
+    }
 
     const formData = await request.formData();
 
@@ -52,7 +52,7 @@ export async function POST(
     const checkoutTime = formData.get("checkoutTime") as string;
     const capacityStr = formData.get("capacity") as string;
     const bedroomsStr = formData.get("bedrooms") as string;
-    const bathroomsStr                                                                                                        = formData.get("bathrooms") as string;
+    const bathroomsStr = formData.get("bathrooms") as string;
     const bedsStr = formData.get("beds") as string;
 
     // CAMPOS OPCIONALES
@@ -139,21 +139,21 @@ export async function POST(
       );
     }
 
-    // Procesar y subir imágenes a GCP
     const photoFiles = formData.getAll("photos");
+
     const images: Array<{ url: string; caption?: string }> = [];
-    
+
     if (photoFiles && photoFiles.length > 0) {
       for (let i = 0; i < photoFiles.length; i++) {
         const fileEntry = photoFiles[i];
-        
+
         if (!(fileEntry instanceof File)) {
-          console.warn(`Entrada ${i} no es un archivo, se omite`);
+          console.warn(`⚠️ Entrada ${i} no es un archivo, se omite`);
           continue;
         }
 
         const file = fileEntry as File;
-        
+
         try {
           // Convertir el archivo a buffer
           const buffer = Buffer.from(await file.arrayBuffer());
@@ -161,8 +161,8 @@ export async function POST(
 
           // Subir a GCP Storage
           const photoUrl = await uploadFileToStorage(buffer, mimeType);
-          
-          // Obtener el caption si existe (puede venir como captions[0], captions[1], etc.)
+
+          // Obtener el caption si existe
           const captionKey = `captions[${i}]`;
           const caption = formData.get(captionKey) as string || file.name;
 
@@ -171,9 +171,9 @@ export async function POST(
             caption: caption,
           });
         } catch (uploadError) {
-          console.error(`Error al subir imagen ${i}:`, uploadError);
+          console.error(`❌ Error al subir imagen ${i}:`, uploadError);
           return NextResponse.json(
-            { 
+            {
               error: "Error al subir imágenes a GCP",
               details: uploadError instanceof Error ? uploadError.message : "Error desconocido"
             },
@@ -191,12 +191,24 @@ export async function POST(
       );
     }
 
-    // Procesar amenities
     const amenitiesJson = formData.get("amenities") as string;
-    let amenities: Array<{ code: string; name?: string }> = [];
+    let amenities: number[] = [];
     if (amenitiesJson) {
       try {
-        amenities = JSON.parse(amenitiesJson);
+        const parsedAmenities = JSON.parse(amenitiesJson);
+
+        if (Array.isArray(parsedAmenities)) {
+          amenities = parsedAmenities.map((item: any) => {
+            if (typeof item === 'number') {
+              return item;
+            } else if (typeof item === 'string') {
+              return parseInt(item, 10);
+            } else if (typeof item === 'object' && item.code) {
+              return parseInt(item.code, 10);
+            }
+            return parseInt(item, 10);
+          }).filter((id: number) => !isNaN(id));
+        }
       } catch (error) {
         console.error("Error al parsear amenities:", error);
         return NextResponse.json(
@@ -206,8 +218,8 @@ export async function POST(
       }
     }
 
-    // Construir el objeto PropertyDetail
-    const propertyData: Partial<PropertyDetail> = {
+    // Construir PropertyDetail
+    const propertyData: any = {
       title,
       propertyType,
       basePriceNight,
@@ -233,13 +245,11 @@ export async function POST(
       maxChildren,
       maxBaby,
       maxPets,
-      images: images as any,
-      amenities: amenities as any,
+      images: images,
+      amenities: amenities,
     };
 
-    // Llamar al servicio para crear la propiedad
     const result = await PropertyService.createProperty(
-      //parseInt(session.user.id),
       165,
       propertyData
     );
@@ -249,12 +259,15 @@ export async function POST(
       data: result,
     });
   } catch (error) {
-    console.error("Error al crear la propiedad:", error);
+    console.error("❌ Error al crear la propiedad:", error);
 
     // Si es un error conocido del servicio
     if (error instanceof Error) {
       return NextResponse.json(
-        { error: error.message },
+        {
+          error: error.message,
+          details: error.stack
+        },
         { status: 500 }
       );
     }

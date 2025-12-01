@@ -511,8 +511,6 @@ export class PropertyService {
   private static normalizeTime(time: string | undefined | null): string | null {
     if (!time) return null;
 
-    // Si viene como "14:00:00", truncar a "14:00"
-    // Si viene como "14:00", mantener tal cual
     const match = time.match(/^(\d{2}):(\d{2})/);
     return match ? `${match[1]}:${match[2]}` : null;
   }
@@ -524,13 +522,11 @@ export class PropertyService {
     let connection: oracledb.Connection | undefined;
 
     try {
-      // Obtener conexión del pool
       connection = await getConnection();
 
       const checkinTime = this.normalizeTime(data.checkinTime);
       const checkoutTime = this.normalizeTime(data.checkoutTime);
 
-      // Preparar los parámetros para el SP
       const bindParams = {
         P_HOST_ID: {
           val: hostId,
@@ -668,7 +664,10 @@ export class PropertyService {
           dir: oracledb.BIND_IN,
         },
         P_AMENITIES: {
-          val: data.amenities && data.amenities.length > 0 ? JSON.stringify(data.amenities) : null,
+          // Enviar como JSON array de números: [27, 28, 29]
+          val: data.amenities && Array.isArray(data.amenities) && data.amenities.length > 0
+            ? JSON.stringify(data.amenities)
+            : null,
           type: oracledb.STRING,
           dir: oracledb.BIND_IN,
         },
@@ -683,7 +682,6 @@ export class PropertyService {
         },
       };
 
-      // Ejecutar el stored procedure
       const result = await connection.execute(
         `BEGIN 
           PROPERTY_PKG.SP_CREATE_PROPERTY(
@@ -723,7 +721,6 @@ export class PropertyService {
         { autoCommit: true }
       );
 
-      // Verificar si hubo un error
       const outBinds = result.outBinds as {
         OUT_PROPERTY_ID?: number;
         OUT_ERROR_CODE?: string;
@@ -739,7 +736,7 @@ export class PropertyService {
 
       return { propertyId: outBinds.OUT_PROPERTY_ID };
     } catch (err) {
-      console.error("Error al crear la propiedad:", err);
+      console.error("❌ Error al crear la propiedad:", err);
       throw new Error("No se pudo crear la propiedad.");
     } finally {
       if (connection) {
@@ -1041,17 +1038,9 @@ export class PropertyService {
       const result = await connection.execute(sql, binds, { autoCommit: true });
 
       if (result.rowsAffected !== 1) {
-        console.log(
-          "Se esperaba insertar 1 fila, pero se insertaron:",
-          result.rowsAffected
-        );
         throw new Error("No se pudo guardar la imagen de la propiedad.");
       }
     } catch (error) {
-      console.log(
-        "ERROR en property.service.ts: Fallo al persistir la URL en Oracle:",
-        error
-      );
       throw new Error(
         "Error al guardar la imagen de la propiedad: " +
         (error as Error).message
@@ -1180,10 +1169,6 @@ export class PropertyService {
 
       return properties;
     } catch (error) {
-      console.log(
-        "ERROR en property.service.ts: Fallo al obtener las propiedades del host desde Oracle:",
-        error
-      );
       throw new Error(
         "Error al obtener las propiedades del host: " + (error as Error).message
       );
