@@ -17,8 +17,41 @@ export async function GET() {
     const tenantId = parseInt(session.user.id);
     connection = await getConnection();
 
-    console.log("🔍 Buscando bookings para tenant_id:", tenantId);
+    // Diagnóstico adicional: ejecutar la misma consulta SELECT directamente
+    let diagRows: unknown[] = [];
+    try {
+      const diagnosticSql = `SELECT b.BOOKING_ID,
+                                     b.PROPERTY_ID,
+                                     b.CHECKIN_DATE,
+                                     b.CHECKOUT_DATE,
+                                     b.STATUS,
+                                     b.GUEST_COUNT,
+                                     p.TITLE,
+                                     p.FORMATTED_ADDRESS,
+                                     p.CITY,
+                                     p.STATE_REGION,
+                                     p.COUNTRY,
+                                     b.TOTAL_AMOUNT,
+                                     u.FIRST_NAME,
+                                     u.LAST_NAME
+                              FROM bookings b
+                              JOIN properties p ON b.property_id = p.property_id
+                              JOIN users u ON p.host_id = u.user_id
+                              WHERE b.tenant_id = :tid
+                              ORDER BY b.booking_id`;
+      const diagRes = await connection.execute(diagnosticSql, { tid: tenantId }, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+      diagRows = (diagRes.rows as unknown[]) || [];
+      console.log('🔎 DIAGNÓSTICO - SELECT directo con la misma conexión devuelve filas:', diagRows.length);
+      console.log('🔎 DIAGNÓSTICO - Filas (direct):', diagRows);
+    } catch (diagErr) {
+      console.error('Error al ejecutar SELECT diagnóstico:', diagErr);
+    }
 
+    console.log("=== PARÁMETROS STORED PROCEDURE ===");
+    console.log("🔍 Tenant ID enviado al SP:", tenantId);
+    console.log("📞 SP: BOOKING_PKG.get_bookings_by_tenant");
+    console.log("🔢 Tipo de tenant_id:", typeof tenantId);
+    
     // Ejecutar el stored procedure
     const result = await connection.execute(
       `BEGIN
@@ -36,8 +69,6 @@ export async function GET() {
     const outBinds = result.outBinds as {
       p_bookings_cur?: oracledb.ResultSet<unknown>;
     };
-
-    console.log("📦 Cursor recibido:", !!outBinds.p_bookings_cur);
 
     // Helper functions para conversión segura
     const toISOString = (value: unknown): string | null => {
@@ -79,16 +110,42 @@ export async function GET() {
 
     if (outBinds.p_bookings_cur) {
       try {
-        const bookingRows = await outBinds.p_bookings_cur.getRows();
-        console.log("📊 Filas obtenidas:", bookingRows.length);
+        // Leer el cursor por bloques (robusto frente a límites de getRows)
+        const fetchedRows: unknown[] = [];
+        const fetchSize = 100;
+        while (true) {
+          const rowsChunk = await outBinds.p_bookings_cur.getRows(fetchSize);
+          if (!rowsChunk || rowsChunk.length === 0) break;
+          fetchedRows.push(...rowsChunk);
+          // Si recibimos menos que fetchSize, probablemente ya no hay más
+          if (rowsChunk.length < fetchSize) break;
+        }
 
-        for (const row of bookingRows) {
+        console.log("=== ANÁLISIS DETALLADO DEL CURSOR ===");
+        console.log("Tenant ID:", tenantId);
+        console.log(`📊 Total filas recibidas del cursor: ${fetchedRows.length}`);
+        console.log("🔍 Raw cursor data:", fetchedRows);
+
+        if (fetchedRows.length === 0) {
+          console.log("⚠️ CURSOR VACÍO - No hay datos del stored procedure");
+        }
+
+        // Si la consulta directa devuelve más filas que el SP, usar la versión directa (fallback)
+        let sourceRows: unknown[] = fetchedRows;
+        if (diagRows.length > 0 && diagRows.length !== fetchedRows.length) {
+          console.warn('⚠️ Inconsistencia detectada: el SELECT directo y el cursor del SP devuelven distinta cantidad. Usando filas directas como fallback.');
+          sourceRows = diagRows;
+        }
+
+        for (let i = 0; i < sourceRows.length; i++) {
+          const row = sourceRows[i];
           const bookingRow = row as Record<string, unknown>;
-          
-          // Debug: imprime la primera fila para verificar nombres de columnas
-          if (bookings.length === 0) {
-            console.log("📝 Primera fila (nombres de columnas):", Object.keys(bookingRow));
-          }
+
+          console.log(`📄 Procesando booking ${i + 1}/${sourceRows.length}:`, {
+            bookingId: bookingRow.BOOKING_ID,
+            status: bookingRow.STATUS,
+            title: bookingRow.TITLE
+          });
 
           bookings.push({
             bookingId: toNumber(bookingRow.BOOKING_ID),
@@ -103,18 +160,30 @@ export async function GET() {
             stateRegion: toString(bookingRow.STATE_REGION) || '',
             country: toString(bookingRow.COUNTRY) || '',
             totalAmount: toNumber(bookingRow.TOTAL_AMOUNT),
-            hostFirstName: toString(bookingRow.HOST_FIRST_NAME) || '',
-            hostLastName: toString(bookingRow.HOST_LAST_NAME) || '',
+            hostFirstName: toString(bookingRow.FIRST_NAME) || '',
+            hostLastName: toString(bookingRow.LAST_NAME) || '',
             hostNote: toString(bookingRow.HOST_NOTE),
-            imageUrl: toString(bookingRow.IMAGE_URL),
+            imageUrl: toString(bookingRow.URL),
           });
+        }
+        
+        console.log("=== RESUMEN DE PROCESAMIENTO ===");
+        console.log(`📊 Filas leídas del cursor (fetchedRows): ${fetchedRows.length}`);
+        console.log(`📊 Filas del SELECT directo (diagRows): ${diagRows.length}`);
+        console.log(`📤 Bookings procesados (output): ${bookings.length}`);
+        console.log(`🎯 IDs de bookings procesados:`, bookings.map(b => b.bookingId));
+
+        // Comparar usando la fuente realmente utilizada (sourceRows)
+        const sourceCount = Math.max(fetchedRows.length, diagRows.length);
+        if (sourceCount !== bookings.length) {
+          console.error(`❌ DISCREPANCIA: fuente esperada tiene ${sourceCount} filas pero se procesaron ${bookings.length}`);
         }
       } finally {
         await outBinds.p_bookings_cur.close();
       }
+    } else {
+      console.log("❌ CURSOR NULO - El stored procedure no retornó cursor");
     }
-
-    console.log("✅ Bookings procesados:", bookings.length);
 
     // Respuesta exitosa
     return NextResponse.json({

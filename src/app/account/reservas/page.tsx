@@ -264,12 +264,31 @@ export default function ReservationsPage() {
 
   // Convertir y ordenar reservas
   const reservations = useMemo<GuestReservation[]>(() => {
+    console.log("=== ANÁLISIS DE VALIDACIÓN FRONTEND ===");
+    console.log("🔍 Bookings originales:", bookings.length);
+    console.log("🔍 Bookings raw:", bookings);
+    
+    // Analizar cada booking individualmente
+    bookings.forEach((booking, index) => {
+      const isValid = booking.bookingId !== null && 
+                     booking.bookingId !== undefined && 
+                     !isNaN(booking.bookingId);
+      console.log(`📋 Booking ${index + 1}: ID=${booking.bookingId}, Valid=${isValid}`, {
+        id: booking.bookingId,
+        title: booking.title,
+        status: booking.status
+      });
+    });
+    
     const validBookings = bookings.filter(
       (booking: TenantBooking) =>
         booking.bookingId !== null &&
         booking.bookingId !== undefined &&
         !isNaN(booking.bookingId)
     );
+    
+    console.log("✅ Bookings válidos después del filtro:", validBookings.length);
+    console.log("🆔 IDs válidos:", validBookings.map(b => b.bookingId));
 
     const formattedBookings: FormattedReservation[] = validBookings.map(
       (booking: TenantBooking) => {
@@ -297,6 +316,9 @@ export default function ReservationsPage() {
       }
     );
 
+    console.log("📋 DEBUG - Bookings formateados:", formattedBookings.length);
+    console.log("🎯 DEBUG - Filtro seleccionado:", selectedFilter);
+    
     // Filtrar según selección
     let filtered = formattedBookings;
     if (selectedFilter !== "all") {
@@ -304,6 +326,8 @@ export default function ReservationsPage() {
         (reservation) => reservation.status === selectedFilter
       );
     }
+    
+    console.log("🔎 DEBUG - Bookings después del filtro:", filtered.length);
 
     // Ordenar por prioridad de estado, luego por fecha de check-in
     return filtered.sort((a, b) => {
@@ -328,6 +352,8 @@ export default function ReservationsPage() {
       return dateB - dateA;
     });
   }, [bookings, selectedFilter]);
+  
+  console.log("🎯 DEBUG - Reservas finales a mostrar:", reservations.length);
 
   if (loading) {
     return (

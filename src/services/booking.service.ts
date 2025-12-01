@@ -99,12 +99,15 @@ export const bookingService = {
 
       const data: ApiResponse<TenantBooking[]> = await response.json();
       console.log("📅 Reservas del tenant obtenidas:", data);
+      console.log("🔢 Cantidad de reservas recibidas:", data.data?.length || 0);
 
       if (!response.ok) {
         throw new Error(data.error || "Error al obtener las reservas");
       }
 
-      return data.data || [];
+      const bookings = data.data || [];
+      console.log("✅ Reservas retornadas al hook:", bookings.length);
+      return bookings;
     } catch (error: unknown) {
       console.error("❌ Error en getTenantBookings:", error);
       const errorMessage =
