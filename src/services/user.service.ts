@@ -56,6 +56,8 @@ export interface UserProfileDetails {
     firstName: string | null;
     lastName: string | null;
     bio: string | null;
+    averageRating?: number | null;
+    totalBookings?: number | null;
   } | null;
   preferences: UserPreference[];
 }
