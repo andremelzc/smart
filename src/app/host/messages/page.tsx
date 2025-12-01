@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  Suspense, // <--- Importante importar Suspense
-} from "react";
+import React, { useEffect, useMemo, useState, Suspense, useRef } from "react";
 import {
   MessageCircle,
   Search,
@@ -18,66 +12,40 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
-// --- Tipos Unificados ---
+// --- Tipos Unificados (API) ---
 
 type ChatMessage = {
-  id: string;
-  sender: "host" | "guest";
+  id: number;
+  senderId: number;
+  senderName: string;
   content: string;
   timestamp: string;
+  isRead: boolean;
+  isMe: boolean;
 };
 
 // Interfaz que soporta tanto los campos del Host como los del Guest
 type Conversation = {
-  id: string;
-  // Campos comunes
+  id: number;
+  reservationId: string | null;
+  hostName: string;
   propertyName: string;
   location: string;
+  autoCreatedAt: string;
   checkIn: string;
   checkOut: string;
   guests: number;
-  status: "pending" | "accepted" | "confirmed";
-  messages: ChatMessage[];
-
-  // Campos específicos del Host
+  status: string;
+  lastMessage: {
+    content: string;
+    senderId: number;
+    timestamp: string;
+  };
+  // Campos adicionales para UI del Host (mapeados de la respuesta API)
   guestName?: string;
-  intentSummary?: string;
-  interestChannel?: string;
   requestId?: string;
-  roomId?: string;
-
-  // Campos específicos del Guest
-  reservationId?: string;
-  hostName?: string;
-  autoCreatedAt?: string;
-};
-
-const SHARED_STORAGE_KEY = "smart-guest-chats";
-
-// Función para leer y ADAPTAR los chats
-const readStoredChats = (): Conversation[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(SHARED_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.map((chat: Conversation) => ({
-          ...chat,
-          guestName: chat.guestName || "Huésped (Usuario)",
-          requestId: chat.requestId || chat.reservationId || "SOL-GENERIC",
-          intentSummary:
-            chat.intentSummary ||
-            `Solicitud de reserva para ${chat.guests} personas`,
-          interestChannel: chat.interestChannel || "Reserva Directa",
-          roomId: chat.roomId || "GENERAL",
-        }))
-      : [];
-  } catch {
-    return [];
-  }
 };
 
 const formatTime = (iso: string) => {
@@ -104,96 +72,161 @@ const formatDate = (iso: string) => {
 
 // --- COMPONENTE DE CONTENIDO (Lógica Principal) ---
 function HostMessagesContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialReservationId = searchParams.get("reservationId");
+  const initialConversationIdParam = searchParams.get("conversationId");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
 
-  // Cargar chats al inicio usando useMemo para evitar setState en useEffect
-  const initialChats = useMemo(() => readStoredChats(), []);
-  const [localChats, setLocalChats] = useState<Conversation[]>(initialChats);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Calcular la conversación inicial basada en el parámetro de URL
-  const initialActiveId = useMemo(() => {
-    if (!initialReservationId || initialChats.length === 0) return null;
-    const target = initialChats.find(
-      (c) =>
-        c.reservationId === initialReservationId ||
-        c.id === initialReservationId ||
-        c.requestId === initialReservationId
-    );
-    return target?.id ?? null;
-  }, [initialReservationId, initialChats]);
-
-  const [activeConversationId, setActiveConversationId] = useState<
-    string | null
-  >(initialActiveId);
-
-  // Escuchar cambios en localStorage
+  // Cargar conversaciones desde la API
   useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === SHARED_STORAGE_KEY) {
-        setLocalChats(readStoredChats());
+    const fetchConversations = async () => {
+      try {
+        const res = await fetch("/api/conversations");
+        if (!res.ok) throw new Error("Error fetching conversations");
+        const data = await res.json();
+
+        // Mapear datos si es necesario para ajustar a la vista del Host
+        // La API devuelve `hostName` que en realidad es "Other User Name".
+        // Para el Host, este es el nombre del Guest.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mappedData = data.map((c: any) => ({
+          ...c,
+          guestName: c.hostName, // Reutilizamos el campo que viene de la API
+          requestId: c.reservationId || `SOL-${c.id}`,
+        }));
+
+        setConversations(mappedData);
+
+        // Si no hay conversación seleccionada y hay conversaciones, seleccionar la primera
+        if (!initialConversationIdParam && mappedData.length > 0) {
+          router.replace(`/host/messages?conversationId=${mappedData[0].id}`);
+        }
+      } catch (error) {
+        console.error("Error cargando conversaciones:", error);
+      } finally {
+        setIsLoadingConversations(false);
       }
     };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
 
-  const persistLocalChats = useCallback((newChats: Conversation[]) => {
-    setLocalChats(newChats);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(SHARED_STORAGE_KEY, JSON.stringify(newChats));
+    fetchConversations();
+  }, [router, initialConversationIdParam]);
+
+  // Conversación activa
+  const activeConversation = useMemo(() => {
+    if (!initialConversationIdParam) return null;
+    return (
+      conversations.find(
+        (c) => c.id.toString() === initialConversationIdParam
+      ) || null
+    );
+  }, [conversations, initialConversationIdParam]);
+
+  // Cargar mensajes de la conversación activa
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    const fetchMessages = async () => {
+      setIsLoadingMessages(true);
+      try {
+        const res = await fetch(
+          `/api/conversations/${activeConversation.id}/messages`
+        );
+        if (!res.ok) throw new Error("Error fetching messages");
+        const data = await res.json();
+        setMessages(data);
+      } catch (error) {
+        console.error("Error cargando mensajes:", error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+
+    // Polling simple
+    const interval = setInterval(fetchMessages, 10000);
+    return () => clearInterval(interval);
+  }, [activeConversation]);
+
+  // Scroll al último mensaje
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, []);
+  }, [messages]);
+
+  const handleSelectConversation = (id: number) => {
+    router.push(`/host/messages?conversationId=${id}`);
+  };
 
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return localChats;
-    return localChats.filter(
+    if (!term) return conversations;
+    return conversations.filter(
       (conversation) =>
         (conversation.guestName?.toLowerCase() || "").includes(term) ||
         (conversation.propertyName?.toLowerCase() || "").includes(term) ||
         (conversation.requestId?.toLowerCase() || "").includes(term)
     );
-  }, [searchTerm, localChats]);
+  }, [searchTerm, conversations]);
 
-  const activeConversation = useMemo(() => {
-    if (!activeConversationId) return null;
-    return localChats.find((c) => c.id === activeConversationId) ?? null;
-  }, [activeConversationId, localChats]);
-
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!messageDraft.trim() || !activeConversation) return;
 
-    const newMessage: ChatMessage = {
-      id: `host-${Date.now()}`,
-      sender: "host",
-      content: messageDraft.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    const updatedChats = localChats.map((c) => {
-      if (c.id === activeConversation.id) {
-        return { ...c, messages: [...c.messages, newMessage] };
-      }
-      return c;
-    });
-
-    persistLocalChats(updatedChats);
+    const content = messageDraft.trim();
     setMessageDraft("");
+
+    try {
+      const res = await fetch(
+        `/api/conversations/${activeConversation.id}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Error enviando mensaje");
+
+      const newMessage = await res.json();
+      setMessages((prev) => [...prev, newMessage]);
+
+      // Actualizar preview en la lista
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === activeConversation.id
+            ? {
+                ...c,
+                lastMessage: {
+                  content: newMessage.content,
+                  senderId: newMessage.senderId,
+                  timestamp: newMessage.timestamp,
+                },
+              }
+            : c
+        )
+      );
+    } catch (error) {
+      console.error("Error enviando mensaje:", error);
+    }
   };
 
-  const messagesEndRef = useCallback(
-    (node: HTMLDivElement) => {
-      if (node) {
-        node.scrollIntoView({ behavior: "smooth" });
-      }
-    },
-    [] // No necesita dependencias ya que solo hace scroll
-  );
+  if (isLoadingConversations) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex h-[calc(100vh-80px)] max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
@@ -229,14 +262,13 @@ function HostMessagesContent() {
 
           <div className="flex-1 divide-y divide-gray-50 overflow-y-auto">
             {filteredConversations.map((conversation) => {
-              const isActive = conversation.id === activeConversationId;
-              const lastMessage =
-                conversation.messages[conversation.messages.length - 1];
+              const isActive = conversation.id === activeConversation?.id;
+              const lastMessage = conversation.lastMessage;
 
               return (
                 <button
                   key={conversation.id}
-                  onClick={() => setActiveConversationId(conversation.id)}
+                  onClick={() => handleSelectConversation(conversation.id)}
                   className={`w-full p-4 text-left transition-all hover:bg-gray-50 ${
                     isActive
                       ? "border-l-4 border-blue-500 bg-blue-50/60"
@@ -249,15 +281,15 @@ function HostMessagesContent() {
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        conversation.status === "pending"
+                        conversation.status === "PENDING"
                           ? "bg-blue-100 text-blue-700"
-                          : conversation.status === "accepted" ||
-                              conversation.status === "confirmed"
+                          : conversation.status === "ACCEPTED" ||
+                              conversation.status === "CONFIRMED"
                             ? "bg-green-100 text-green-700"
                             : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {conversation.status === "pending"
+                      {conversation.status === "PENDING"
                         ? "Pendiente"
                         : "Confirmada"}
                     </span>
@@ -271,10 +303,10 @@ function HostMessagesContent() {
                   </p>
 
                   <p className="mt-2 flex items-center gap-1 truncate text-xs text-gray-600">
-                    {lastMessage ? (
+                    {lastMessage && lastMessage.content ? (
                       <>
                         <span className="font-medium text-gray-800">
-                          {lastMessage.sender === "host" ? "Tú: " : ""}
+                          {/* Opcional: indicar si fuiste tú */}
                         </span>
                         {lastMessage.content}
                       </>
@@ -327,12 +359,8 @@ function HostMessagesContent() {
                     </div>
                   </div>
                   <p className="mt-2 text-xs text-gray-400">
-                    Creado el{" "}
-                    {formatDate(
-                      activeConversation.messages[0]?.timestamp ||
-                        new Date().toISOString()
-                    )}
-                    , justo después de enviar tu solicitud.
+                    Creado el {formatDate(activeConversation.autoCreatedAt)},
+                    justo después de enviar tu solicitud.
                   </p>
                 </div>
 
@@ -348,34 +376,42 @@ function HostMessagesContent() {
 
               {/* Mensajes */}
               <div className="flex-1 space-y-6 overflow-y-auto bg-white p-6">
-                {activeConversation.messages.map((msg) => {
-                  const isHost = msg.sender === "host";
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex w-full ${
-                        isHost ? "justify-end" : "justify-start"
-                      }`}
-                    >
+                {isLoadingMessages ? (
+                  <div className="flex justify-center p-4">
+                    <span className="text-xs text-gray-400">
+                      Cargando mensajes...
+                    </span>
+                  </div>
+                ) : (
+                  messages.map((msg) => {
+                    const isMe = msg.isMe;
+                    return (
                       <div
-                        className={`max-w-[75%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
-                          isHost
-                            ? "rounded-br-none bg-blue-600 text-white"
-                            : "rounded-bl-none bg-gray-100 text-gray-800"
+                        key={msg.id}
+                        className={`flex w-full ${
+                          isMe ? "justify-end" : "justify-start"
                         }`}
                       >
-                        <p>{msg.content}</p>
-                        <p
-                          className={`mt-2 text-right text-[10px] ${
-                            isHost ? "text-blue-200" : "text-gray-400"
+                        <div
+                          className={`max-w-[75%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
+                            isMe
+                              ? "rounded-br-none bg-blue-600 text-white"
+                              : "rounded-bl-none bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {formatTime(msg.timestamp)}
-                        </p>
+                          <p>{msg.content}</p>
+                          <p
+                            className={`mt-2 text-right text-[10px] ${
+                              isMe ? "text-blue-200" : "text-gray-400"
+                            }`}
+                          >
+                            {formatTime(msg.timestamp)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
                 <div ref={messagesEndRef} />
               </div>
 

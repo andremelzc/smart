@@ -52,27 +52,32 @@ export async function GET(
 
     const result = await executeQuery(messagesSql, { conversationId });
 
-    interface MessageRow {
-      MESSAGE_ID: number;
-      AUTHOR_USER_ID: number;
-      FIRST_NAME: string;
-      LAST_NAME: string;
-      CONTENT: string;
-      SENT_AT: string;
-      IS_READ: number;
-    }
+    // Helper to safely convert dates
+    const toISOStringOrNull = (date: unknown): string | null => {
+      if (!date) return null;
+      try {
+        if (date instanceof Date) {
+          return date.toISOString();
+        }
+        if (typeof date === "string") {
+          return new Date(date).toISOString();
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
 
-    const messages = (result?.rows || []).map((row: unknown) => {
-      const r = row as MessageRow;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages = (result?.rows || []).map((row: any) => {
       return {
-        id: r.MESSAGE_ID,
-        senderId: r.AUTHOR_USER_ID,
-        senderName: `${r.FIRST_NAME} ${r.LAST_NAME}`,
-        content: r.CONTENT,
-        timestamp: r.SENT_AT,
-        isRead: r.IS_READ === 1,
-        // Helper to determine if the message is from the current user (guest vs host logic handled in frontend)
-        isMe: r.AUTHOR_USER_ID == Number(userId),
+        id: Number(row.MESSAGE_ID) || 0,
+        senderId: Number(row.AUTHOR_USER_ID) || 0,
+        senderName: `${row.FIRST_NAME || ""} ${row.LAST_NAME || ""}`.trim(),
+        content: String(row.CONTENT || ""),
+        timestamp: toISOStringOrNull(row.SENT_AT) || new Date().toISOString(),
+        isRead: Number(row.IS_READ) === 1,
+        isMe: Number(row.AUTHOR_USER_ID) === Number(userId),
       };
     });
 
@@ -147,11 +152,25 @@ export async function POST(
     const newMessageId = outBinds?.out_id;
     const sentAt = outBinds?.out_sent_at;
 
+    // Safely convert sentAt to ISO string
+    let sentAtISO: string;
+    try {
+      if (sentAt instanceof Date) {
+        sentAtISO = sentAt.toISOString();
+      } else if (typeof sentAt === "string") {
+        sentAtISO = new Date(sentAt).toISOString();
+      } else {
+        sentAtISO = new Date().toISOString();
+      }
+    } catch {
+      sentAtISO = new Date().toISOString();
+    }
+
     return NextResponse.json({
-      id: newMessageId,
-      senderId: userId,
+      id: Number(newMessageId) || 0,
+      senderId: Number(userId) || 0,
       content: content.trim(),
-      timestamp: sentAt,
+      timestamp: sentAtISO,
       isMe: true,
     });
   } catch (error) {
