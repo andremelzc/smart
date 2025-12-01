@@ -21,7 +21,6 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<PropertyCreateResponse | PropertyErrorResponse>> {
   try {
-    // Verificar autenticación
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -137,7 +136,7 @@ export async function POST(
 
     const photoFiles = formData.getAll("photos");
 
-    const images: Array<{ url: string; caption?: string }> = [];
+    const images: Array<{ url: string; caption?: string; sort_order: number }> = [];
 
     if (photoFiles && photoFiles.length > 0) {
       for (let i = 0; i < photoFiles.length; i++) {
@@ -165,6 +164,7 @@ export async function POST(
           images.push({
             url: photoUrl,
             caption: caption,
+            sort_order: i,
           });
         } catch (uploadError) {
           console.error(`❌ Error al subir imagen ${i}:`, uploadError);
