@@ -52,7 +52,6 @@ export async function uploadFileToStorage(
       contentType: mimeType,
       cacheControl: "public, max-age=31536000", // cache por 1 año
     },
-    //predefinedAcl: 'publicRead' as const, // hacer el archivo público
   };
 
   try {

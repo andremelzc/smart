@@ -507,6 +507,16 @@ export class PropertyService {
    * @param data - Datos de la propiedad a crear
    * @returns Promise con el ID de la propiedad creada o lanza un error
    */
+
+  private static normalizeTime(time: string | undefined | null): string | null {
+    if (!time) return null;
+
+    // Si viene como "14:00:00", truncar a "14:00"
+    // Si viene como "14:00", mantener tal cual
+    const match = time.match(/^(\d{2}):(\d{2})/);
+    return match ? `${match[1]}:${match[2]}` : null;
+  }
+
   static async createProperty(
     hostId: number,
     data: Partial<PropertyDetail>
@@ -515,8 +525,10 @@ export class PropertyService {
 
     try {
       // Obtener conexión del pool
-      const pool = oracledb.getPool();
-      connection = await pool.getConnection();
+      connection = await getConnection();
+
+      const checkinTime = this.normalizeTime(data.checkinTime);
+      const checkoutTime = this.normalizeTime(data.checkoutTime);
 
       // Preparar los parámetros para el SP
       const bindParams = {
@@ -591,12 +603,12 @@ export class PropertyService {
           dir: oracledb.BIND_IN,
         },
         P_CHECKIN_TIME: {
-          val: data.checkinTime ?? null,
+          val: checkinTime,
           type: oracledb.STRING,
           dir: oracledb.BIND_IN,
         },
         P_CHECKOUT_TIME: {
-          val: data.checkoutTime ?? null,
+          val: checkoutTime,
           type: oracledb.STRING,
           dir: oracledb.BIND_IN,
         },
@@ -1042,7 +1054,7 @@ export class PropertyService {
       );
       throw new Error(
         "Error al guardar la imagen de la propiedad: " +
-          (error as Error).message
+        (error as Error).message
       );
     } finally {
       if (connection) {
@@ -1140,13 +1152,13 @@ export class PropertyService {
               amenities: [],
               images: processedRow.MAIN_IMAGE_URL
                 ? [
-                    {
-                      id: 0,
-                      url: processedRow.MAIN_IMAGE_URL,
-                      alt: "",
-                      isPrimary: true,
-                    },
-                  ]
+                  {
+                    id: 0,
+                    url: processedRow.MAIN_IMAGE_URL,
+                    alt: "",
+                    isPrimary: true,
+                  },
+                ]
                 : [],
               reviews: {
                 totalCount: 0,
