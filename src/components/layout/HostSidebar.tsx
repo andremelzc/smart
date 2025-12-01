@@ -135,19 +135,7 @@ export default function HostSidebar() {
                   </div>
                 </div>
 
-                <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-
-                    <span>245 huespedes</span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-500" />
-
-                    <span>4.8</span>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>

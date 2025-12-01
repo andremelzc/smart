@@ -54,23 +54,28 @@ export async function GET() {
         const bookingRows = await outBinds.p_bookings_cur.getRows();
 
         for (const row of bookingRows) {
-          const bookingRow = row as unknown[];
-
+          // Cambio aquí: de unknown[] a Record<string, unknown>
+          const bookingRow = row as Record<string, unknown>;
+          console.log("📝 Fila de booking (raw):", bookingRow);
+          console.log("Primera columna (bookingId):", bookingRow.BOOKING_ID);
+          
           bookings.push({
-            bookingId: bookingRow[0] as number,
-            checkinDate: bookingRow[1] as string,
-            checkoutDate: bookingRow[2] as string,
-            status: bookingRow[3] as string,
-            guestCount: bookingRow[4] as number,
-            totalAmount: bookingRow[5] as number,
-            propertyTitle: bookingRow[6] as string,
-            tenantFirstName: bookingRow[7] as string,
-            tenantLastName: bookingRow[8] as string,
-            imageUrl: bookingRow[9] as string | null,
+            bookingId: bookingRow.BOOKING_ID as number,
+            checkinDate: bookingRow.CHECKIN_DATE as string,
+            checkoutDate: bookingRow.CHECKOUT_DATE as string,
+            status: bookingRow.STATUS as string,
+            guestCount: bookingRow.GUEST_COUNT as number,
+            totalAmount: bookingRow.TOTAL_AMOUNT as number,
+            propertyTitle: bookingRow.PROPERTY_TITLE as string,
+            tenantFirstName: bookingRow.TENANT_FIRST_NAME as string,
+            tenantLastName: bookingRow.TENANT_LAST_NAME as string,
+            imageUrl: bookingRow.URL as string | null,
           });
         }
       } finally {
         await outBinds.p_bookings_cur.close();
+        console.log("Bookings: ", bookings.length);
+        console.log("Bookings data: ", bookings);
       }
     }
 

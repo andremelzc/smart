@@ -17,6 +17,8 @@ export async function GET() {
     const tenantId = parseInt(session.user.id);
     connection = await getConnection();
 
+    console.log("🔍 Buscando bookings para tenant_id:", tenantId);
+
     // Ejecutar el stored procedure
     const result = await connection.execute(
       `BEGIN
@@ -33,6 +35,26 @@ export async function GET() {
 
     const outBinds = result.outBinds as {
       p_bookings_cur?: oracledb.ResultSet<unknown>;
+    };
+
+    console.log("📦 Cursor recibido:", !!outBinds.p_bookings_cur);
+
+    // Helper functions para conversión segura
+    const toISOString = (value: unknown): string | null => {
+      if (!value) return null;
+      if (value instanceof Date) return value.toISOString();
+      if (typeof value === 'string') return value;
+      return String(value);
+    };
+
+    const toString = (value: unknown): string | null => {
+      if (value === null || value === undefined) return null;
+      return String(value);
+    };
+
+    const toNumber = (value: unknown): number => {
+      if (value === null || value === undefined) return 0;
+      return Number(value);
     };
 
     // Procesar cursor de bookings
@@ -58,33 +80,41 @@ export async function GET() {
     if (outBinds.p_bookings_cur) {
       try {
         const bookingRows = await outBinds.p_bookings_cur.getRows();
+        console.log("📊 Filas obtenidas:", bookingRows.length);
 
         for (const row of bookingRows) {
-          const bookingRow = row as unknown[];
+          const bookingRow = row as Record<string, unknown>;
+          
+          // Debug: imprime la primera fila para verificar nombres de columnas
+          if (bookings.length === 0) {
+            console.log("📝 Primera fila (nombres de columnas):", Object.keys(bookingRow));
+          }
 
           bookings.push({
-            bookingId: bookingRow[0] as number,
-            propertyId: bookingRow[1] as number,
-            checkinDate: bookingRow[2] as string,
-            checkoutDate: bookingRow[3] as string,
-            status: bookingRow[4] as string,
-            guestCount: bookingRow[5] as number,
-            title: bookingRow[6] as string,
-            formattedAddress: bookingRow[7] as string,
-            city: bookingRow[8] as string,
-            stateRegion: bookingRow[9] as string,
-            country: bookingRow[10] as string,
-            totalAmount: bookingRow[11] as number,
-            hostFirstName: bookingRow[12] as string,
-            hostLastName: bookingRow[13] as string,
-            hostNote: bookingRow[14] as string | null,
-            imageUrl: bookingRow[15] as string | null,
+            bookingId: toNumber(bookingRow.BOOKING_ID),
+            propertyId: toNumber(bookingRow.PROPERTY_ID),
+            checkinDate: toISOString(bookingRow.CHECKIN_DATE) || '',
+            checkoutDate: toISOString(bookingRow.CHECKOUT_DATE) || '',
+            status: toString(bookingRow.STATUS) || '',
+            guestCount: toNumber(bookingRow.GUEST_COUNT),
+            title: toString(bookingRow.TITLE) || '',
+            formattedAddress: toString(bookingRow.FORMATTED_ADDRESS) || '',
+            city: toString(bookingRow.CITY) || '',
+            stateRegion: toString(bookingRow.STATE_REGION) || '',
+            country: toString(bookingRow.COUNTRY) || '',
+            totalAmount: toNumber(bookingRow.TOTAL_AMOUNT),
+            hostFirstName: toString(bookingRow.HOST_FIRST_NAME) || '',
+            hostLastName: toString(bookingRow.HOST_LAST_NAME) || '',
+            hostNote: toString(bookingRow.HOST_NOTE),
+            imageUrl: toString(bookingRow.IMAGE_URL),
           });
         }
       } finally {
         await outBinds.p_bookings_cur.close();
       }
     }
+
+    console.log("✅ Bookings procesados:", bookings.length);
 
     // Respuesta exitosa
     return NextResponse.json({

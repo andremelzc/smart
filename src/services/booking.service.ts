@@ -443,5 +443,5 @@ export const bookingService = {
       throw new Error(data.error || "No se pudo cancelar la reserva");
     }
     return data;
-  },
+  }
 };

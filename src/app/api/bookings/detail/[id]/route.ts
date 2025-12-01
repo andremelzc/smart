@@ -69,46 +69,70 @@ export async function GET(
           );
         }
 
-        const row = rows[0] as unknown[];
+        console.log("📊 Filas obtenidas del cursor de reserva detallada:", rows.length);
+
+        const row = rows[0] as Record<string, unknown>;
+
+        console.log("📝 Datos de la fila:", row);
+
+        // Helper para convertir fechas de Oracle a string ISO
+        const toISOString = (value: unknown): string | null => {
+          if (!value) return null;
+          if (value instanceof Date) return value.toISOString();
+          if (typeof value === 'string') return value;
+          return String(value);
+        };
+
+        // Helper para convertir valores a string
+        const toString = (value: unknown): string | null => {
+          if (value === null || value === undefined) return null;
+          return String(value);
+        };
+
+        // Helper para convertir valores a número
+        const toNumber = (value: unknown): number => {
+          if (value === null || value === undefined) return 0;
+          return Number(value);
+        };
 
         bookingDetail = {
           // Datos básicos de la reserva
-          bookingId: row[0] as number,
-          status: row[1] as string,
-          checkinDate: row[2] as string,
-          checkoutDate: row[3] as string,
-          guestCount: row[4] as number,
-          totalAmount: row[5] as number,
-          basePrice: row[6] as number,
-          serviceFee: row[7] as number,
-          cleaningFee: row[8] as number,
-          taxes: row[9] as number,
-          createdAt: row[10] as string,
-          completedAt: row[11] as string | null,
-          hostNote: row[12] as string | null,
-          guestMessage: row[13] as string | null,
-          checkinCode: row[14] as string | null,
+          bookingId: toNumber(row.BOOKING_ID),
+          status: toString(row.STATUS) || '',
+          checkinDate: toISOString(row.CHECKIN_DATE) || '',
+          checkoutDate: toISOString(row.CHECKOUT_DATE) || '',
+          guestCount: toNumber(row.GUEST_COUNT),
+          totalAmount: toNumber(row.TOTAL_AMOUNT),
+          basePrice: toNumber(row.BASE_PRICE),
+          serviceFee: toNumber(row.SERVICE_FEE),
+          cleaningFee: toNumber(row.CLEANING_FEE),
+          taxes: toNumber(row.TAXES),
+          createdAt: toISOString(row.CREATED_AT) || '',
+          completedAt: toISOString(row.COMPLETED_AT),
+          hostNote: toString(row.HOST_NOTE),
+          guestMessage: toString(row.GUEST_MESSAGE),
+          checkinCode: toString(row.CHECKIN_CODE),
 
           // Datos del huésped
-          tenantId: row[15] as number,
-          guestFirstName: row[16] as string,
-          guestLastName: row[17] as string,
-          guestEmail: row[18] as string,
-          guestPhone: row[19] as string,
+          tenantId: toNumber(row.TENANT_ID),
+          guestFirstName: toString(row.GUEST_FIRST_NAME) || '',
+          guestLastName: toString(row.GUEST_LAST_NAME) || '',
+          guestEmail: toString(row.GUEST_EMAIL) || '',
+          guestPhone: toString(row.GUEST_PHONE) || '',
 
           // Datos de la propiedad
-          propertyId: row[20] as number,
-          propertyName: row[21] as string,
-          hostId: row[22] as number,
-          propertyAddress: row[23] as string,
+          propertyId: toNumber(row.PROPERTY_ID),
+          propertyName: toString(row.PROPERTY_NAME) || '',
+          hostId: toNumber(row.HOST_ID),
+          propertyAddress: toString(row.PROPERTY_ADDRESS) || '',
 
           // Datos de pagos
-          paymentStatus: row[24] as string | null,
-          paymentMessage: row[25] as string | null,
+          paymentStatus: toString(row.PAYMENT_STATUS),
+          paymentMessage: toString(row.PAYMENT_MESSAGE),
 
           // Datos de reseñas
-          hasHostReview: Boolean(row[26] as number),
-          hasGuestReview: Boolean(row[27] as number),
+          hasHostReview: Boolean(toNumber(row.HAS_HOST_REVIEW)),
+          hasGuestReview: Boolean(toNumber(row.HAS_GUEST_REVIEW)),
         };
       } finally {
         await outBinds.p_booking_info_cur.close();
