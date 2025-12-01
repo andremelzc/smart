@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import { PropertyService } from "@/src/services/property.service";
 import { uploadFileToStorage } from "@/src/lib/storage";
-import type { PropertyDetail } from "@/src/types/dtos/properties.dto";
 
 interface PropertyCreateResponse {
   success: true;
@@ -17,10 +16,6 @@ interface PropertyErrorResponse {
   details?: string;
 }
 
-/**
- * POST /api/properties
- * Crear una nueva propiedad
- */
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<PropertyCreateResponse | PropertyErrorResponse>> {
