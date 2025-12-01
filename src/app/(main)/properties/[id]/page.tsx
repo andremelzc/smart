@@ -5,7 +5,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/hooks/useAuth";
 import { usePropertyDetail } from "@/src/hooks/usePropertyDetail";
+import { useStartConversation } from "@/src/hooks/useStartConversation";
 import { GuestCounts } from "@/src/components/layout/search/GuestPopover";
+import { MessageCircle } from "lucide-react";
 import {
   PropertyReviews,
   PropertyImageGallery,
@@ -24,7 +26,6 @@ import {
   PropertyErrorState,
   PropertyNotFoundState,
 } from "@/src/components/features/properties/PropertyStates";
-import { set } from "zod";
 
 interface PropertyPageProps {
   params: Promise<{ id: string }>;
@@ -41,6 +42,8 @@ export default function PropertyPage({ params }: PropertyPageProps) {
   const router = useRouter();
   const { property, isLoading, error } = usePropertyDetail(id);
   const { isAuthenticated } = useAuth();
+  const { startConversationAndNavigate, isLoading: isStartingConversation } =
+    useStartConversation();
 
   // Estados para funcionalidades
 
@@ -140,9 +143,14 @@ export default function PropertyPage({ params }: PropertyPageProps) {
       return;
     }
 
-    if(selectedDates.checkIn === "2025-11-25" && selectedDates.checkOut === "2025-11-26") {
+    if (
+      selectedDates.checkIn === "2025-11-25" &&
+      selectedDates.checkOut === "2025-11-26"
+    ) {
       setPropertyOccupied(true);
-      setTimeout(() => {setPropertyOccupied(false)}, 10000);
+      setTimeout(() => {
+        setPropertyOccupied(false);
+      }, 10000);
       return;
     }
 
@@ -194,6 +202,19 @@ export default function PropertyPage({ params }: PropertyPageProps) {
     setShowSuccess(false);
   };
 
+  const handleContactHost = async () => {
+    if (!isAuthenticated) {
+      const callbackUrl = encodeURIComponent(window.location.href);
+      router.push(`/login?callbackUrl=${callbackUrl}`);
+      return;
+    }
+
+    await startConversationAndNavigate({
+      propertyId: parseInt(id),
+      initialMessage: `Hola, estoy interesado en ${property?.title}. ¿Podrías darme más información?`,
+    });
+  };
+
   return (
     <>
       <div className="min-h-screen bg-white">
@@ -234,6 +255,27 @@ export default function PropertyPage({ params }: PropertyPageProps) {
                 city={property.city}
                 country={property.country}
               />
+
+              {/* Contact Host Button */}
+              <div className="rounded-xl border border-gray-200 bg-white p-6">
+                <h3 className="mb-3 text-lg font-semibold text-gray-900">
+                  ¿Tienes preguntas?
+                </h3>
+                <p className="mb-4 text-sm text-gray-600">
+                  Contacta al anfitrión para resolver tus dudas antes de
+                  reservar
+                </p>
+                <button
+                  onClick={handleContactHost}
+                  disabled={isStartingConversation}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-600 bg-white px-4 py-3 font-medium text-blue-600 transition-all hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  {isStartingConversation
+                    ? "Iniciando chat..."
+                    : "Contactar al anfitrión"}
+                </button>
+              </div>
 
               {/* Descripcion */}
 
