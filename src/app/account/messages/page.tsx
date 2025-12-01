@@ -17,6 +17,7 @@ import {
   Users,
   MessageCircle,
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // --- 1. Definición de Tipos (API) ---
 
@@ -53,40 +54,39 @@ interface Conversation {
 function AccountMessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const queryClient = useQueryClient();
   const [currentMessage, setCurrentMessage] = useState("");
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Obtiene el ID de la conversación activa desde la URL
-  // Nota: La URL usa "reservationId" por legado, pero ahora usaremos conversationId (id numérico)
-  // Si el param es numérico, asumimos que es conversationId.
   const activeConversationIdParam = searchParams.get("conversationId");
 
   // --- Carga de Conversaciones ---
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
+  const { data: conversations = [], isLoading: isLoadingConversations } =
+    useQuery({
+      queryKey: ["conversations"],
+      queryFn: async () => {
         const res = await fetch("/api/conversations");
         if (!res.ok) throw new Error("Error fetching conversations");
-        const data = await res.json();
-        setConversations(data);
+        return res.json() as Promise<Conversation[]>;
+      },
+    });
 
-        // Si no hay conversación seleccionada y hay conversaciones, seleccionar la primera
-        if (!activeConversationIdParam && data.length > 0) {
-          router.replace(`/account/messages?conversationId=${data[0].id}`);
-        }
-      } catch (error) {
-        console.error("Error cargando conversaciones:", error);
-      } finally {
-        setIsLoadingConversations(false);
-      }
-    };
-
-    fetchConversations();
-  }, [router, activeConversationIdParam]);
+  // Seleccionar la primera conversación si no hay ninguna seleccionada
+  useEffect(() => {
+    if (
+      !isLoadingConversations &&
+      !activeConversationIdParam &&
+      conversations.length > 0
+    ) {
+      router.replace(`/account/messages?conversationId=${conversations[0].id}`);
+    }
+  }, [
+    isLoadingConversations,
+    activeConversationIdParam,
+    conversations,
+    router,
+  ]);
 
   // Encontrar la conversación activa
   const activeConversation = useMemo(() => {
@@ -98,41 +98,116 @@ function AccountMessagesContent() {
     );
   }, [conversations, activeConversationIdParam]);
 
-  // --- Carga de Mensajes ---
-  useEffect(() => {
-    if (!activeConversation) return;
+  // --- Carga de Mensajes (Initial Load) ---
+  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
+    queryKey: ["messages", activeConversationIdParam],
+    queryFn: async () => {
+      if (!activeConversationIdParam) return [];
+      const res = await fetch(
+        `/api/conversations/${activeConversationIdParam}/messages?limit=50`
+      );
+      if (!res.ok) throw new Error("Error fetching messages");
+      return res.json() as Promise<Message[]>;
+    },
+    enabled: !!activeConversationIdParam,
+    staleTime: Infinity, // No refetch automatically, we handle updates manually
+  });
 
-    const fetchMessages = async () => {
-      setIsLoadingMessages(true);
+  // --- Polling Incremental ---
+  useEffect(() => {
+    if (!activeConversationIdParam) return;
+
+    const pollMessages = async () => {
+      // Obtener el último mensaje del cache actual
+      const currentMessages = queryClient.getQueryData<Message[]>([
+        "messages",
+        activeConversationIdParam,
+      ]);
+      const lastMessage = currentMessages?.[currentMessages.length - 1];
+      const afterTimestamp = lastMessage?.timestamp;
+
+      if (!afterTimestamp) return;
+
       try {
         const res = await fetch(
-          `/api/conversations/${activeConversation.id}/messages`
+          `/api/conversations/${activeConversationIdParam}/messages?after=${afterTimestamp}`
         );
-        if (!res.ok) throw new Error("Error fetching messages");
-        const data = await res.json();
-        setMessages(data);
+        if (!res.ok) return;
+        const newMessages: Message[] = await res.json();
+
+        if (newMessages.length > 0) {
+          queryClient.setQueryData<Message[]>(
+            ["messages", activeConversationIdParam],
+            (old) => [...(old || []), ...newMessages]
+          );
+        }
       } catch (error) {
-        console.error("Error cargando mensajes:", error);
-      } finally {
-        setIsLoadingMessages(false);
+        console.error("Error polling messages:", error);
       }
     };
 
-    fetchMessages();
-
-    // Polling simple para nuevos mensajes (opcional, cada 10s)
-    const interval = setInterval(fetchMessages, 10000);
-    return () => clearInterval(interval);
-  }, [activeConversation]);
+    const intervalId = setInterval(pollMessages, 5000); // Poll cada 5 segundos
+    return () => clearInterval(intervalId);
+  }, [activeConversationIdParam, queryClient]);
 
   // Scroll automático al último mensaje
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages.length, activeConversationIdParam]);
 
-  // --- Manejadores de Eventos ---
+  // --- Enviar Mensaje ---
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!activeConversation) throw new Error("No active conversation");
+      const res = await fetch(
+        `/api/conversations/${activeConversation.id}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        }
+      );
+      if (!res.ok) throw new Error("Error sending message");
+      return res.json() as Promise<Message>;
+    },
+    onSuccess: (newMessage) => {
+      // Actualizar la lista de mensajes
+      queryClient.setQueryData<Message[]>(
+        ["messages", activeConversationIdParam],
+        (old) => [...(old || []), newMessage]
+      );
+
+      // Actualizar la última mensaje en la lista de conversaciones
+      queryClient.setQueryData<Conversation[]>(["conversations"], (old) =>
+        (old || []).map((c) =>
+          c.id === activeConversation?.id
+            ? {
+                ...c,
+                lastMessage: {
+                  content: newMessage.content,
+                  senderId: newMessage.senderId,
+                  timestamp: newMessage.timestamp,
+                },
+              }
+            : c
+        )
+      );
+    },
+  });
+
+  const handleSendMessage = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!currentMessage.trim() || !activeConversation) return;
+
+      const content = currentMessage.trim();
+      setCurrentMessage(""); // Limpiar input inmediatamente
+      sendMessageMutation.mutate(content);
+    },
+    [currentMessage, activeConversation, sendMessageMutation]
+  );
 
   // Cambiar de conversación activa
   const handleSelectConversation = useCallback(
@@ -140,53 +215,6 @@ function AccountMessagesContent() {
       router.push(`/account/messages?conversationId=${conversationId}`);
     },
     [router]
-  );
-
-  // Enviar un nuevo mensaje
-  const handleSendMessage = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!currentMessage.trim() || !activeConversation) return;
-
-      const content = currentMessage.trim();
-      setCurrentMessage(""); // Limpiar input inmediatamente
-
-      try {
-        const res = await fetch(
-          `/api/conversations/${activeConversation.id}/messages`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content }),
-          }
-        );
-
-        if (!res.ok) throw new Error("Error enviando mensaje");
-
-        const newMessage = await res.json();
-        setMessages((prev) => [...prev, newMessage]);
-
-        // Actualizar la última mensaje en la lista de conversaciones (opcional pero recomendado)
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === activeConversation.id
-              ? {
-                  ...c,
-                  lastMessage: {
-                    content: newMessage.content,
-                    senderId: newMessage.senderId,
-                    timestamp: newMessage.timestamp,
-                  },
-                }
-              : c
-          )
-        );
-      } catch (error) {
-        console.error("Error enviando mensaje:", error);
-        // Aquí podrías mostrar un toast de error o restaurar el mensaje en el input
-      }
-    },
-    [currentMessage, activeConversation]
   );
 
   if (isLoadingConversations) {
@@ -198,25 +226,27 @@ function AccountMessagesContent() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <MessageCircle className="h-5 w-5 text-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">
-          Chat disponible cuando envías una solicitud
+    <div className="flex flex-col gap-4 h-full">
+      <div className="flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-blue-600" />
+          <p className="text-sm font-semibold text-gray-700">
+            Chat disponible cuando envías una solicitud
+          </p>
+        </div>
+        <h1 className="text-gray-dark-900 mb-2 text-3xl font-semibold">
+          Mensajes
+        </h1>
+        <p className="text-gray-dark-600 -mt-4">
+          Cada vez que solicitas una reserva, Smart abre un canal directo con el
+          anfitrión para resolver dudas y acelerar la confirmación.
         </p>
       </div>
-      <h1 className="text-gray-dark-900 mb-2 text-3xl font-semibold">
-        Mensajes
-      </h1>
-      <p className="text-gray-dark-600 -mt-4">
-        Cada vez que solicitas una reserva, Smart abre un canal directo con el
-        anfitrión para resolver dudas y acelerar la confirmación.
-      </p>
 
-      <div className="grid h-[calc(100vh-300px)] min-h-[500px] grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 md:grid-cols-3">
+      <div className="grid flex-1 grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 md:grid-cols-3" style={{ minHeight: '600px', maxHeight: 'calc(100vh - 250px)' }}>
         {/* Columna Izquierda: Lista de Conversaciones */}
-        <div className="flex flex-col border-r border-gray-200 bg-white">
-          <div className="border-b border-gray-200 p-4">
+        <div className="flex flex-col border-r border-gray-200 bg-white overflow-hidden">
+          <div className="flex-shrink-0 border-b border-gray-200 p-4">
             <div className="relative">
               <input
                 type="text"
@@ -249,12 +279,14 @@ function AccountMessagesContent() {
         </div>
 
         {/* Columna Derecha: Chat Activo */}
-        <div className="flex h-full flex-col bg-gray-50 md:col-span-2">
+        <div className="flex flex-col bg-gray-50 md:col-span-2 overflow-hidden">
           {!activeConversation ? (
             <ChatPlaceholder />
           ) : (
             <>
-              <ChatHeader conversation={activeConversation} />
+              <div className="flex-shrink-0">
+                <ChatHeader conversation={activeConversation} />
+              </div>
 
               <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
                 <p className="text-center text-xs text-gray-400">
@@ -286,11 +318,13 @@ function AccountMessagesContent() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <ChatInput
-                currentMessage={currentMessage}
-                setCurrentMessage={setCurrentMessage}
-                onSendMessage={handleSendMessage}
-              />
+              <div className="flex-shrink-0">
+                <ChatInput
+                  currentMessage={currentMessage}
+                  setCurrentMessage={setCurrentMessage}
+                  onSendMessage={handleSendMessage}
+                />
+              </div>
             </>
           )}
         </div>

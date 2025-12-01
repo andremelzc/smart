@@ -18,6 +18,9 @@ export async function GET(
 
     const { id: conversationId } = await params;
     const userId = session.user.id;
+    const { searchParams } = new URL(request.url);
+    const after = searchParams.get("after");
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
 
     // 1. Verify user is a participant in this conversation
     const participantSql = `
@@ -35,7 +38,7 @@ export async function GET(
     }
 
     // 2. Fetch messages
-    const messagesSql = `
+    let messagesSql = `
       SELECT 
         m.MESSAGE_ID,
         m.AUTHOR_USER_ID,
@@ -47,10 +50,19 @@ export async function GET(
       FROM MESSAGES m
       JOIN USERS u ON m.AUTHOR_USER_ID = u.USER_ID
       WHERE m.CONVERSATION_ID = :conversationId
-      ORDER BY m.SENT_AT ASC
     `;
 
-    const result = await executeQuery(messagesSql, { conversationId });
+    const binds: oracledb.BindParameters = { conversationId };
+
+    if (after) {
+      messagesSql += ` AND m.SENT_AT > TO_TIMESTAMP_TZ(:after, 'YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"')`;
+      (binds as Record<string, unknown>).after = after;
+    }
+
+    messagesSql += ` ORDER BY m.SENT_AT ASC FETCH FIRST :limit ROWS ONLY`;
+    (binds as Record<string, unknown>).limit = limit;
+
+    const result = await executeQuery(messagesSql, binds);
 
     // Helper to safely convert dates
     const toISOStringOrNull = (date: unknown): string | null => {
