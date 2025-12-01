@@ -21,6 +21,7 @@ export interface UpdatePropertyBody {
   beds?: number;
 }
 
+// Tipo para el body del request de creación
 export interface CreatePropertyData {
   title: string;
   propertyType: string;
