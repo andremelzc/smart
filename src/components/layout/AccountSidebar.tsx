@@ -86,31 +86,27 @@ export default function AccountSidebar() {
                   alt={user.name || "Usuario"}
                   width={64}
                   height={64}
-                  className="rounded-full border-4 border-white object-cover shadow-lg"
+                  className="rounded-full border-3 border-white object-cover shadow-lg"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-                  <User className="h-8 w-8 text-white" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-3 border-white bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                  <span className="text-2xl font-bold text-white">
+                    {user?.name?.charAt(0)?.toUpperCase() || "?"}
+                  </span>
                 </div>
               )}
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate text-lg font-bold text-gray-900">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900">
                   {user?.name || "Usuario"}
                 </h3>
-                <p
-                  className="mt-0.5 truncate text-sm text-gray-600"
-                  title={user?.email || undefined}
-                >
-                  {user?.email}
-                </p>
-                {isHost && (
-                  <div className="mt-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
-                      <Building2 className="h-3.5 w-3.5" />
-                      Anfitrion
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-700">
+                      Huésped
                     </span>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

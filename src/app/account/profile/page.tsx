@@ -338,14 +338,14 @@ export default function ProfilePage() {
 
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-gray-dark-900 text-2xl font-bold">8</p>
+                      <p className="text-gray-dark-900 text-2xl font-bold">{spProfileData?.totalBookings}</p>
 
                       <p className="text-gray-dark-500 text-sm">Viajes</p>
                     </div>
 
                     <div>
                       <p className="text-gray-dark-900 text-2xl font-bold">
-                        4.9
+                        {spProfileData?.averageRating === null ? "N/A" : spProfileData?.averageRating}
                       </p>
 
                       <p className="text-gray-dark-500 text-sm">Calificación</p>

@@ -63,8 +63,8 @@ export const PropertyReviews = ({ reviews }: PropertyReviewsProps) => {
         <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
 
         <h3 className="text-xl font-semibold">
-          {realAverageRating.toFixed(1)} {realTotalCount} resena
-          {realTotalCount !== 1 ? "s" : ""}
+          {realAverageRating.toFixed(1)} ({realTotalCount} reseña
+          {realTotalCount !== 1 ? "s" : ""})
         </h3>
       </div>
 
@@ -108,14 +108,10 @@ export const PropertyReviews = ({ reviews }: PropertyReviewsProps) => {
             return (
               <div
                 key={index}
-                className="border-b border-gray-100 pb-4 last:border-b-0"
+                className="border-b border-gray-100 pb-6 last:border-b-0"
               >
-                <div className="mb-2 flex items-start justify-between">
-                  <div>
-                    <div className="font-medium">{authorName}</div>
-
-                    <div className="text-sm text-gray-500">{formattedDate}</div>
-                  </div>
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="font-medium text-gray-900">{authorName}</div>
 
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
@@ -131,7 +127,31 @@ export const PropertyReviews = ({ reviews }: PropertyReviewsProps) => {
                   </div>
                 </div>
 
-                <p className="text-gray-700">{comment}</p>
+                {/* Comentario en card azul */}
+                {comment && (
+                  <div className="mb-3 rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <svg
+                        className="h-5 w-5 flex-shrink-0 text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                        />
+                      </svg>
+                      <p className="flex-1 italic text-gray-700">
+                        &ldquo;{comment}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-sm text-gray-500">{formattedDate}</div>
               </div>
             );
           })}

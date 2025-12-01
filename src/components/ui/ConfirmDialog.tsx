@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/src/components/ui/Button";
 
 type ConfirmDialogProps = {
@@ -50,10 +50,7 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center px-4">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
 
       <div className="relative z-[90] w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
@@ -63,7 +60,9 @@ export function ConfirmDialog({
 
         {requirePrice && (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Precio por noche</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Precio por noche
+            </label>
             <input
               type="number"
               step="0.01"
@@ -75,7 +74,9 @@ export function ConfirmDialog({
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <Button variant="ghost" onClick={onCancel}>{cancelLabel}</Button>
+          <Button variant="ghost" onClick={onCancel}>
+            {cancelLabel}
+          </Button>
           <Button onClick={handleConfirm}>{confirmLabel}</Button>
         </div>
       </div>

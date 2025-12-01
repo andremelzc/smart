@@ -7,6 +7,8 @@ interface UseProfileDetailsReturn {
     firstName: string | null;
     lastName: string | null;
     bio: string | null;
+    averageRating?: number | null;
+    totalBookings?: number | null;
   } | null;
   preferences: UserPreference[];
   loading: boolean;
@@ -26,6 +28,8 @@ export function useProfileDetails(): UseProfileDetailsReturn {
     firstName: string | null;
     lastName: string | null;
     bio: string | null;
+    averageRating?: number | null;
+    totalBookings?: number | null;
   } | null>(null);
 
   const [preferences, setPreferences] = useState<UserPreference[]>([]);

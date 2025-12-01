@@ -6,8 +6,10 @@ import React, { useState, useEffect } from "react";
 import { Star, MessageSquare, Filter, Search, Loader2, TrendingUp } from "lucide-react";
 import { useAuth } from "@/src/hooks/useAuth";
 import { Button } from "@/src/components/ui/Button";
+import { reviewService } from "@/src/services/review.service";
+import type { HostReviewStats } from "@/src/types/dtos/reviews.dto";
 
-// Tipo para una reseña individual
+// Tipo para una reseña individual (compatible con la vista)
 type Review = {
   id: number;
   guestName: string;
@@ -22,17 +24,7 @@ type Review = {
 };
 
 // Tipo para las estadísticas de reseñas
-type ReviewStats = {
-  totalReviews: number;
-  averageRating: number;
-  ratingDistribution: {
-    5: number;
-    4: number;
-    3: number;
-    2: number;
-    1: number;
-  };
-};
+type ReviewStats = HostReviewStats;
 
 export default function ReviewsPage() {
   // Hook de autenticación para obtener el host ID
@@ -61,70 +53,33 @@ export default function ReviewsPage() {
         setLoading(true);
         setError(null);
 
-        // TODO: Reemplazar con la llamada real a la API
-        // const response = await fetch(`/api/host/${user.id}/reviews`);
-        // const data = await response.json();
+        // Llamar a la API real para obtener reseñas del host
+        const { reviews: apiReviews, stats: apiStats } = await reviewService.getHostReceivedReviews();
 
-        // Datos de ejemplo (simular respuesta de API)
-        const mockReviews: Review[] = [
-          {
-            id: 1,
-            guestName: "María González",
-            propertyTitle: "Departamento en el centro",
-            propertyId: 1,
-            rating: 5,
-            comment: "Excelente estadía! El departamento estaba impecable y la ubicación es perfecta. El anfitrión fue muy atento y respondió rápidamente a todas nuestras consultas.",
-            createdAt: "2024-11-20T10:30:00Z",
-            checkInDate: "2024-11-15",
-            checkOutDate: "2024-11-18",
-          },
-          {
-            id: 2,
-            guestName: "Carlos Ramírez",
-            propertyTitle: "Casa cerca de la playa",
-            propertyId: 2,
-            rating: 4,
-            comment: "Muy buena experiencia. La casa es tal como se describe en las fotos. Solo faltaron algunos utensilios de cocina, pero en general todo estuvo bien.",
-            createdAt: "2024-11-18T15:45:00Z",
-            checkInDate: "2024-11-10",
-            checkOutDate: "2024-11-17",
-          },
-          {
-            id: 3,
-            guestName: "Ana Martínez",
-            propertyTitle: "Departamento en el centro",
-            propertyId: 1,
-            rating: 5,
-            comment: "¡Perfecto! Superó nuestras expectativas. Muy limpio, cómodo y bien equipado. Definitivamente volveremos.",
-            createdAt: "2024-11-10T09:20:00Z",
-            checkInDate: "2024-11-05",
-            checkOutDate: "2024-11-09",
-          },
-        ];
+        // Mapear ReviewWithReviewer[] a Review[] para compatibilidad con la UI
+        const mappedReviews: Review[] = apiReviews.map((review) => ({
+          id: review.reviewId,
+          guestName: reviewService.formatFullName(review.reviewerFirstName, review.reviewerLastName),
+          guestAvatar: review.reviewerImage,
+          propertyTitle: review.propertyTitle || '',
+          propertyId: review.propertyId || 0,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt,
+          checkInDate: review.checkinDate || '',
+          checkOutDate: review.checkoutDate || '',
+        }));
 
-        const mockStats: ReviewStats = {
-          totalReviews: 3,
-          averageRating: 4.7,
-          ratingDistribution: {
-            5: 2,
-            4: 1,
-            3: 0,
-            2: 0,
-            1: 0,
-          },
-        };
+        // Extraer propiedades únicas para el filtro
+        const uniqueProperties = Array.from(
+          new Map(
+            mappedReviews.map((r) => [r.propertyId, { id: r.propertyId, title: r.propertyTitle }])
+          ).values()
+        );
 
-        const mockProperties = [
-          { id: 1, title: "Departamento en el centro" },
-          { id: 2, title: "Casa cerca de la playa" },
-        ];
-
-        // Simular delay de red
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setReviews(mockReviews);
-        setStats(mockStats);
-        setProperties(mockProperties);
+        setReviews(mappedReviews);
+        setStats(apiStats);
+        setProperties(uniqueProperties);
       } catch (err) {
         console.error("Error al cargar reseñas:", err);
         setError("No se pudieron cargar las reseñas. Por favor, intenta de nuevo.");

@@ -182,8 +182,8 @@ export default function BecomeHostModal({
     <div
       className="animate-fadeIn fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={handleBackdropClick}
-      onMouseDown={(_e) => console.log("🌑 MouseDown en BACKDROP")}
-      onMouseUp={(_e) => console.log("🌑 MouseUp en BACKDROP")}
+      onMouseDown={() => console.log("🌑 MouseDown en BACKDROP")}
+      onMouseUp={() => console.log("🌑 MouseUp en BACKDROP")}
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
     >
       <div

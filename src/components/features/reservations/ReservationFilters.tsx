@@ -58,7 +58,7 @@ export function ReservationFilters<T = string>({
                   <button
                     key={String(segment.key)}
                     onClick={() => onStatusChange(segment.key)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors min-w-[100px] text-center ${
                       isSelected
                         ? "bg-blue-light-100 text-blue-light-700 border-blue-light-300 border"
                         : "border border-transparent text-gray-600 hover:bg-gray-100"
@@ -86,7 +86,7 @@ export function ReservationFilters<T = string>({
                       <button
                         key={segment.key}
                         onClick={() => onTimeChange!(segment.key)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors min-w-[100px] text-center ${
                           isActive
                             ? "bg-blue-light-100 text-blue-light-700 border-blue-light-300 border"
                             : "border border-transparent text-gray-600 hover:bg-gray-100"

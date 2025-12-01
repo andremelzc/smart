@@ -168,7 +168,9 @@ export default function HostReservationsPage() {
       if (timeFilter === "present") {
         matchesTime = checkIn <= today && checkOut >= today;
       } else if (timeFilter === "upcoming") {
-        matchesTime = checkIn > today;
+        // Para próximas: solo futuras Y que no estén canceladas/rechazadas
+        matchesTime = checkIn > today && 
+          !['cancelled', 'declined'].includes(reservation.status.toLowerCase());
       } else if (timeFilter === "past") {
         matchesTime = checkOut < today;
       }

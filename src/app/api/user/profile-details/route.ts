@@ -69,6 +69,8 @@ export async function GET() {
           firstName: row[0] as string | null,
           lastName: row[1] as string | null,
           bio: bio,
+          averageRating: row[3] as number | null,
+          totalBookings: row[4] as number | null,
         };
       }
       await outBinds.p_profile_cursor.close();
