@@ -58,7 +58,7 @@ interface OracleAmenityRow {
 
 interface OracleReviewRow {
   RATING?: number;
-  comment?: string;
+  COMMENTS?: string;
   CREATED_AT?: string | Date;
   AUTHOR_FIRST_NAME?: string;
   AUTHOR_LAST_NAME?: string;
@@ -422,7 +422,7 @@ export class PropertyService {
           )) as OracleReviewRow;
           reviewsList.push({
             rating: processedReviewRow.RATING || 0,
-            comment: processedReviewRow.comment || "",
+            comment: processedReviewRow.COMMENTS || "",
             createdAt:
               typeof processedReviewRow.CREATED_AT === "string"
                 ? processedReviewRow.CREATED_AT
