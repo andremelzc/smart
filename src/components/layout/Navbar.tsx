@@ -535,9 +535,9 @@ export default function Navbar() {
                   className={`relative flex flex-[1.3] items-center gap-2 rounded-full py-2 pr-2 pl-6 transition-all duration-300 ${
                     activeSearchPanel === "guests"
                       ? "z-10 bg-white shadow-lg ring-1 ring-black/5"
-                      : "hover:bg-gray-100 cursor-pointer"
+                      : "cursor-pointer hover:bg-gray-100"
                   }`}
-                  onClick={(e) => {
+                  onClick={() => {
                     if (activeSearchPanel !== "guests") {
                       toggleSearchPanel("guests");
                     }

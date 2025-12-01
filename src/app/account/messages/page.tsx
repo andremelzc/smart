@@ -18,20 +18,21 @@ import {
   MessageCircle,
 } from "lucide-react";
 
-// --- 1. Definición de Tipos (basado en tu lógica de reservas) ---
+// --- 1. Definición de Tipos (API) ---
 
-// Estructura del mensaje individual
 interface Message {
-  id: string;
-  sender: "guest" | "host";
+  id: number;
+  senderId: number;
+  senderName: string;
   content: string;
   timestamp: string;
+  isRead: boolean;
+  isMe: boolean;
 }
 
-// Estructura de la conversación guardada en Local Storage
 interface Conversation {
-  id: string; // "CHAT-RES-XXXX"
-  reservationId: string; // "RES-XXXX"
+  id: number;
+  reservationId: string | null;
   hostName: string;
   propertyName: string;
   location: string;
@@ -39,97 +40,12 @@ interface Conversation {
   checkIn: string;
   checkOut: string;
   guests: number;
-  status: "confirmed" | "pending";
-  messages: Message[];
-}
-
-const CHAT_STORAGE_KEY = "smart-guest-chats";
-
-// --- NUEVO: Datos Dummy para el prototipo (basado en tu mockup) ---
-const DUMMY_CONVERSATIONS: Conversation[] = [
-  {
-    id: "CHAT-RES-2045",
-    reservationId: "RES-2045",
-    hostName: "Ana Rodriguez",
-    propertyName: "Loft moderno en Miraflores",
-    location: "Lima, Peru",
-    autoCreatedAt: "2025-10-24T12:35:00Z",
-    checkIn: "2025-10-24T14:00:00Z",
-    checkOut: "2025-10-28T11:00:00Z",
-    guests: 2,
-    status: "pending",
-    messages: [
-      {
-        id: "guest-1",
-        sender: "guest",
-        content:
-          "Hola Ana, acabo de enviar la solicitud. ¿Podrías confirmar si el loft tiene escritorio amplio?",
-        timestamp: "2025-10-24T12:38:00Z",
-      },
-      {
-        id: "host-1",
-        sender: "host",
-        content:
-          "Hola María, si contamos con escritorio y monitor. ¿Necesitas algo adicional?",
-        timestamp: "2025-10-24T12:39:00Z",
-      },
-    ],
-  },
-  {
-    id: "CHAT-RES-2078",
-    reservationId: "RES-2078",
-    hostName: "Luis Flores",
-    propertyName: "Casa frente al mar en Mancora",
-    location: "Mancora, Peru",
-    autoCreatedAt: "2025-10-22T10:00:00Z",
-    checkIn: "2025-11-15T14:00:00Z",
-    checkOut: "2025-11-20T11:00:00Z",
-    guests: 4,
-    status: "confirmed",
-    messages: [
-      {
-        id: "host-2",
-        sender: "host",
-        content: "¡Reserva confirmada! Los esperamos.",
-        timestamp: "2025-10-22T10:28:00Z",
-      },
-      {
-        id: "guest-2",
-        sender: "guest",
-        content:
-          "Perfecto, estaremos atentos. ¿Podríamos ingresar un poco antes?",
-        timestamp: "2025-10-22T10:29:00Z",
-      },
-    ],
-  },
-];
-
-// --- NUEVO: Función para inicializar los datos dummy ---
-/**
- * Comprueba Local Storage. Si está vacío, inyecta los datos dummy.
- */
-function initializeDummyChats() {
-  try {
-    const rawData = window.localStorage.getItem(CHAT_STORAGE_KEY);
-    const existingConvos = rawData ? JSON.parse(rawData) : [];
-    if (!Array.isArray(existingConvos) || existingConvos.length === 0) {
-      // Solo inyecta si el Local Storage está vacío
-      window.localStorage.setItem(
-        CHAT_STORAGE_KEY,
-        JSON.stringify(DUMMY_CONVERSATIONS)
-      );
-      return DUMMY_CONVERSATIONS;
-    }
-    return existingConvos;
-  } catch (error) {
-    console.error("Error al inicializar chats:", error);
-    // En caso de error (ej. JSON malformado), forzamos los dummies
-    window.localStorage.setItem(
-      CHAT_STORAGE_KEY,
-      JSON.stringify(DUMMY_CONVERSATIONS)
-    );
-    return DUMMY_CONVERSATIONS;
-  }
+  status: string;
+  lastMessage: {
+    content: string;
+    senderId: number;
+    timestamp: string;
+  };
 }
 
 // --- 2. Componente Principal del Chat (Contenido de la Página) ---
@@ -138,106 +54,142 @@ function AccountMessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Obtiene el ID de la conversación activa desde la URL
-  const activeReservationId = searchParams.get("reservationId");
+  // Nota: La URL usa "reservationId" por legado, pero ahora usaremos conversationId (id numérico)
+  // Si el param es numérico, asumimos que es conversationId.
+  const activeConversationIdParam = searchParams.get("conversationId");
 
-  // --- Carga de Datos y Sincronización ---
-
-  // Cargar conversaciones desde Local Storage al montar el componente
+  // --- Carga de Conversaciones ---
   useEffect(() => {
-    try {
-      // --- MODIFICADO: Usamos la función de inicialización ---
-      const allConvos = initializeDummyChats();
-      setConversations(allConvos);
+    const fetchConversations = async () => {
+      try {
+        const res = await fetch("/api/conversations");
+        if (!res.ok) throw new Error("Error fetching conversations");
+        const data = await res.json();
+        setConversations(data);
 
-      // --- NUEVO: Seleccionar el primer chat si no hay ninguno activo ---
-      const currentReservationId = searchParams.get("reservationId");
-      if (!currentReservationId && allConvos.length > 0) {
-        // Redirige para seleccionar el primer chat de la lista
-        router.replace(
-          `/account/messages?reservationId=${allConvos[0].reservationId}`
-        );
+        // Si no hay conversación seleccionada y hay conversaciones, seleccionar la primera
+        if (!activeConversationIdParam && data.length > 0) {
+          router.replace(`/account/messages?conversationId=${data[0].id}`);
+        }
+      } catch (error) {
+        console.error("Error cargando conversaciones:", error);
+      } finally {
+        setIsLoadingConversations(false);
       }
-    } catch (error) {
-      console.error("Error al cargar chats:", error);
-      setConversations([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router, searchParams]);
+    };
+
+    fetchConversations();
+  }, [router, activeConversationIdParam]);
 
   // Encontrar la conversación activa
   const activeConversation = useMemo(() => {
-    // --- MODIFICADO: Selecciona el primero si no hay ID en URL ---
-    if (!activeReservationId) {
-      // Si no hay ID en la URL pero ya tenemos conversaciones, mostramos la primera
-      return conversations[0] || null;
-    }
+    if (!activeConversationIdParam) return null;
     return (
-      conversations.find((c) => c.reservationId === activeReservationId) || null
+      conversations.find(
+        (c) => c.id.toString() === activeConversationIdParam
+      ) || null
     );
-  }, [conversations, activeReservationId]);
+  }, [conversations, activeConversationIdParam]);
+
+  // --- Carga de Mensajes ---
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    const fetchMessages = async () => {
+      setIsLoadingMessages(true);
+      try {
+        const res = await fetch(
+          `/api/conversations/${activeConversation.id}/messages`
+        );
+        if (!res.ok) throw new Error("Error fetching messages");
+        const data = await res.json();
+        setMessages(data);
+      } catch (error) {
+        console.error("Error cargando mensajes:", error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+
+    // Polling simple para nuevos mensajes (opcional, cada 10s)
+    const interval = setInterval(fetchMessages, 10000);
+    return () => clearInterval(interval);
+  }, [activeConversation]);
 
   // Scroll automático al último mensaje
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [activeConversation?.messages]);
+  }, [messages]);
 
   // --- Manejadores de Eventos ---
 
   // Cambiar de conversación activa
   const handleSelectConversation = useCallback(
-    (reservationId: string) => {
-      // Actualiza la URL sin recargar la página
-      router.push(`/account/messages?reservationId=${reservationId}`);
+    (conversationId: number) => {
+      router.push(`/account/messages?conversationId=${conversationId}`);
     },
     [router]
   );
 
   // Enviar un nuevo mensaje
   const handleSendMessage = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault();
       if (!currentMessage.trim() || !activeConversation) return;
 
-      const newMessage: Message = {
-        id: `guest-${Date.now()}`,
-        sender: "guest",
-        content: currentMessage.trim(),
-        timestamp: new Date().toISOString(),
-      };
+      const content = currentMessage.trim();
+      setCurrentMessage(""); // Limpiar input inmediatamente
 
-      // Actualiza el estado y Local Storage
-      const updatedConversations = conversations.map((convo) => {
-        if (convo.id === activeConversation.id) {
-          return {
-            ...convo,
-            messages: [...convo.messages, newMessage],
-          };
-        }
-        return convo;
-      });
+      try {
+        const res = await fetch(
+          `/api/conversations/${activeConversation.id}/messages`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content }),
+          }
+        );
 
-      setConversations(updatedConversations);
-      setCurrentMessage("");
-      window.localStorage.setItem(
-        CHAT_STORAGE_KEY,
-        JSON.stringify(updatedConversations)
-      );
+        if (!res.ok) throw new Error("Error enviando mensaje");
 
-      // TODO: Aquí iría la llamada a la API del backend para enviar el mensaje
-      // await chatService.sendMessage(activeConversation.id, newMessage);
+        const newMessage = await res.json();
+        setMessages((prev) => [...prev, newMessage]);
+
+        // Actualizar la última mensaje en la lista de conversaciones (opcional pero recomendado)
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeConversation.id
+              ? {
+                  ...c,
+                  lastMessage: {
+                    content: newMessage.content,
+                    senderId: newMessage.senderId,
+                    timestamp: newMessage.timestamp,
+                  },
+                }
+              : c
+          )
+        );
+      } catch (error) {
+        console.error("Error enviando mensaje:", error);
+        // Aquí podrías mostrar un toast de error o restaurar el mensaje en el input
+      }
     },
-    [currentMessage, activeConversation, conversations]
+    [currentMessage, activeConversation]
   );
 
-  if (isLoading) {
+  if (isLoadingConversations) {
     return (
       <div className="flex items-center justify-center p-12">
         <span className="text-gray-500">Cargando conversaciones...</span>
@@ -247,7 +199,6 @@ function AccountMessagesContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Título de la sección (igual al mockup) */}
       <div className="flex items-center gap-2">
         <MessageCircle className="h-5 w-5 text-blue-600" />
         <p className="text-sm font-semibold text-gray-700">
@@ -262,7 +213,6 @@ function AccountMessagesContent() {
         anfitrión para resolver dudas y acelerar la confirmación.
       </p>
 
-      {/* Contenedor principal del chat (2 columnas) */}
       <div className="grid h-[calc(100vh-300px)] min-h-[500px] grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 md:grid-cols-3">
         {/* Columna Izquierda: Lista de Conversaciones */}
         <div className="flex flex-col border-r border-gray-200 bg-white">
@@ -275,7 +225,6 @@ function AccountMessagesContent() {
               />
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
-            {/* --- NUEVO: Texto de ayuda del mockup --- */}
             <p className="mt-2 text-xs text-gray-500">
               Solo verás las conversaciones de reservas que tú iniciaste.
             </p>
@@ -291,7 +240,7 @@ function AccountMessagesContent() {
                 <ConversationListItem
                   key={convo.id}
                   conversation={convo}
-                  isActive={convo.reservationId === activeReservationId}
+                  isActive={convo.id === activeConversation?.id}
                   onSelect={handleSelectConversation}
                 />
               ))
@@ -305,12 +254,9 @@ function AccountMessagesContent() {
             <ChatPlaceholder />
           ) : (
             <>
-              {/* Header del Chat Activo */}
               <ChatHeader conversation={activeConversation} />
 
-              {/* Cuerpo de Mensajes */}
               <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
-                {/* --- NUEVO: Mensaje de "Chat generado" del mockup --- */}
                 <p className="text-center text-xs text-gray-400">
                   Chat generado automaticamente <br />
                   Creado el{" "}
@@ -326,17 +272,20 @@ function AccountMessagesContent() {
                   p. m. justo después de enviar tu solicitud.
                 </p>
 
-                {activeConversation.messages.map((msg) => (
-                  <MessageBubble
-                    key={msg.id}
-                    message={msg}
-                    isGuest={msg.sender === "guest"}
-                  />
-                ))}
+                {isLoadingMessages ? (
+                  <div className="flex justify-center p-4">
+                    <span className="text-xs text-gray-400">
+                      Cargando mensajes...
+                    </span>
+                  </div>
+                ) : (
+                  messages.map((msg) => (
+                    <MessageBubble key={msg.id} message={msg} isMe={msg.isMe} />
+                  ))
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input de Mensaje */}
               <ChatInput
                 currentMessage={currentMessage}
                 setCurrentMessage={setCurrentMessage}
@@ -355,7 +304,7 @@ function AccountMessagesContent() {
 interface ConversationListItemProps {
   conversation: Conversation;
   isActive: boolean;
-  onSelect: (reservationId: string) => void;
+  onSelect: (id: number) => void;
 }
 
 function ConversationListItem({
@@ -363,17 +312,17 @@ function ConversationListItem({
   isActive,
   onSelect,
 }: ConversationListItemProps) {
-  const lastMessage = conversation.messages[conversation.messages.length - 1];
+  const lastMessage = conversation.lastMessage;
   const statusLabel =
-    conversation.status === "pending" ? "Pendiente" : "Confirmada";
+    conversation.status === "PENDING" ? "Pendiente" : "Confirmada"; // Ajustar según valores reales de DB
   const statusClass =
-    conversation.status === "pending"
-      ? "text-yellow-600 bg-yellow-100" // --- MODIFICADO: Colores del mockup
-      : "text-green-600 bg-green-100"; // --- MODIFICADO: Colores del mockup
+    conversation.status === "PENDING"
+      ? "text-yellow-600 bg-yellow-100"
+      : "text-green-600 bg-green-100";
 
   return (
     <button
-      onClick={() => onSelect(conversation.reservationId)}
+      onClick={() => onSelect(conversation.id)}
       className={`w-full rounded-lg p-4 text-left transition-colors ${
         isActive ? "border border-blue-200 bg-blue-50" : "hover:bg-gray-50"
       }`}
@@ -381,7 +330,7 @@ function ConversationListItem({
       <div className="mb-1 flex items-center justify-between">
         <h3 className="font-semibold text-gray-800">{conversation.hostName}</h3>
         <span
-          className={`rounded px-2 py-0.5 text-xs font-medium ${statusClass}`} // --- MODIFICADO: "rounded" en vez de "rounded-full"
+          className={`rounded px-2 py-0.5 text-xs font-medium ${statusClass}`}
         >
           {statusLabel}
         </span>
@@ -390,11 +339,12 @@ function ConversationListItem({
         {conversation.propertyName}
       </p>
       <p className="mt-1 text-xs text-gray-400">{conversation.reservationId}</p>
-      {lastMessage && (
+      {lastMessage && lastMessage.content && (
         <p className="mt-2 truncate text-sm text-gray-500">
           <span className="font-medium">
-            {lastMessage.sender === "guest" ? "Tú: " : "Anfitrión: "}
-          </span>
+            {/* Aquí no sabemos si el último mensaje fue "Tú" sin comparar IDs, pero podemos omitirlo o mejorarlo luego */}
+            Mensaje:
+          </span>{" "}
           {lastMessage.content}
         </p>
       )}
@@ -406,6 +356,7 @@ function ConversationListItem({
 
 function ChatHeader({ conversation }: { conversation: Conversation }) {
   const formatDate = (dateString: string) => {
+    if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("es-ES", {
       day: "numeric",
       month: "short",
@@ -437,7 +388,7 @@ function ChatHeader({ conversation }: { conversation: Conversation }) {
           </div>
         </div>
         <a
-          href="#" // TODO: Cambiar por un Link a /properties/[id] o /account/reservas
+          href="#"
           className="text-sm font-medium text-blue-600 hover:underline"
         >
           Ver reserva
@@ -449,13 +400,7 @@ function ChatHeader({ conversation }: { conversation: Conversation }) {
 
 // --- 5. Sub-componente: Burbuja de Mensaje ---
 
-function MessageBubble({
-  message,
-  isGuest,
-}: {
-  message: Message;
-  isGuest: boolean;
-}) {
+function MessageBubble({ message, isMe }: { message: Message; isMe: boolean }) {
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString("es-ES", {
       hour: "2-digit",
@@ -464,10 +409,10 @@ function MessageBubble({
   };
 
   return (
-    <div className={`flex ${isGuest ? "justify-end" : "justify-start"}`}>
+    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-xs rounded-2xl p-3 md:max-w-md ${
-          isGuest
+          isMe
             ? "rounded-br-lg bg-blue-600 text-white"
             : "rounded-bl-lg border border-gray-200 bg-white text-gray-800"
         }`}
@@ -475,7 +420,7 @@ function MessageBubble({
         <p className="text-sm">{message.content}</p>
         <p
           className={`mt-1 text-xs ${
-            isGuest ? "text-right text-blue-100/70" : "text-gray-400" // --- MODIFICADO: hora alineada
+            isMe ? "text-right text-blue-100/70" : "text-gray-400"
           }`}
         >
           {formatTime(message.timestamp)}
@@ -503,7 +448,6 @@ function ChatInput({
       onSubmit={onSendMessage}
       className="border-t border-gray-200 bg-white p-4"
     >
-      {/* --- NUEVO: Mensaje de "Comparte detalles" del mockup --- */}
       <div className="mb-3 rounded-lg bg-gray-100 p-3 text-center">
         <p className="text-sm text-gray-600">
           Comparte detalles con el anfitrión para acelerar la confirmación...
@@ -532,7 +476,6 @@ function ChatInput({
           <Send className="h-5 w-5" />
         </button>
       </div>
-      {/* --- NUEVO: Texto de "Consejo" del mockup --- */}
       <p className="mt-2 text-center text-xs text-gray-400">
         Consejo: responde rápido para mantener tu lugar.
       </p>
