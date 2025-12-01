@@ -21,6 +21,36 @@ export interface UpdatePropertyBody {
   beds?: number;
 }
 
+export interface CreatePropertyData {
+  title: string;
+  propertyType: string;
+  basePriceNight: number;
+  currencyCode: string;
+  addressText: string;
+  city: string;
+  stateRegion: string;
+  country: string;
+  postalCode?: string;
+  latitude: number;
+  longitude: number;
+  descriptionLong: string;
+  houseRules: string;
+  checkinTime: string;
+  checkoutTime: string;
+  capacity: number;
+  bedrooms: number;
+  bathrooms: number;
+  beds: number;
+  area?: number;
+  floorNumber?: number;
+  maxAdults?: number;
+  maxChildren?: number;
+  maxBaby?: number;
+  maxPets?: number;
+  images: Array<{ url: string; caption?: string }>;
+  amenities: number[];
+}
+
 // Tipo para la respuesta exitosa de actualización
 export interface UpdatePropertyResponse {
   success: true;

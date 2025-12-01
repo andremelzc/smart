@@ -1,5 +1,6 @@
 import oracledb from "oracledb";
 import {
+  CreatePropertyData,
   UpdatePropertyBody,
   PropertyDetail,
   PropertyAmenity,
@@ -517,7 +518,7 @@ export class PropertyService {
 
   static async createProperty(
     hostId: number,
-    data: Partial<PropertyDetail>
+    data: Partial<CreatePropertyData>
   ): Promise<{ propertyId: number }> {
     let connection: oracledb.Connection | undefined;
 

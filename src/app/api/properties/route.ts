@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import { PropertyService } from "@/src/services/property.service";
 import { uploadFileToStorage } from "@/src/lib/storage";
+import { CreatePropertyData } from "@/src/types/dtos/properties.dto";
 
 interface PropertyCreateResponse {
   success: true;
@@ -193,15 +194,15 @@ export async function POST(
         const parsedAmenities = JSON.parse(amenitiesJson);
 
         if (Array.isArray(parsedAmenities)) {
-          amenities = parsedAmenities.map((item: any) => {
+          amenities = parsedAmenities.map((item: unknown) => {
             if (typeof item === 'number') {
               return item;
             } else if (typeof item === 'string') {
               return parseInt(item, 10);
-            } else if (typeof item === 'object' && item.code) {
-              return parseInt(item.code, 10);
+            } else if (typeof item === 'object' && item !== null && 'code' in item) {
+              return parseInt((item as { code: string | number }).code.toString(), 10);
             }
-            return parseInt(item, 10);
+            return parseInt(String(item), 10);
           }).filter((id: number) => !isNaN(id));
         }
       } catch (error) {
@@ -214,7 +215,7 @@ export async function POST(
     }
 
     // Construir PropertyDetail
-    const propertyData: any = {
+    const propertyData: CreatePropertyData = {
       title,
       propertyType,
       basePriceNight,
@@ -245,7 +246,7 @@ export async function POST(
     };
 
     const result = await PropertyService.createProperty(
-      165,
+      parseInt(session.user.id),
       propertyData
     );
 
