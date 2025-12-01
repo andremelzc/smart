@@ -133,7 +133,7 @@ export function LeaveReviewModal({
     },
   };
 
-  const currentConfig = config[reviewRole];
+  const currentConfig = config[reviewRole] || config.guest;
 
   // Handler para cerrar modal al hacer click fuera
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {

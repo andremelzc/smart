@@ -23,7 +23,7 @@ type ReservationStatus = "current" | "upcoming" | "past" | "cancelled";
 const getBookingStatus = (
   checkinDate: string,
   checkoutDate: string,
-  dbStatus: string
+  dbStatus: string | null | undefined
 ): ReservationStatus => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -34,7 +34,8 @@ const getBookingStatus = (
   const checkout = new Date(checkoutDate);
   checkout.setHours(0, 0, 0, 0);
 
-  const normalizedStatus = dbStatus.toUpperCase();
+  // Handle null/undefined status - default to "PENDING"
+  const normalizedStatus = (dbStatus || "PENDING").toUpperCase();
 
   // Primero verificar estados de BD que tienen prioridad
   switch (normalizedStatus) {
@@ -285,7 +286,15 @@ export default function ReservationsPage() {
 
   // Convertir los bookings de la BD al formato de la UI
   const reservations = useMemo<GuestReservation[]>(() => {
-    const formattedBookings: GuestReservation[] = bookings.map(
+    // Filtrar bookings con bookingId inválido antes de procesar
+    const validBookings = bookings.filter(
+      (booking: TenantBooking) =>
+        booking.bookingId !== null &&
+        booking.bookingId !== undefined &&
+        !isNaN(booking.bookingId)
+    );
+
+    const formattedBookings: GuestReservation[] = validBookings.map(
       (booking: TenantBooking) => {
         const status = getBookingStatus(
           booking.checkinDate,

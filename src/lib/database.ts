@@ -1,5 +1,8 @@
 import oracledb from "oracledb";
 
+// ✅ Configurar outFormat globalmente para que todas las queries devuelvan objetos
+oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+
 const dbConfig: oracledb.PoolAttributes = {
   user: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,

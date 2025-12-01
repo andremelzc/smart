@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LeaveReviewModal } from "./LeaveReviewModal";
 import { useAuth } from "@/src/hooks/useAuth";
+import { reviewService } from "@/src/services/review.service";
 
-// Definir tipo para la reserva pendiente
-type PendingReview = {
-  bookingId: string;
+// Tipo local para el modal (mapeo de PendingReview de la API)
+type ReviewModalData = {
+  bookingId: number;
   targetName: string;
   targetImage?: string;
-  role: "guest" | "host"; // 'guest' = yo soy huesped, 'host' = yo soy anfitrion
+  role: "guest" | "host";
   location?: string;
   checkInDate?: string;
   checkOutDate?: string;
@@ -20,21 +21,15 @@ export function ReviewNudge() {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [pendingReview, setPendingReview] = useState<PendingReview | null>(
+  const [pendingReview, setPendingReview] = useState<ReviewModalData | null>(
     null
   );
 
   useEffect(() => {
-    // Lógica: Solo ejecutar si el usuario está autenticado y en página relevante
-    const isHostContext = pathname.startsWith("/host");
-    const isTenantContext =
-      pathname === "/" ||
-      pathname.startsWith("/account") ||
-      pathname.startsWith("/properties");
+    // Solo ejecutar si el usuario está autenticado y en página relevante
+    const isRelevantPage = pathname === "/" || pathname === "/host";
 
-    const shouldShowReviews = isHostContext || isTenantContext;
-
-    if (isAuthenticated && shouldShowReviews && !isOpen) {
+    if (isAuthenticated && isRelevantPage && !isOpen) {
       checkPendingReviews();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,50 +37,45 @@ export function ReviewNudge() {
 
   const checkPendingReviews = async () => {
     try {
-      // --- SIMULACIÓN PARA PROTOTIPO ---
-      // 1. Probabilidad de que aparezca una reseña pendiente
-      const hasPendingReview = Math.random() > 0.3; // 70% probabilidad
+      // Obtener la primera pending review real de la API
+      const firstPending = await reviewService.getFirstPendingReview();
 
-      if (!hasPendingReview) return;
+      if (!firstPending) return;
 
-      // 2. Determinar el role según el contexto actual (pathname)
-      // Solo mostrar en rutas específicas exactas
-      const isHostContext = pathname === "/host";
-      const isTenantContext = pathname === "/";
+      // Determinar targetName y targetImage según el tipo de reseña
+      let targetName: string;
+      let targetImage: string | undefined;
+      let location: string | undefined;
 
-      // Si no estamos en ninguna de las rutas permitidas, no mostrar
-      if (!isHostContext && !isTenantContext) return;
-
-      let mockPending: PendingReview;
-
-      if (isHostContext) {
-        // CASO A: Estoy en contexto HOST -> calificar a un HUÉSPED
-        mockPending = {
-          bookingId: "RES-H999",
-          role: "host",
-          targetName: "Maria Gonzalez",
-          targetImage: "",
-          location: "Reserva en tu propiedad",
-          checkInDate: "15 Nov",
-          checkOutDate: "20 Nov",
-        };
+      if (firstPending.reviewType === 'guest') {
+        // El usuario es inquilino, opina sobre la propiedad
+        targetName = firstPending.propertyTitle;
+        targetImage = firstPending.propertyImage;
+        location = `${firstPending.city}, ${firstPending.stateRegion}`;
       } else {
-        // CASO B: Estoy en contexto TENANT -> calificar una PROPIEDAD
-        mockPending = {
-          bookingId: "RES-T123",
-          role: "guest",
-          targetName: "Loft moderno en Miraflores",
-          targetImage:
-            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-          location: "Miraflores, Lima",
-          checkInDate: "15 Nov",
-          checkOutDate: "20 Nov",
-        };
+        // El usuario es host, opina sobre el huésped
+        targetName = reviewService.formatFullName(
+          firstPending.otherUserFirstName,
+          firstPending.otherUserLastName
+        );
+        targetImage = firstPending.otherUserImage;
+        location = 'Reserva en tu propiedad';
       }
+
+      // Mapear a ReviewModalData
+      const modalData: ReviewModalData = {
+        bookingId: firstPending.bookingId,
+        role: firstPending.reviewType,
+        targetName,
+        targetImage,
+        location,
+        checkInDate: reviewService.formatDate(firstPending.checkinDate),
+        checkOutDate: reviewService.formatDate(firstPending.checkoutDate),
+      };
 
       // Delay para que se sienta natural
       setTimeout(() => {
-        setPendingReview(mockPending);
+        setPendingReview(modalData);
         setIsOpen(true);
       }, 1500);
     } catch (error) {
@@ -96,16 +86,28 @@ export function ReviewNudge() {
   const handleSubmitReview = async (rating: number, comment: string) => {
     if (!pendingReview) return;
 
-    console.log(`Enviando reseña como ${pendingReview.role}:`, {
-      bookingId: pendingReview.bookingId,
-      rating,
-      comment,
-    });
+    try {
+      console.log(`Enviando reseña como ${pendingReview.role}:`, {
+        bookingId: pendingReview.bookingId,
+        rating,
+        comment,
+      });
 
-    // AQUÍ: Conectar con tu servicio de reseñas real
-    // await reviewService.create({ ... });
+      // Enviar la reseña a la API
+      await reviewService.createReview({
+        bookingId: pendingReview.bookingId,
+        reviewType: pendingReview.role,
+        rating,
+        comment,
+      });
 
-    setIsOpen(false);
+      console.log('✅ Reseña creada exitosamente');
+      setIsOpen(false);
+    } catch (error) {
+      console.error('❌ Error al crear reseña:', error);
+      // Podrías mostrar un toast o notificación de error aquí
+      throw error; // Dejar que el modal lo maneje
+    }
   };
 
   if (!pendingReview) return null;
