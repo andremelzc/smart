@@ -528,6 +528,8 @@ function PropertySearchContent() {
     setMapBounds(null);
     setAppliedFilters(null);
     setError(null);
+    // Notify Navbar to clear its filters too
+    window.dispatchEvent(new CustomEvent("clear-search-filters"));
   };
 
   return (

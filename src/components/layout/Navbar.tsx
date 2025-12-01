@@ -269,6 +269,64 @@ export default function Navbar() {
     };
   }, [isNotificationsOpen]);
 
+  // Auto-trigger search when filters change (only on search page)
+  useEffect(() => {
+    if (pathname !== "/search") return;
+
+    const params = new URLSearchParams();
+
+    if (selectedLocation?.value) {
+      params.set("city", selectedLocation.value);
+    }
+
+    if (checkInDate) {
+      params.set("startDate", checkInDate);
+    }
+
+    if (checkOutDate) {
+      params.set("endDate", checkOutDate);
+    }
+
+    if (guestCounts.adults > 0) {
+      params.set("adults", String(guestCounts.adults));
+    }
+
+    if (guestCounts.children > 0) {
+      params.set("children", String(guestCounts.children));
+    }
+
+    if (guestCounts.babies > 0) {
+      params.set("babies", String(guestCounts.babies));
+    }
+
+    if (guestCounts.pets > 0) {
+      params.set("pets", String(guestCounts.pets));
+    }
+
+    const query = params.toString();
+    router.push(query ? `/search?${query}` : "/search");
+  }, [selectedLocation, checkInDate, checkOutDate, guestCounts, pathname, router]);
+
+  // Listen for clear-filters event from FilterModal
+  useEffect(() => {
+    const handleClearFilters = () => {
+      setSelectedLocation(null);
+      setCheckInDate(undefined);
+      setCheckOutDate(undefined);
+      setGuestCounts({
+        adults: 1,
+        children: 0,
+        babies: 0,
+        pets: 0,
+      });
+    };
+
+    window.addEventListener("clear-search-filters", handleClearFilters);
+    return () => {
+      window.removeEventListener("clear-search-filters", handleClearFilters);
+    };
+  }, []);
+
   const newNotificationCount = useMemo(
     () =>
       notifications.filter(
