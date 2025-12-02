@@ -1168,6 +1168,51 @@ export class PropertyService {
         }
       }
 
+      // ========================================
+      // Consulta adicional: Obtener conteo de reviews por propiedad
+      // usando la vista V_HOST_REVIEWS_DETAIL
+      // ========================================
+      if (properties.length > 0) {
+        const reviewCountsQuery = `
+          SELECT 
+            PROPERTY_ID,
+            COUNT(*) AS REVIEW_COUNT,
+            AVG(RATING) AS AVG_RATING
+          FROM V_HOST_REVIEWS_DETAIL
+          WHERE HOST_ID = :host_id
+          GROUP BY PROPERTY_ID
+        `;
+
+        const reviewCountsResult = await connection.execute(
+          reviewCountsQuery,
+          { host_id: hostId },
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        // Crear un mapa de property_id -> { count, rating }
+        const reviewsMap = new Map<number, { count: number; rating: number }>();
+        
+        if (reviewCountsResult.rows) {
+          for (const row of reviewCountsResult.rows) {
+            const rowData = row as Record<string, unknown>;
+            const propertyId = Number(rowData.PROPERTY_ID);
+            const count = Number(rowData.REVIEW_COUNT) || 0;
+            const rating = Number(rowData.AVG_RATING) || 0;
+            
+            reviewsMap.set(propertyId, { count, rating });
+          }
+        }
+
+        // Actualizar cada propiedad con su conteo real de reviews
+        for (const property of properties) {
+          const reviewData = reviewsMap.get(property.propertyId);
+          if (reviewData) {
+            property.reviews.totalCount = reviewData.count;
+            property.reviews.averageRating = reviewData.rating;
+          }
+        }
+      }
+
       return properties;
     } catch (error) {
       throw new Error(
