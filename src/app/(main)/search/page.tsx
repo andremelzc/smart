@@ -8,6 +8,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   startTransition,
 } from "react";
 import dynamic from "next/dynamic";
@@ -163,10 +164,19 @@ function PropertySearchContent() {
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
+  const [hasReceivedInitialBounds, setHasReceivedInitialBounds] = useState(false);
+  const boundsDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const searchParamsKey = searchParams.toString();
 
   useEffect(() => {
+    // Cancelar búsqueda anterior si existe
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
+
     if (!searchParamsKey) {
       startTransition(() => {
         setFormValues({ ...EMPTY_FORM });
@@ -174,7 +184,9 @@ function PropertySearchContent() {
         setMapBounds(null);
         setAppliedFilters(null);
         setError(null);
+        setHasReceivedInitialBounds(false);
       });
+      // No hacer búsqueda aquí - esperar a que el mapa proporcione los bounds iniciales
       return;
     }
 
@@ -273,6 +285,15 @@ function PropertySearchContent() {
     window.addEventListener("toggle-search-filters", handleOpenFilters);
     return () => {
       window.removeEventListener("toggle-search-filters", handleOpenFilters);
+    };
+  }, []);
+
+  // Cleanup de timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (boundsDebounceRef.current) {
+        clearTimeout(boundsDebounceRef.current);
+      }
     };
   }, []);
 
@@ -458,38 +479,92 @@ function PropertySearchContent() {
   const closeFilters = () => setShowFilters(false);
 
   const handleMapBoundsChange = useCallback(
-    async (nextBounds: MapBounds) => {
+    (nextBounds: MapBounds) => {
+      // Ignorar cambios de bounds si estamos reseteando
+      if (isResetting) {
+        return;
+      }
+
       if (areBoundsEqual(mapBounds, nextBounds)) {
         return;
       }
 
+      // Cancelar debounce anterior si existe
+      if (boundsDebounceRef.current) {
+        clearTimeout(boundsDebounceRef.current);
+      }
+
       setMapBounds(nextBounds);
+
+      // Debounce la búsqueda por cambios de mapa para evitar múltiples llamadas
+      boundsDebounceRef.current = setTimeout(async () => {
+        // Verificar de nuevo por si isResetting cambió durante el debounce
+        if (isResetting) {
+          return;
+        }
+
+        setError(null);
+
+        const nextFilters = buildFilters(
+          formValues,
+          selectedAmenities,
+          nextBounds
+        );
+
+        try {
+          await search(nextFilters);
+          setAppliedFilters({
+            ...nextFilters,
+            amenities: nextFilters.amenities
+              ? [...nextFilters.amenities]
+              : undefined,
+            orderBy: nextFilters.orderBy,
+          });
+        } catch (err) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError("No se pudo realizar la búsqueda.");
+          }
+        }
+      }, 300);
+    },
+    [formValues, isResetting, mapBounds, search, selectedAmenities]
+  );
+
+  // Handler para los bounds iniciales del mapa (primera carga)
+  const handleInitialBounds = useCallback(
+    async (initialBounds: MapBounds) => {
+      // Solo procesar si no tenemos searchParams y no hemos recibido bounds antes
+      if (searchParamsKey || hasReceivedInitialBounds) {
+        return;
+      }
+
+      setHasReceivedInitialBounds(true);
+      setMapBounds(initialBounds);
       setError(null);
 
-      const nextFilters = buildFilters(
-        formValues,
-        selectedAmenities,
-        nextBounds
-      );
+      // Ejecutar búsqueda con los bounds del área visible del mapa
+      const initialFilters = buildFilters(formValues, selectedAmenities, initialBounds);
 
       try {
-        await search(nextFilters);
+        await search(initialFilters);
         setAppliedFilters({
-          ...nextFilters,
-          amenities: nextFilters.amenities
-            ? [...nextFilters.amenities]
+          ...initialFilters,
+          amenities: initialFilters.amenities
+            ? [...initialFilters.amenities]
             : undefined,
-          orderBy: nextFilters.orderBy,
+          orderBy: initialFilters.orderBy,
         });
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError("No se pudo realizar la busqueda.");
+          setError("No se pudo realizar la búsqueda.");
         }
       }
     },
-    [formValues, mapBounds, search, selectedAmenities]
+    [formValues, hasReceivedInitialBounds, search, searchParamsKey, selectedAmenities]
   );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -522,14 +597,53 @@ function PropertySearchContent() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    // Cancelar cualquier debounce pendiente del mapa
+    if (boundsDebounceRef.current) {
+      clearTimeout(boundsDebounceRef.current);
+      boundsDebounceRef.current = null;
+    }
+
+    // Marcar que estamos reseteando para ignorar cambios de bounds del mapa
+    setIsResetting(true);
+
+    // Guardar los bounds actuales del mapa antes de resetear
+    const currentBounds = mapBounds;
+
+    // Limpiar todo el estado de filtros
     setFormValues({ ...EMPTY_FORM });
     setSelectedAmenities([]);
-    setMapBounds(null);
     setAppliedFilters(null);
     setError(null);
+    // No resetear hasReceivedInitialBounds ni mapBounds para mantener el área visible
+
     // Notify Navbar to clear its filters too
     window.dispatchEvent(new CustomEvent("clear-search-filters"));
+
+    // Ejecutar búsqueda solo con los bounds del mapa actual (sin otros filtros)
+    try {
+      const boundsOnlyFilters: PropertyFilterDto = currentBounds
+        ? {
+            latMin: currentBounds.latMin,
+            latMax: currentBounds.latMax,
+            lngMin: currentBounds.lngMin,
+            lngMax: currentBounds.lngMax,
+          }
+        : {};
+      await search(boundsOnlyFilters);
+      setAppliedFilters(boundsOnlyFilters);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("No se pudo realizar la búsqueda.");
+      }
+    } finally {
+      // Permitir cambios de bounds del mapa nuevamente después de un pequeño delay
+      setTimeout(() => {
+        setIsResetting(false);
+      }, 500);
+    }
   };
 
   return (
@@ -570,6 +684,7 @@ function PropertySearchContent() {
         showFilters={showFilters}
         mapBounds={mapBounds}
         onBoundsChange={handleMapBoundsChange}
+        onInitialBounds={handleInitialBounds}
         appliedFilters={appliedFilters}
         nightsCount={nightsCount}
         MapComponent={PropertySearchMap}

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { PropertyFilterDto } from "@/src/types/dtos/properties.dto";
 
 type PropertySearchItem = Record<string, unknown>;
@@ -12,8 +12,22 @@ type PropertySearchPayload = {
 export function usePropertySearch() {
   const [results, setResults] = useState<PropertySearchItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
 
   const search = useCallback(async (filters: PropertyFilterDto) => {
+    // Cancelar la búsqueda anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Crear nuevo AbortController para esta búsqueda
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    // Incrementar el ID de la request para detectar respuestas obsoletas
+    const currentRequestId = ++requestIdRef.current;
+
     setLoading(true);
 
     try {
@@ -23,11 +37,17 @@ export function usePropertySearch() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(filters ?? {}),
+        signal: abortController.signal,
       });
 
       const payload: PropertySearchPayload = await response
         .json()
         .catch(() => ({}));
+
+      // Si esta request fue abortada o hay una más reciente, ignorar resultado
+      if (abortController.signal.aborted || currentRequestId !== requestIdRef.current) {
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(payload?.message || "Error al buscar propiedades");
@@ -121,8 +141,17 @@ export function usePropertySearch() {
       } else {
         setResults(items);
       }
+    } catch (error) {
+      // Ignorar errores de abort
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+      throw error;
     } finally {
-      setLoading(false);
+      // Solo actualizar loading si esta es la request más reciente
+      if (currentRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 

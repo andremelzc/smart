@@ -17,6 +17,7 @@ type PropertySearchMapProps = {
   bounds: MapBounds | null;
   loading?: boolean;
   onBoundsChange: (nextBounds: MapBounds) => void | Promise<void>;
+  onInitialBounds?: (bounds: MapBounds) => void;
 };
 
 type MarkerPoint = {
@@ -223,25 +224,66 @@ const MapEventBridge = ({
   markersBounds,
 
   onBoundsChange,
+  
+  onInitialBounds,
 }: {
   explicitBounds: MapBounds | null;
 
   markersBounds: MapBounds | null;
 
   onBoundsChange: (nextBounds: MapBounds) => void | Promise<void>;
+  
+  onInitialBounds?: (bounds: MapBounds) => void;
 }) => {
   const map = useMap();
 
   const lastAppliedBounds = useRef<MapBounds | null>(null);
 
   const userInteracting = useRef(false);
+  
+  const isInitialMount = useRef(true);
+  
+  const hasReportedInitialBounds = useRef(false);
+
+  // Reportar los bounds iniciales cuando el mapa esté listo
+  useEffect(() => {
+    if (hasReportedInitialBounds.current || !onInitialBounds) return;
+    
+    // Pequeño delay para asegurar que el mapa está completamente renderizado
+    const timeoutId = setTimeout(() => {
+      if (hasReportedInitialBounds.current) return;
+      
+      const leafletBounds = map.getBounds();
+      const initialBounds: MapBounds = {
+        latMin: leafletBounds.getSouth(),
+        latMax: leafletBounds.getNorth(),
+        lngMin: leafletBounds.getWest(),
+        lngMax: leafletBounds.getEast(),
+      };
+      
+      hasReportedInitialBounds.current = true;
+      lastAppliedBounds.current = initialBounds;
+      onInitialBounds(initialBounds);
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [map, onInitialBounds]);
 
   useEffect(() => {
     const handleMoveStart = () => {
-      userInteracting.current = true;
+      // Solo marcar interacción del usuario si no es el montaje inicial
+      if (!isInitialMount.current) {
+        userInteracting.current = true;
+      }
     };
 
     const handleMoveEnd = () => {
+      // Si es el montaje inicial, marcarlo como completado y no disparar cambios
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+
       if (!userInteracting.current) return;
 
       userInteracting.current = false;
@@ -293,6 +335,9 @@ const MapEventBridge = ({
 
     lastAppliedBounds.current = targetBounds;
 
+    // Asegurarse de que el ajuste programático no dispare eventos de usuario
+    userInteracting.current = false;
+
     map.fitBounds(leafletBounds, { padding: BOUNDS_PADDING, animate: false });
   }, [explicitBounds, markersBounds, map]);
 
@@ -304,6 +349,7 @@ export function PropertySearchMap({
   bounds,
   loading,
   onBoundsChange,
+  onInitialBounds,
 }: PropertySearchMapProps) {
   const [isClient, setIsClient] = useState(false);
 
@@ -399,6 +445,7 @@ export function PropertySearchMap({
           explicitBounds={bounds}
           markersBounds={markersBounds}
           onBoundsChange={onBoundsChange}
+          onInitialBounds={onInitialBounds}
         />
 
         {markers.map((marker) => (

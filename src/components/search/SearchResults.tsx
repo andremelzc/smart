@@ -10,6 +10,7 @@ export type MapRenderer = ComponentType<{
   bounds: MapBounds | null;
   loading?: boolean;
   onBoundsChange: (nextBounds: MapBounds) => void | Promise<void>;
+  onInitialBounds?: (bounds: MapBounds) => void;
 }>;
 
 type SearchResultsProps = {
@@ -19,6 +20,7 @@ type SearchResultsProps = {
   showFilters: boolean;
   mapBounds: MapBounds | null;
   onBoundsChange: (nextBounds: MapBounds) => void | Promise<void>;
+  onInitialBounds?: (bounds: MapBounds) => void;
   appliedFilters: PropertyFilterDto | null;
   nightsCount: number | null;
   MapComponent: MapRenderer;
@@ -31,6 +33,7 @@ export function SearchResults({
   showFilters,
   mapBounds,
   onBoundsChange,
+  onInitialBounds,
   appliedFilters,
   nightsCount,
   MapComponent,
@@ -82,6 +85,7 @@ export function SearchResults({
             bounds={mapBounds}
             loading={loading}
             onBoundsChange={onBoundsChange}
+            onInitialBounds={onInitialBounds}
           />
         </div>
       </div>
