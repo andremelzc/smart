@@ -76,7 +76,7 @@ export function PropertyBookingCard({
     return date;
   }, []);
 
-  const { availability } = usePropertyAvailability(
+  const { availability, refetch } = usePropertyAvailability(
     propertyId,
     today,
     threeMonthsLater
@@ -302,7 +302,15 @@ export function PropertyBookingCard({
         {/* Formulario de fechas */}
         <div className="mb-6 space-y-4">
           {/* Calendario de rango */}
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <Popover
+            open={calendarOpen}
+            onOpenChange={(open) => {
+              setCalendarOpen(open);
+              if (open) {
+                refetch();
+              }
+            }}
+          >
             <PopoverTrigger asChild>
               <button className="w-full cursor-pointer rounded-lg border border-gray-300 text-left transition-colors hover:border-gray-400">
                 <div className="grid grid-cols-2 gap-0">
@@ -355,6 +363,10 @@ export function PropertyBookingCard({
                   toDate={threeMonthsLater}
                   numberOfMonths={2}
                   locale={es}
+                  classNames={{
+                    disabled:
+                      "text-muted-foreground opacity-50 line-through decoration-2",
+                  }}
                 />
                 {(selectedDates.checkIn || selectedDates.checkOut) && (
                   <div className="border-t border-gray-200 p-3">
