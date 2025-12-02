@@ -119,7 +119,7 @@ export async function GET() {
                 revieweeId: hostId,
                 reviewType: 'guest',
                 rating: Number(rowData.RATING),
-                comment: String(rowData.REVIEW_COMMENT || ''),  // Usar REVIEW_COMMENT del alias del SP
+                comment: String(rowData.REVIEW_COMMENT || rowData.COMMENTS || ''),  // Intentar ambos nombres de columna
                 createdAt: rowData.CREATED_AT
                   ? new Date(String(rowData.CREATED_AT)).toISOString()
                   : '',
