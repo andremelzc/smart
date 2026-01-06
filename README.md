@@ -245,4 +245,4 @@ Para preguntas o issues, por favor abre un issue en el repositorio de GitHub.
 
 ---
 
-Construido con ❤️ usando Next.js y Oracle Database
+Construido con Next.js y Oracle Database
