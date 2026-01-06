@@ -234,11 +234,6 @@ Las contribuciones son bienvenidas. Por favor:
 
 Este proyecto es privado y está bajo desarrollo activo.
 
-## 👨‍💻 Autor
-
-**Andre Melz**
-- GitHub: [@andremelzc](https://github.com/andremelzc)
-
 ## 📞 Soporte
 
 Para preguntas o issues, por favor abre un issue en el repositorio de GitHub.
